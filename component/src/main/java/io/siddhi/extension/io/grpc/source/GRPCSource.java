@@ -29,7 +29,7 @@ import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.SourceStaticHolder;
-import io.siddhi.extension.io.grpc.util.service.SequenceCallResponse;
+import io.siddhi.extension.map.protobuf.utils.service.SequenceCallResponse;
 import org.apache.log4j.Logger;
 
 /**

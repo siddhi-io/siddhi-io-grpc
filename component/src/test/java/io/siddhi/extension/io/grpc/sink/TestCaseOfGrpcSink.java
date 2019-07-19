@@ -9,9 +9,9 @@ import io.siddhi.core.event.Event;
 import io.siddhi.core.query.output.callback.QueryCallback;
 import io.siddhi.core.stream.input.InputHandler;
 import io.siddhi.core.util.EventPrinter;
-import io.siddhi.extension.io.grpc.util.service.InvokeSequenceGrpc;
-import io.siddhi.extension.io.grpc.util.service.SequenceCallRequest;
-import io.siddhi.extension.io.grpc.util.service.SequenceCallResponse;
+import io.siddhi.extension.map.protobuf.utils.service.InvokeSequenceGrpc;
+import io.siddhi.extension.map.protobuf.utils.service.SequenceCallRequest;
+import io.siddhi.extension.map.protobuf.utils.service.SequenceCallResponse;
 import org.apache.log4j.Logger;
 import org.testng.annotations.Test;
 
@@ -70,6 +70,56 @@ public class TestCaseOfGrpcSink {
                 stopServer();
             }
         }
+
+    @Test
+    public void test2() throws Exception {
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        startServer();
+        String port = String.valueOf(server.getPort());
+        String inStreamDefinition = ""
+                + "@sink(type='grpc', " +
+                "host = 'dns:///localhost', " +
+                "port = '" + port + "', " +
+                "sequence = 'mySeq', " +
+                "response = 'true', " +
+                "sink.id= '1', @map(type='protobuf', mode='MIConnect')) "
+                + "define stream FooStream (message String);";
+
+        String stream2 = "@source(type='grpc', sequence='mySeq', response='true', sink.id= '1') " +
+                "define stream BarStream (message String);";
+        String query = "@info(name = 'query') "
+                + "from BarStream "
+                + "select *  "
+                + "insert into outputStream;";
+
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition + stream2 +
+                query);
+        siddhiAppRuntime.addCallback("query", new QueryCallback() {
+            @Override
+            public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
+                EventPrinter.print(timeStamp, inEvents, removeEvents);
+            }
+        });
+        InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
+
+//        SequenceCallRequest.Builder requestBuilder = SequenceCallRequest.newBuilder();
+//        requestBuilder.setPayloadAsJSON("niruhan");
+//        requestBuilder.setSequenceName("mySeq");
+//        SequenceCallRequest sequenceCallRequest = requestBuilder.build();
+
+        try {
+            siddhiAppRuntime.start();
+
+            fooStream.send(new Object[]{"niruhan"});
+            fooStream.send(new Object[]{"niruhan"});
+
+            Thread.sleep(5000);
+            siddhiAppRuntime.shutdown();
+        } finally {
+            stopServer();
+        }
+    }
 
     private void startServer() throws IOException {
         if (server != null) {

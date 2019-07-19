@@ -36,10 +36,9 @@ import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.core.util.transport.DynamicOptions;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.SourceStaticHolder;
-import io.siddhi.extension.io.grpc.util.service.InvokeSequenceGrpc;
-import io.siddhi.extension.io.grpc.util.service.InvokeSequenceGrpc.InvokeSequenceFutureStub;
-import io.siddhi.extension.io.grpc.util.service.SequenceCallRequest;
-import io.siddhi.extension.io.grpc.util.service.SequenceCallResponse;
+import io.siddhi.extension.map.protobuf.utils.service.InvokeSequenceGrpc;
+import io.siddhi.extension.map.protobuf.utils.service.SequenceCallRequest;
+import io.siddhi.extension.map.protobuf.utils.service.SequenceCallResponse;
 import io.siddhi.query.api.definition.StreamDefinition;
 import org.apache.log4j.Logger;
 
@@ -75,7 +74,7 @@ public class GRPCSink extends Sink {
     private String serviceName;
     private String methodName;
     private String sequenceName;
-    private InvokeSequenceFutureStub futureStub;
+    private InvokeSequenceGrpc.InvokeSequenceFutureStub futureStub;
     private boolean isMIConnect = false;
     private SourceStaticHolder sourceStaticHolder = SourceStaticHolder.getInstance();
     private String sinkID;
@@ -151,7 +150,8 @@ public class GRPCSink extends Sink {
     public void publish(Object payload, DynamicOptions dynamicOptions, State state)
             throws ConnectionUnavailableException {
         if (isMIConnect) {
-            if (payload instanceof SequenceCallRequest) {
+//            System.out.println(payload.getClass().getName());
+            if (payload.getClass().getName().equals("io.siddhi.extension.map.protobuf.utils.service.SequenceCallRequest")) {
                 if (methodName.equalsIgnoreCase("CallSequenceWithResponse")) {
                     ListenableFuture<SequenceCallResponse> futureResponse =
                             futureStub.callSequenceWithResponse((SequenceCallRequest) payload);

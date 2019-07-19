@@ -42,6 +42,11 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>io.siddhi.extension.map.protobuf</groupId>
+            <artifactId>siddhi-map-protobuf</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>io.siddhi.extension.map.json</groupId>
             <artifactId>siddhi-map-json</artifactId>
             <scope>test</scope>
@@ -75,6 +80,10 @@
             <groupId>org.wso2.transport.http</groupId>
             <artifactId>org.wso2.transport.http.netty</artifactId>
             <version>${transport.http.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.siddhi.extension.map.protobuf</groupId>
+            <artifactId>siddhi-map-protobuf</artifactId>
         </dependency>
     </dependencies>
 
