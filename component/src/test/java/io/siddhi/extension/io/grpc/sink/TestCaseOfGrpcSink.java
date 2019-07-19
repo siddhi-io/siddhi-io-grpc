@@ -12,12 +12,14 @@ import io.siddhi.core.util.EventPrinter;
 import io.siddhi.extension.io.grpc.util.service.InvokeSequenceGrpc;
 import io.siddhi.extension.io.grpc.util.service.SequenceCallRequest;
 import io.siddhi.extension.io.grpc.util.service.SequenceCallResponse;
+import org.apache.log4j.Logger;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 public class TestCaseOfGrpcSink {
+    private static final Logger logger = Logger.getLogger(TestCaseOfGrpcSink.class.getName());
     private Server server;
         @Test
         public void test1() throws Exception {
@@ -41,7 +43,8 @@ public class TestCaseOfGrpcSink {
                     + "select *  "
                     + "insert into outputStream;";
 
-            SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition + stream2 + query);
+            SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition + stream2 +
+                    query);
             siddhiAppRuntime.addCallback("query", new QueryCallback() {
                 @Override
                 public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
@@ -50,8 +53,6 @@ public class TestCaseOfGrpcSink {
             });
             InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
 
-
-            System.out.println(server.getPort());
             try {
                 siddhiAppRuntime.start();
 
@@ -71,8 +72,11 @@ public class TestCaseOfGrpcSink {
         }
         server = ServerBuilder.forPort(0).addService(new InvokeSequenceGrpc.InvokeSequenceImplBase() {
             @Override
-            public void callSequenceWithResponse(SequenceCallRequest request, StreamObserver<SequenceCallResponse> responseObserver) {
-                System.out.println("Server hit");
+            public void callSequenceWithResponse(SequenceCallRequest request,
+                                                 StreamObserver<SequenceCallResponse> responseObserver) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Server hit");
+                }
                 SequenceCallResponse.Builder responseBuilder = SequenceCallResponse.newBuilder();
                 responseBuilder.setResponseAsJSON("server data");
                 SequenceCallResponse response = responseBuilder.build();
@@ -81,7 +85,9 @@ public class TestCaseOfGrpcSink {
             }
         }).build();
         server.start();
-        System.out.println("Server started");
+        if (logger.isDebugEnabled()) {
+            logger.debug("Server started");
+        }
     }
 
     private void stopServer() throws InterruptedException {
@@ -92,7 +98,10 @@ public class TestCaseOfGrpcSink {
         server = null;
         s.shutdown();
         if (s.awaitTermination(1, TimeUnit.SECONDS)) {
-            System.out.println("Server stopped");
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("Server stopped");
+            }
             return;
         }
         s.shutdownNow();

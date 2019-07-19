@@ -70,15 +70,15 @@ private static final long serialVersionUID = 0L;
   }
   public static final com.google.protobuf.Descriptors.Descriptor
       getDescriptor() {
-    return io.siddhi.extension.io.grpc.util.service.SiddhiMicroIntegratorProto.internal_static_invokesequence_SequenceCallResponse_descriptor;
+    return SiddhiMicroIntegratorProto.internal_static_invokesequence_SequenceCallResponse_descriptor;
   }
 
   @Override
   protected FieldAccessorTable
       internalGetFieldAccessorTable() {
-    return io.siddhi.extension.io.grpc.util.service.SiddhiMicroIntegratorProto.internal_static_invokesequence_SequenceCallResponse_fieldAccessorTable
+    return SiddhiMicroIntegratorProto.internal_static_invokesequence_SequenceCallResponse_fieldAccessorTable
         .ensureFieldAccessorsInitialized(
-            io.siddhi.extension.io.grpc.util.service.SequenceCallResponse.class, io.siddhi.extension.io.grpc.util.service.SequenceCallResponse.Builder.class);
+            SequenceCallResponse.class, SequenceCallResponse.Builder.class);
   }
 
   public static final int RESPONSEASJSON_FIELD_NUMBER = 1;
@@ -154,10 +154,10 @@ private static final long serialVersionUID = 0L;
     if (obj == this) {
      return true;
     }
-    if (!(obj instanceof io.siddhi.extension.io.grpc.util.service.SequenceCallResponse)) {
+    if (!(obj instanceof SequenceCallResponse)) {
       return super.equals(obj);
     }
-    io.siddhi.extension.io.grpc.util.service.SequenceCallResponse other = (io.siddhi.extension.io.grpc.util.service.SequenceCallResponse) obj;
+    SequenceCallResponse other = (SequenceCallResponse) obj;
 
     if (!getResponseAsJSON()
         .equals(other.getResponseAsJSON())) return false;
@@ -179,69 +179,69 @@ private static final long serialVersionUID = 0L;
     return hash;
   }
 
-  public static io.siddhi.extension.io.grpc.util.service.SequenceCallResponse parseFrom(
+  public static SequenceCallResponse parseFrom(
       java.nio.ByteBuffer data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static io.siddhi.extension.io.grpc.util.service.SequenceCallResponse parseFrom(
+  public static SequenceCallResponse parseFrom(
       java.nio.ByteBuffer data,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static io.siddhi.extension.io.grpc.util.service.SequenceCallResponse parseFrom(
+  public static SequenceCallResponse parseFrom(
       com.google.protobuf.ByteString data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static io.siddhi.extension.io.grpc.util.service.SequenceCallResponse parseFrom(
+  public static SequenceCallResponse parseFrom(
       com.google.protobuf.ByteString data,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static io.siddhi.extension.io.grpc.util.service.SequenceCallResponse parseFrom(byte[] data)
+  public static SequenceCallResponse parseFrom(byte[] data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static io.siddhi.extension.io.grpc.util.service.SequenceCallResponse parseFrom(
+  public static SequenceCallResponse parseFrom(
       byte[] data,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static io.siddhi.extension.io.grpc.util.service.SequenceCallResponse parseFrom(java.io.InputStream input)
+  public static SequenceCallResponse parseFrom(java.io.InputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseWithIOException(PARSER, input);
   }
-  public static io.siddhi.extension.io.grpc.util.service.SequenceCallResponse parseFrom(
+  public static SequenceCallResponse parseFrom(
       java.io.InputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseWithIOException(PARSER, input, extensionRegistry);
   }
-  public static io.siddhi.extension.io.grpc.util.service.SequenceCallResponse parseDelimitedFrom(java.io.InputStream input)
+  public static SequenceCallResponse parseDelimitedFrom(java.io.InputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseDelimitedWithIOException(PARSER, input);
   }
-  public static io.siddhi.extension.io.grpc.util.service.SequenceCallResponse parseDelimitedFrom(
+  public static SequenceCallResponse parseDelimitedFrom(
       java.io.InputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
   }
-  public static io.siddhi.extension.io.grpc.util.service.SequenceCallResponse parseFrom(
+  public static SequenceCallResponse parseFrom(
       com.google.protobuf.CodedInputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseWithIOException(PARSER, input);
   }
-  public static io.siddhi.extension.io.grpc.util.service.SequenceCallResponse parseFrom(
+  public static SequenceCallResponse parseFrom(
       com.google.protobuf.CodedInputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
@@ -254,7 +254,7 @@ private static final long serialVersionUID = 0L;
   public static Builder newBuilder() {
     return DEFAULT_INSTANCE.toBuilder();
   }
-  public static Builder newBuilder(io.siddhi.extension.io.grpc.util.service.SequenceCallResponse prototype) {
+  public static Builder newBuilder(SequenceCallResponse prototype) {
     return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
   }
   @Override
@@ -275,18 +275,18 @@ private static final long serialVersionUID = 0L;
   public static final class Builder extends
       com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
       // @@protoc_insertion_point(builder_implements:invokesequence.SequenceCallResponse)
-      io.siddhi.extension.io.grpc.util.service.SequenceCallResponseOrBuilder {
+      SequenceCallResponseOrBuilder {
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return io.siddhi.extension.io.grpc.util.service.SiddhiMicroIntegratorProto.internal_static_invokesequence_SequenceCallResponse_descriptor;
+      return SiddhiMicroIntegratorProto.internal_static_invokesequence_SequenceCallResponse_descriptor;
     }
 
     @Override
     protected FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return io.siddhi.extension.io.grpc.util.service.SiddhiMicroIntegratorProto.internal_static_invokesequence_SequenceCallResponse_fieldAccessorTable
+      return SiddhiMicroIntegratorProto.internal_static_invokesequence_SequenceCallResponse_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              io.siddhi.extension.io.grpc.util.service.SequenceCallResponse.class, io.siddhi.extension.io.grpc.util.service.SequenceCallResponse.Builder.class);
+              SequenceCallResponse.class, SequenceCallResponse.Builder.class);
     }
 
     // Construct using io.siddhi.extension.io.grpc.util.service.SequenceCallResponse.newBuilder()
@@ -315,17 +315,17 @@ private static final long serialVersionUID = 0L;
     @Override
     public com.google.protobuf.Descriptors.Descriptor
         getDescriptorForType() {
-      return io.siddhi.extension.io.grpc.util.service.SiddhiMicroIntegratorProto.internal_static_invokesequence_SequenceCallResponse_descriptor;
+      return SiddhiMicroIntegratorProto.internal_static_invokesequence_SequenceCallResponse_descriptor;
     }
 
     @Override
-    public io.siddhi.extension.io.grpc.util.service.SequenceCallResponse getDefaultInstanceForType() {
-      return io.siddhi.extension.io.grpc.util.service.SequenceCallResponse.getDefaultInstance();
+    public SequenceCallResponse getDefaultInstanceForType() {
+      return SequenceCallResponse.getDefaultInstance();
     }
 
     @Override
-    public io.siddhi.extension.io.grpc.util.service.SequenceCallResponse build() {
-      io.siddhi.extension.io.grpc.util.service.SequenceCallResponse result = buildPartial();
+    public SequenceCallResponse build() {
+      SequenceCallResponse result = buildPartial();
       if (!result.isInitialized()) {
         throw newUninitializedMessageException(result);
       }
@@ -333,8 +333,8 @@ private static final long serialVersionUID = 0L;
     }
 
     @Override
-    public io.siddhi.extension.io.grpc.util.service.SequenceCallResponse buildPartial() {
-      io.siddhi.extension.io.grpc.util.service.SequenceCallResponse result = new io.siddhi.extension.io.grpc.util.service.SequenceCallResponse(this);
+    public SequenceCallResponse buildPartial() {
+      SequenceCallResponse result = new SequenceCallResponse(this);
       result.responseAsJSON_ = responseAsJSON_;
       onBuilt();
       return result;
@@ -374,16 +374,16 @@ private static final long serialVersionUID = 0L;
     }
     @Override
     public Builder mergeFrom(com.google.protobuf.Message other) {
-      if (other instanceof io.siddhi.extension.io.grpc.util.service.SequenceCallResponse) {
-        return mergeFrom((io.siddhi.extension.io.grpc.util.service.SequenceCallResponse)other);
+      if (other instanceof SequenceCallResponse) {
+        return mergeFrom((SequenceCallResponse)other);
       } else {
         super.mergeFrom(other);
         return this;
       }
     }
 
-    public Builder mergeFrom(io.siddhi.extension.io.grpc.util.service.SequenceCallResponse other) {
-      if (other == io.siddhi.extension.io.grpc.util.service.SequenceCallResponse.getDefaultInstance()) return this;
+    public Builder mergeFrom(SequenceCallResponse other) {
+      if (other == SequenceCallResponse.getDefaultInstance()) return this;
       if (!other.getResponseAsJSON().isEmpty()) {
         responseAsJSON_ = other.responseAsJSON_;
         onChanged();
@@ -403,11 +403,11 @@ private static final long serialVersionUID = 0L;
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      io.siddhi.extension.io.grpc.util.service.SequenceCallResponse parsedMessage = null;
+      SequenceCallResponse parsedMessage = null;
       try {
         parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        parsedMessage = (io.siddhi.extension.io.grpc.util.service.SequenceCallResponse) e.getUnfinishedMessage();
+        parsedMessage = (SequenceCallResponse) e.getUnfinishedMessage();
         throw e.unwrapIOException();
       } finally {
         if (parsedMessage != null) {
@@ -502,12 +502,12 @@ private static final long serialVersionUID = 0L;
   }
 
   // @@protoc_insertion_point(class_scope:invokesequence.SequenceCallResponse)
-  private static final io.siddhi.extension.io.grpc.util.service.SequenceCallResponse DEFAULT_INSTANCE;
+  private static final SequenceCallResponse DEFAULT_INSTANCE;
   static {
-    DEFAULT_INSTANCE = new io.siddhi.extension.io.grpc.util.service.SequenceCallResponse();
+    DEFAULT_INSTANCE = new SequenceCallResponse();
   }
 
-  public static io.siddhi.extension.io.grpc.util.service.SequenceCallResponse getDefaultInstance() {
+  public static SequenceCallResponse getDefaultInstance() {
     return DEFAULT_INSTANCE;
   }
 
@@ -532,7 +532,7 @@ private static final long serialVersionUID = 0L;
   }
 
   @Override
-  public io.siddhi.extension.io.grpc.util.service.SequenceCallResponse getDefaultInstanceForType() {
+  public SequenceCallResponse getDefaultInstanceForType() {
     return DEFAULT_INSTANCE;
   }
 

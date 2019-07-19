@@ -19,23 +19,19 @@
 
 <FindBugsFilter>
     <Match>
-        <Class name="io.siddhi.extension.io.grpc.EmptyResponse$Builder"/>
+        <Class name="io.siddhi.extension.io.grpc.util.service.EmptyResponse$Builder"/>
         <Bug pattern="UCF_USELESS_CONTROL_FLOW"/>
     </Match>
     <Match>
-        <Class name="io.siddhi.extension.io.grpc.SequenceCallRequest$Builder"/>
-        <Bug pattern="DLS_DEAD_LOCAL_STORE"/>
-    </Match>
-    <Match>
-        <Class name="io.siddhi.extension.io.grpc.SequenceCallRequest"/>
-        <Bug pattern="SE_BAD_FIELD"/>
-    </Match>
-    <Match>
-        <Class name="io.siddhi.extension.io.grpc.SequenceCallRequest$Builder"/>
+        <Class name="io.siddhi.extension.io.grpc.util.service.SequenceCallRequest$Builder"/>
         <Bug pattern="UCF_USELESS_CONTROL_FLOW"/>
     </Match>
     <Match>
-        <Class name="io.siddhi.extension.io.grpc.SequenceCallResponse$Builder"/>
+        <Class name="io.siddhi.extension.io.grpc.util.service.SequenceCallResponse$Builder"/>
         <Bug pattern="UCF_USELESS_CONTROL_FLOW"/>
+    </Match>
+    <Match>
+        <Class name="io.siddhi.extension.io.grpc.sink.GRPCSink$1"/>
+        <Bug pattern="NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE"/>
     </Match>
 </FindBugsFilter>

@@ -21,6 +21,10 @@ import io.siddhi.extension.io.grpc.source.GRPCSource;
 
 import java.util.HashMap;
 
+/**
+ * a class to maintain pointers to source with sink id as key.
+ * used by sink to push responses into respective source
+ */
 public class SourceStaticHolder {
     private static SourceStaticHolder instance = new SourceStaticHolder();
     private HashMap<String, GRPCSource> sourceHashMap = new HashMap<>();

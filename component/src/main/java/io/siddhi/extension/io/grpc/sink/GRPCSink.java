@@ -20,7 +20,8 @@ package io.siddhi.extension.io.grpc.sink;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import io.grpc.*;
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
 import io.siddhi.core.config.SiddhiAppContext;
@@ -71,8 +72,8 @@ public class GRPCSink extends Sink {
     private static final Logger logger = Logger.getLogger(GRPCSink.class.getName());
     private SiddhiAppContext siddhiAppContext;
     private ManagedChannel channel;
-    private static String serviceName;
-    private static String methodName;
+    private String serviceName;
+    private String methodName;
     private String sequenceName;
     private InvokeSequenceFutureStub futureStub;
     private boolean isMIConnect = false;
@@ -131,7 +132,8 @@ public class GRPCSink extends Sink {
             isMIConnect = true;
             serviceName = "InvokeSequence";
             sequenceName = optionHolder.validateAndGetOption("sequence").getValue();
-            boolean isResponseExpected = optionHolder.validateAndGetOption("response").getValue().equalsIgnoreCase("True");
+            boolean isResponseExpected = optionHolder.validateAndGetOption("response").getValue()
+                    .equalsIgnoreCase("True");
             if (isResponseExpected) {
                 methodName = "CallSequenceWithResponse";
             } else {
@@ -146,7 +148,8 @@ public class GRPCSink extends Sink {
     }
 
     @Override
-    public void publish(Object payload, DynamicOptions dynamicOptions, State state) throws ConnectionUnavailableException {
+    public void publish(Object payload, DynamicOptions dynamicOptions, State state)
+            throws ConnectionUnavailableException {
         String payload2 = "niru";
         if (isMIConnect) {
             SequenceCallRequest.Builder requestBuilder = SequenceCallRequest.newBuilder();
@@ -154,17 +157,22 @@ public class GRPCSink extends Sink {
             requestBuilder.setSequenceName(sequenceName);
             SequenceCallRequest sequenceCallRequest = requestBuilder.build();
             if (methodName.equalsIgnoreCase("CallSequenceWithResponse")) {
-                ListenableFuture<SequenceCallResponse> futureResponse = futureStub.callSequenceWithResponse(sequenceCallRequest);
+                ListenableFuture<SequenceCallResponse> futureResponse =
+                        futureStub.callSequenceWithResponse(sequenceCallRequest);
                 Futures.addCallback(futureResponse, new FutureCallback<SequenceCallResponse>() {
                     @Override
                     public void onSuccess(SequenceCallResponse result) {
                         sourceStaticHolder.getGRPCSource(sinkID).onResponse(result);
-                        System.out.println("Success!");
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("Success!");
+                        }
                     }
 
                     @Override
                     public void onFailure(Throwable t) {
-                        System.out.println("Failure");
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("Failure!");
+                        }
                         throw new SiddhiAppRuntimeException(t.getMessage());
                     }
                 });

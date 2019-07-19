@@ -19,30 +19,30 @@ public final class InvokeSequenceGrpc {
   public static final String SERVICE_NAME = "invokesequence.InvokeSequence";
 
   // Static method descriptors that strictly reflect the proto.
-  private static volatile io.grpc.MethodDescriptor<io.siddhi.extension.io.grpc.util.service.SequenceCallRequest,
-      io.siddhi.extension.io.grpc.util.service.SequenceCallResponse> getCallSequenceWithResponseMethod;
+  private static volatile io.grpc.MethodDescriptor<SequenceCallRequest,
+      SequenceCallResponse> getCallSequenceWithResponseMethod;
 
   @io.grpc.stub.annotations.RpcMethod(
       fullMethodName = SERVICE_NAME + '/' + "CallSequenceWithResponse",
-      requestType = io.siddhi.extension.io.grpc.util.service.SequenceCallRequest.class,
-      responseType = io.siddhi.extension.io.grpc.util.service.SequenceCallResponse.class,
+      requestType = SequenceCallRequest.class,
+      responseType = SequenceCallResponse.class,
       methodType = io.grpc.MethodDescriptor.MethodType.UNARY)
-  public static io.grpc.MethodDescriptor<io.siddhi.extension.io.grpc.util.service.SequenceCallRequest,
-      io.siddhi.extension.io.grpc.util.service.SequenceCallResponse> getCallSequenceWithResponseMethod() {
-    io.grpc.MethodDescriptor<io.siddhi.extension.io.grpc.util.service.SequenceCallRequest, io.siddhi.extension.io.grpc.util.service.SequenceCallResponse> getCallSequenceWithResponseMethod;
+  public static io.grpc.MethodDescriptor<SequenceCallRequest,
+      SequenceCallResponse> getCallSequenceWithResponseMethod() {
+    io.grpc.MethodDescriptor<SequenceCallRequest, SequenceCallResponse> getCallSequenceWithResponseMethod;
     if ((getCallSequenceWithResponseMethod = InvokeSequenceGrpc.getCallSequenceWithResponseMethod) == null) {
       synchronized (InvokeSequenceGrpc.class) {
         if ((getCallSequenceWithResponseMethod = InvokeSequenceGrpc.getCallSequenceWithResponseMethod) == null) {
-          InvokeSequenceGrpc.getCallSequenceWithResponseMethod = getCallSequenceWithResponseMethod = 
-              io.grpc.MethodDescriptor.<io.siddhi.extension.io.grpc.util.service.SequenceCallRequest, io.siddhi.extension.io.grpc.util.service.SequenceCallResponse>newBuilder()
+          InvokeSequenceGrpc.getCallSequenceWithResponseMethod = getCallSequenceWithResponseMethod =
+              io.grpc.MethodDescriptor.<SequenceCallRequest, SequenceCallResponse>newBuilder()
               .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
               .setFullMethodName(generateFullMethodName(
                   "invokesequence.InvokeSequence", "CallSequenceWithResponse"))
               .setSampledToLocalTracing(true)
               .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
-                  io.siddhi.extension.io.grpc.util.service.SequenceCallRequest.getDefaultInstance()))
+                  SequenceCallRequest.getDefaultInstance()))
               .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
-                  io.siddhi.extension.io.grpc.util.service.SequenceCallResponse.getDefaultInstance()))
+                  SequenceCallResponse.getDefaultInstance()))
                   .setSchemaDescriptor(new InvokeSequenceMethodDescriptorSupplier("CallSequenceWithResponse"))
                   .build();
           }
@@ -51,30 +51,30 @@ public final class InvokeSequenceGrpc {
      return getCallSequenceWithResponseMethod;
   }
 
-  private static volatile io.grpc.MethodDescriptor<io.siddhi.extension.io.grpc.util.service.SequenceCallRequest,
-      io.siddhi.extension.io.grpc.util.service.EmptyResponse> getCallSequenceWithoutResponseMethod;
+  private static volatile io.grpc.MethodDescriptor<SequenceCallRequest,
+      EmptyResponse> getCallSequenceWithoutResponseMethod;
 
   @io.grpc.stub.annotations.RpcMethod(
       fullMethodName = SERVICE_NAME + '/' + "CallSequenceWithoutResponse",
-      requestType = io.siddhi.extension.io.grpc.util.service.SequenceCallRequest.class,
-      responseType = io.siddhi.extension.io.grpc.util.service.EmptyResponse.class,
+      requestType = SequenceCallRequest.class,
+      responseType = EmptyResponse.class,
       methodType = io.grpc.MethodDescriptor.MethodType.UNARY)
-  public static io.grpc.MethodDescriptor<io.siddhi.extension.io.grpc.util.service.SequenceCallRequest,
-      io.siddhi.extension.io.grpc.util.service.EmptyResponse> getCallSequenceWithoutResponseMethod() {
-    io.grpc.MethodDescriptor<io.siddhi.extension.io.grpc.util.service.SequenceCallRequest, io.siddhi.extension.io.grpc.util.service.EmptyResponse> getCallSequenceWithoutResponseMethod;
+  public static io.grpc.MethodDescriptor<SequenceCallRequest,
+      EmptyResponse> getCallSequenceWithoutResponseMethod() {
+    io.grpc.MethodDescriptor<SequenceCallRequest, EmptyResponse> getCallSequenceWithoutResponseMethod;
     if ((getCallSequenceWithoutResponseMethod = InvokeSequenceGrpc.getCallSequenceWithoutResponseMethod) == null) {
       synchronized (InvokeSequenceGrpc.class) {
         if ((getCallSequenceWithoutResponseMethod = InvokeSequenceGrpc.getCallSequenceWithoutResponseMethod) == null) {
-          InvokeSequenceGrpc.getCallSequenceWithoutResponseMethod = getCallSequenceWithoutResponseMethod = 
-              io.grpc.MethodDescriptor.<io.siddhi.extension.io.grpc.util.service.SequenceCallRequest, io.siddhi.extension.io.grpc.util.service.EmptyResponse>newBuilder()
+          InvokeSequenceGrpc.getCallSequenceWithoutResponseMethod = getCallSequenceWithoutResponseMethod =
+              io.grpc.MethodDescriptor.<SequenceCallRequest, EmptyResponse>newBuilder()
               .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
               .setFullMethodName(generateFullMethodName(
                   "invokesequence.InvokeSequence", "CallSequenceWithoutResponse"))
               .setSampledToLocalTracing(true)
               .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
-                  io.siddhi.extension.io.grpc.util.service.SequenceCallRequest.getDefaultInstance()))
+                  SequenceCallRequest.getDefaultInstance()))
               .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
-                  io.siddhi.extension.io.grpc.util.service.EmptyResponse.getDefaultInstance()))
+                  EmptyResponse.getDefaultInstance()))
                   .setSchemaDescriptor(new InvokeSequenceMethodDescriptorSupplier("CallSequenceWithoutResponse"))
                   .build();
           }
@@ -112,15 +112,15 @@ public final class InvokeSequenceGrpc {
 
     /**
      */
-    public void callSequenceWithResponse(io.siddhi.extension.io.grpc.util.service.SequenceCallRequest request,
-        io.grpc.stub.StreamObserver<io.siddhi.extension.io.grpc.util.service.SequenceCallResponse> responseObserver) {
+    public void callSequenceWithResponse(SequenceCallRequest request,
+                                         io.grpc.stub.StreamObserver<SequenceCallResponse> responseObserver) {
       asyncUnimplementedUnaryCall(getCallSequenceWithResponseMethod(), responseObserver);
     }
 
     /**
      */
-    public void callSequenceWithoutResponse(io.siddhi.extension.io.grpc.util.service.SequenceCallRequest request,
-        io.grpc.stub.StreamObserver<io.siddhi.extension.io.grpc.util.service.EmptyResponse> responseObserver) {
+    public void callSequenceWithoutResponse(SequenceCallRequest request,
+                                            io.grpc.stub.StreamObserver<EmptyResponse> responseObserver) {
       asyncUnimplementedUnaryCall(getCallSequenceWithoutResponseMethod(), responseObserver);
     }
 
@@ -130,15 +130,15 @@ public final class InvokeSequenceGrpc {
             getCallSequenceWithResponseMethod(),
             asyncUnaryCall(
               new MethodHandlers<
-                io.siddhi.extension.io.grpc.util.service.SequenceCallRequest,
-                io.siddhi.extension.io.grpc.util.service.SequenceCallResponse>(
+                SequenceCallRequest,
+                SequenceCallResponse>(
                   this, METHODID_CALL_SEQUENCE_WITH_RESPONSE)))
           .addMethod(
             getCallSequenceWithoutResponseMethod(),
             asyncUnaryCall(
               new MethodHandlers<
-                io.siddhi.extension.io.grpc.util.service.SequenceCallRequest,
-                io.siddhi.extension.io.grpc.util.service.EmptyResponse>(
+                SequenceCallRequest,
+                EmptyResponse>(
                   this, METHODID_CALL_SEQUENCE_WITHOUT_RESPONSE)))
           .build();
     }
@@ -164,16 +164,16 @@ public final class InvokeSequenceGrpc {
 
     /**
      */
-    public void callSequenceWithResponse(io.siddhi.extension.io.grpc.util.service.SequenceCallRequest request,
-        io.grpc.stub.StreamObserver<io.siddhi.extension.io.grpc.util.service.SequenceCallResponse> responseObserver) {
+    public void callSequenceWithResponse(SequenceCallRequest request,
+                                         io.grpc.stub.StreamObserver<SequenceCallResponse> responseObserver) {
       asyncUnaryCall(
           getChannel().newCall(getCallSequenceWithResponseMethod(), getCallOptions()), request, responseObserver);
     }
 
     /**
      */
-    public void callSequenceWithoutResponse(io.siddhi.extension.io.grpc.util.service.SequenceCallRequest request,
-        io.grpc.stub.StreamObserver<io.siddhi.extension.io.grpc.util.service.EmptyResponse> responseObserver) {
+    public void callSequenceWithoutResponse(SequenceCallRequest request,
+                                            io.grpc.stub.StreamObserver<EmptyResponse> responseObserver) {
       asyncUnaryCall(
           getChannel().newCall(getCallSequenceWithoutResponseMethod(), getCallOptions()), request, responseObserver);
     }
@@ -199,14 +199,14 @@ public final class InvokeSequenceGrpc {
 
     /**
      */
-    public io.siddhi.extension.io.grpc.util.service.SequenceCallResponse callSequenceWithResponse(io.siddhi.extension.io.grpc.util.service.SequenceCallRequest request) {
+    public SequenceCallResponse callSequenceWithResponse(SequenceCallRequest request) {
       return blockingUnaryCall(
           getChannel(), getCallSequenceWithResponseMethod(), getCallOptions(), request);
     }
 
     /**
      */
-    public io.siddhi.extension.io.grpc.util.service.EmptyResponse callSequenceWithoutResponse(io.siddhi.extension.io.grpc.util.service.SequenceCallRequest request) {
+    public EmptyResponse callSequenceWithoutResponse(SequenceCallRequest request) {
       return blockingUnaryCall(
           getChannel(), getCallSequenceWithoutResponseMethod(), getCallOptions(), request);
     }
@@ -232,16 +232,16 @@ public final class InvokeSequenceGrpc {
 
     /**
      */
-    public com.google.common.util.concurrent.ListenableFuture<io.siddhi.extension.io.grpc.util.service.SequenceCallResponse> callSequenceWithResponse(
-        io.siddhi.extension.io.grpc.util.service.SequenceCallRequest request) {
+    public com.google.common.util.concurrent.ListenableFuture<SequenceCallResponse> callSequenceWithResponse(
+        SequenceCallRequest request) {
       return futureUnaryCall(
           getChannel().newCall(getCallSequenceWithResponseMethod(), getCallOptions()), request);
     }
 
     /**
      */
-    public com.google.common.util.concurrent.ListenableFuture<io.siddhi.extension.io.grpc.util.service.EmptyResponse> callSequenceWithoutResponse(
-        io.siddhi.extension.io.grpc.util.service.SequenceCallRequest request) {
+    public com.google.common.util.concurrent.ListenableFuture<EmptyResponse> callSequenceWithoutResponse(
+        SequenceCallRequest request) {
       return futureUnaryCall(
           getChannel().newCall(getCallSequenceWithoutResponseMethod(), getCallOptions()), request);
     }
@@ -268,12 +268,12 @@ public final class InvokeSequenceGrpc {
     public void invoke(Req request, io.grpc.stub.StreamObserver<Resp> responseObserver) {
       switch (methodId) {
         case METHODID_CALL_SEQUENCE_WITH_RESPONSE:
-          serviceImpl.callSequenceWithResponse((io.siddhi.extension.io.grpc.util.service.SequenceCallRequest) request,
-              (io.grpc.stub.StreamObserver<io.siddhi.extension.io.grpc.util.service.SequenceCallResponse>) responseObserver);
+          serviceImpl.callSequenceWithResponse((SequenceCallRequest) request,
+              (io.grpc.stub.StreamObserver<SequenceCallResponse>) responseObserver);
           break;
         case METHODID_CALL_SEQUENCE_WITHOUT_RESPONSE:
-          serviceImpl.callSequenceWithoutResponse((io.siddhi.extension.io.grpc.util.service.SequenceCallRequest) request,
-              (io.grpc.stub.StreamObserver<io.siddhi.extension.io.grpc.util.service.EmptyResponse>) responseObserver);
+          serviceImpl.callSequenceWithoutResponse((SequenceCallRequest) request,
+              (io.grpc.stub.StreamObserver<EmptyResponse>) responseObserver);
           break;
         default:
           throw new AssertionError();
@@ -297,7 +297,7 @@ public final class InvokeSequenceGrpc {
 
     @Override
     public com.google.protobuf.Descriptors.FileDescriptor getFileDescriptor() {
-      return io.siddhi.extension.io.grpc.util.service.SiddhiMicroIntegratorProto.getDescriptor();
+      return SiddhiMicroIntegratorProto.getDescriptor();
     }
 
     @Override

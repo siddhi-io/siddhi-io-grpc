@@ -58,8 +58,8 @@ import org.apache.log4j.Logger;
 public class GRPCSource extends Source {
     private static final Logger logger = Logger.getLogger(GRPCSource.class.getName());
     private SiddhiAppContext siddhiAppContext;
-    private static String serviceName;
-    private static String methodName;
+    private String serviceName;
+    private String methodName;
     private String sequenceName;
     private boolean isMIConnect = false;
     private SourceStaticHolder sourceStaticHolder = SourceStaticHolder.getInstance();
@@ -93,7 +93,8 @@ public class GRPCSource extends Source {
             isMIConnect = true;
             serviceName = "InvokeSequence";
             sequenceName = optionHolder.validateAndGetOption("sequence").getValue();
-            boolean isResponseExpected = optionHolder.validateAndGetOption("response").getValue().equalsIgnoreCase("True");
+            boolean isResponseExpected = optionHolder.validateAndGetOption("response").getValue()
+                    .equalsIgnoreCase("True");
             if (isResponseExpected) {
                 methodName = "CallSequenceWithResponse";
             } else {

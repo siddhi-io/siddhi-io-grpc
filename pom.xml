@@ -130,10 +130,39 @@
                     <obrRepository>NONE</obrRepository>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>${maven.checkstyleplugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>validate</id>
+                        <phase>validate</phase>
+                        <configuration combine.self="override">
+                            <configLocation>
+                                https://raw.githubusercontent.com/wso2/code-quality-tools/master/checkstyle/checkstyle.xml
+                            </configLocation>
+                            <suppressionsLocation>
+                                suppressions.xml
+                            </suppressionsLocation>
+                            <encoding>UTF-8</encoding>
+                            <consoleOutput>true</consoleOutput>
+                            <failsOnError>true</failsOnError>
+                            <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                            <!--Exclude sources-->
+                            <excludes>${maven.checkstyleplugin.excludes}</excludes>
+                        </configuration>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
     <properties>
         <!--<netty.version>4.1.19.Final</netty.version>-->
+        <maven.checkstyleplugin.excludes>io.siddhi.extension.io.grpc.util.service.SequenceCallResponse</maven.checkstyleplugin.excludes>
         <transport.http.version>6.0.294</transport.http.version>
         <mavan.findbugsplugin.exclude.file>findbugs-exclude.xml</mavan.findbugsplugin.exclude.file>
         <siddhi.version>5.0.0</siddhi.version>
