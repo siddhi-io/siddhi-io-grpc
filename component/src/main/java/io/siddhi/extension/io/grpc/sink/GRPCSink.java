@@ -150,32 +150,33 @@ public class GRPCSink extends Sink {
     @Override
     public void publish(Object payload, DynamicOptions dynamicOptions, State state)
             throws ConnectionUnavailableException {
-        String payload2 = "niru";
         if (isMIConnect) {
-            SequenceCallRequest.Builder requestBuilder = SequenceCallRequest.newBuilder();
-            requestBuilder.setPayloadAsJSON((String) payload2);
-            requestBuilder.setSequenceName(sequenceName);
-            SequenceCallRequest sequenceCallRequest = requestBuilder.build();
-            if (methodName.equalsIgnoreCase("CallSequenceWithResponse")) {
-                ListenableFuture<SequenceCallResponse> futureResponse =
-                        futureStub.callSequenceWithResponse(sequenceCallRequest);
-                Futures.addCallback(futureResponse, new FutureCallback<SequenceCallResponse>() {
-                    @Override
-                    public void onSuccess(SequenceCallResponse result) {
-                        sourceStaticHolder.getGRPCSource(sinkID).onResponse(result);
-                        if (logger.isDebugEnabled()) {
-                            logger.debug("Success!");
+            if (payload instanceof SequenceCallRequest) {
+                if (methodName.equalsIgnoreCase("CallSequenceWithResponse")) {
+                    ListenableFuture<SequenceCallResponse> futureResponse =
+                            futureStub.callSequenceWithResponse((SequenceCallRequest) payload);
+                    Futures.addCallback(futureResponse, new FutureCallback<SequenceCallResponse>() {
+                        @Override
+                        public void onSuccess(SequenceCallResponse result) {
+                            sourceStaticHolder.getGRPCSource(sinkID).onResponse(result);
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("Success!");
+                            }
                         }
-                    }
 
-                    @Override
-                    public void onFailure(Throwable t) {
-                        if (logger.isDebugEnabled()) {
-                            logger.debug("Failure!");
+                        @Override
+                        public void onFailure(Throwable t) {
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("Failure!");
+                            }
+                            throw new SiddhiAppRuntimeException(t.getMessage());
                         }
-                        throw new SiddhiAppRuntimeException(t.getMessage());
-                    }
-                });
+                    });
+                }
+            } else {
+                throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": To communicate with Micro " +
+                        "Integrator the gRPC sink payload must be of class SequenceCallRequest but found " +
+                        payload.getClass());
             }
         }
     }

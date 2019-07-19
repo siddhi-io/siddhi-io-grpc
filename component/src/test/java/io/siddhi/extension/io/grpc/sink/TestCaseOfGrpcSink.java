@@ -53,11 +53,16 @@ public class TestCaseOfGrpcSink {
             });
             InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
 
+            SequenceCallRequest.Builder requestBuilder = SequenceCallRequest.newBuilder();
+            requestBuilder.setPayloadAsJSON("niruhan");
+            requestBuilder.setSequenceName("mySeq");
+            SequenceCallRequest sequenceCallRequest = requestBuilder.build();
+
             try {
                 siddhiAppRuntime.start();
 
-                fooStream.send(new Object[]{"niruhan"});
-                fooStream.send(new Object[]{"niruhan2"});
+                fooStream.send(new Object[]{sequenceCallRequest});
+                fooStream.send(new Object[]{sequenceCallRequest});
 
                 Thread.sleep(5000);
                 siddhiAppRuntime.shutdown();
