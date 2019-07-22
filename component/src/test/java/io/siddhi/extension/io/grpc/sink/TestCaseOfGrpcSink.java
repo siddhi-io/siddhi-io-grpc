@@ -1,33 +1,43 @@
+/*
+ * Copyright (c)  2019, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *
+ * WSO2 Inc. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package io.siddhi.extension.io.grpc.sink;
 
-import com.google.protobuf.Empty;
-import io.grpc.Server;
-import io.grpc.ServerBuilder;
-import io.grpc.stub.StreamObserver;
 import io.siddhi.core.SiddhiAppRuntime;
 import io.siddhi.core.SiddhiManager;
 import io.siddhi.core.event.Event;
 import io.siddhi.core.query.output.callback.QueryCallback;
 import io.siddhi.core.stream.input.InputHandler;
 import io.siddhi.core.util.EventPrinter;
-import io.siddhi.extension.io.grpc.util.service.EventServiceGrpc;
+import io.siddhi.extension.io.grpc.TestServer;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.testng.annotations.Test;
 
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
-
 public class TestCaseOfGrpcSink {
     private static final Logger logger = Logger.getLogger(TestCaseOfGrpcSink.class.getName());
-    private Server server;
+    private TestServer server = new TestServer();
         @Test
         public void test1() throws Exception {
             logger.info("Test case to call process");
             logger.setLevel(Level.DEBUG);
             SiddhiManager siddhiManager = new SiddhiManager();
 
-            startServer();
+            server.start();
             String port = String.valueOf(server.getPort());
             String inStreamDefinition = ""
                     + "@sink(type='grpc', " +
@@ -36,7 +46,7 @@ public class TestCaseOfGrpcSink {
                     "sink.id= '1', @map(type='json')) "
                     + "define stream FooStream (message String);";
 
-            String stream2 = "@source(type='grpc', sequence='mySeq', response='true', sink.id= '1') " +
+            String stream2 = "@source(type='grpc', sequence='mySeq', sink.id= '1') " +
                     "define stream BarStream (message String);";
             String query = "@info(name = 'query') "
                     + "from BarStream "
@@ -62,7 +72,7 @@ public class TestCaseOfGrpcSink {
                 Thread.sleep(5000);
                 siddhiAppRuntime.shutdown();
             } finally {
-                stopServer();
+                server.stop();
             }
         }
 
@@ -72,7 +82,7 @@ public class TestCaseOfGrpcSink {
         logger.setLevel(Level.DEBUG);
         SiddhiManager siddhiManager = new SiddhiManager();
 
-        startServer();
+        server.start();
         String port = String.valueOf(server.getPort());
         String inStreamDefinition = ""
                 + "@sink(type='grpc', " +
@@ -81,7 +91,7 @@ public class TestCaseOfGrpcSink {
                 "sink.id= '1', @map(type='json')) "
                 + "define stream FooStream (message String);";
 
-        String stream2 = "@source(type='grpc', sequence='mySeq', response='true', sink.id= '1') " +
+        String stream2 = "@source(type='grpc', sequence='mySeq', sink.id= '1') " +
                 "define stream BarStream (message String);";
         String query = "@info(name = 'query') "
                 + "from BarStream "
@@ -107,7 +117,7 @@ public class TestCaseOfGrpcSink {
             Thread.sleep(5000);
             siddhiAppRuntime.shutdown();
         } finally {
-            stopServer();
+            server.stop();
         }
     }
 
@@ -155,59 +165,4 @@ public class TestCaseOfGrpcSink {
 //            stopServer();
 //        }
 //    }
-
-    private void startServer() throws IOException {
-        if (server != null) {
-            throw new IllegalStateException("Already started");
-        }
-        server = ServerBuilder.forPort(0).addService(new EventServiceGrpc.EventServiceImplBase() {
-            @Override
-            public void process(io.siddhi.extension.io.grpc.util.service.Event request,
-                                                 StreamObserver<io.siddhi.extension.io.grpc.util.service.Event> responseObserver) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Server hit");
-                }
-                io.siddhi.extension.io.grpc.util.service.Event.Builder responseBuilder = io.siddhi.extension.io.grpc.util.service.Event.newBuilder();
-                responseBuilder.setPayload("server data");
-                io.siddhi.extension.io.grpc.util.service.Event response = responseBuilder.build();
-                responseObserver.onNext(response);
-                responseObserver.onCompleted();
-            }
-
-            @Override
-            public void consume(io.siddhi.extension.io.grpc.util.service.Event request,
-                                StreamObserver<Empty> responseObserver) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Server hit");
-                }
-                responseObserver.onNext(Empty.getDefaultInstance());
-                responseObserver.onCompleted();
-            }
-        }).build();
-        server.start();
-        if (logger.isDebugEnabled()) {
-            logger.debug("Server started");
-        }
-    }
-
-    private void stopServer() throws InterruptedException {
-        Server s = server;
-        if (s == null) {
-            throw new IllegalStateException("Already stopped");
-        }
-        server = null;
-        s.shutdown();
-        if (s.awaitTermination(1, TimeUnit.SECONDS)) {
-
-            if (logger.isDebugEnabled()) {
-                logger.debug("Server stopped");
-            }
-            return;
-        }
-        s.shutdownNow();
-        if (s.awaitTermination(1, TimeUnit.SECONDS)) {
-            return;
-        }
-        throw new RuntimeException("Unable to shutdown server");
-    }
 }

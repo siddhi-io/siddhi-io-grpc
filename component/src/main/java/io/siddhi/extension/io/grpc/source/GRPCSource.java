@@ -35,24 +35,45 @@ import io.siddhi.extension.io.grpc.util.service.Event;
 import org.apache.log4j.Logger;
 
 /**
- * This is a sample class-level comment, explaining what the extension class does.
+ * {@code GrpcSource} Handle receiving of responses for gRPC calls. Does not have connection logics as sink will add a
+ * callback to inject responses into this source
  */
 
 @Extension(
         name = "grpc",
         namespace = "source",
-        description = "This grpc source receives ",
+        description = "This grpc source receives responses received from gRPC server for requests sent from a gRPC " +
+                "sink. The source will receive responses for sink with the same sink.id. For example if you have a " +
+                "gRPC sink with sink.id 15 then we need to set the sink.id as 15 in the source to receives " +
+                "responses. Sinks and sources have 1:1 mapping. When using the source to listen to responses from " +
+                "Micro Integrator the optional parameter sequence should be given. Since the default Micro " +
+                "Integrator connection service can provide access to many different sequences this should be " +
+                "specified to separate and listen to only one sequence responses.",
         parameters = {
-                @Parameter(name = " ",
-                        description = " " ,
-                        dynamic = false/true,
-                        optional = true/false, defaultValue = " ",
-                        type = {DataType.INT, DataType.BOOL, DataType.STRING, DataType.DOUBLE, }),
+                @Parameter(name = "sink.id",
+                        description = "a unique ID that should be set for each gRPC source. There is a 1:1 mapping " +
+                                "between gRPC sinks and sources. Each sink has one particular source listening to " +
+                                "the responses to requests published from that sink. So the same sink.id should be " +
+                                "given when writing the sink also." ,
+                        type = {DataType.INT}),
+                @Parameter(name = "sequence",
+                        description = "This is an optional parameter to be used when connecting to Micro Integrator " +
+                                "sequences from Siddhi. Micro integrator will expose a service called EventService " +
+                                "which has 2 rpc's as mentioned in the extension description. Both of these rpc can " +
+                                "access many different sequences in Micro Integrator. This parameter is used to " +
+                                "specify the sequence which we want to use. When this parameter is given gRPC source " +
+                                "will listen to MI." ,
+                        optional = true, defaultValue = "NA. When sequence is not given the service name and method " +
+                        "name should be specified in the url",
+                        type = {DataType.STRING}),
         },
         examples = {
                 @Example(
-                        syntax = " ",
-                        description = " "
+                        syntax = "@source(type='grpc', sequence='mySeq', sink.id= '1') " +
+                                "define stream BarStream (message String);",
+                        description = "Here we are listening to responses from a sequence called mySeq. In addition, " +
+                                "only the responses for requests sent from the sink with sink.id 1 will be received " +
+                                "here. The results will be injected into BarStream"
                 )
         }
 )
@@ -90,6 +111,9 @@ public class GRPCSource extends Source {
 
     public void onResponse(Event response) {
         sourceEventListener.onEvent(new Object[]{response.getPayload()}, new String[]{"1"});
+        //todo: here I am sending the entire JSON string into the output event. Need to format and extract the data
+        // and send as separate values in data array. Will do after some MI side implementation and finalizing the
+        // JSON message format
     }
 
     /**
@@ -100,7 +124,7 @@ public class GRPCSource extends Source {
      */
     @Override
     public Class[] getOutputEventClasses() {
-        return new Class[0];
+        return new Class[]{io.siddhi.core.event.Event.class};
     }
 
     @Override
@@ -121,7 +145,7 @@ public class GRPCSource extends Source {
      */
     @Override
     public void destroy() {
-
+        sourceStaticHolder.removeGRPCSource(sinkID);
     }
 
     /**
