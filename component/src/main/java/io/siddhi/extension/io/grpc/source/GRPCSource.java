@@ -19,6 +19,8 @@ package io.siddhi.extension.io.grpc.source;
 
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
+import io.siddhi.annotation.Parameter;
+import io.siddhi.annotation.util.DataType;
 import io.siddhi.core.config.SiddhiAppContext;
 import io.siddhi.core.exception.ConnectionUnavailableException;
 import io.siddhi.core.stream.ServiceDeploymentInfo;
@@ -39,14 +41,13 @@ import org.apache.log4j.Logger;
 @Extension(
         name = "grpc",
         namespace = "source",
-        description = " ",
+        description = "This grpc source receives ",
         parameters = {
-                /*@Parameter(name = " ",
+                @Parameter(name = " ",
                         description = " " ,
                         dynamic = false/true,
                         optional = true/false, defaultValue = " ",
                         type = {DataType.INT, DataType.BOOL, DataType.STRING, DataType.DOUBLE, }),
-                        type = {DataType.INT, DataType.BOOL, DataType.STRING, DataType.DOUBLE, }),*/
         },
         examples = {
                 @Example(
@@ -58,10 +59,6 @@ import org.apache.log4j.Logger;
 public class GRPCSource extends Source {
     private static final Logger logger = Logger.getLogger(GRPCSource.class.getName());
     private SiddhiAppContext siddhiAppContext;
-    private String serviceName;
-    private String methodName;
-    private String sequenceName;
-    private boolean isMIConnect = false;
     private SourceStaticHolder sourceStaticHolder = SourceStaticHolder.getInstance();
     private String sinkID;
     private SourceEventListener sourceEventListener;
@@ -88,22 +85,6 @@ public class GRPCSource extends Source {
         this.sourceEventListener = sourceEventListener;
         sinkID = optionHolder.validateAndGetOption("sink.id").getValue();
         sourceStaticHolder.putSource(sinkID, this);
-
-        if (!optionHolder.isOptionExists("service")) {
-            isMIConnect = true;
-            serviceName = "InvokeSequence";
-            sequenceName = optionHolder.validateAndGetOption("sequence").getValue();
-            boolean isResponseExpected = optionHolder.validateAndGetOption("response").getValue()
-                    .equalsIgnoreCase("True");
-            if (isResponseExpected) {
-                methodName = "CallSequenceWithResponse";
-            } else {
-                methodName = "CallSequenceWithoutResponse";
-            }
-        } else {
-            serviceName = optionHolder.validateAndGetOption("service").getValue();
-            methodName = optionHolder.validateAndGetOption("method").getValue();
-        }
         return null;
     }
 

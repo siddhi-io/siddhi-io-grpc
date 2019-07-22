@@ -45,4 +45,8 @@ public class SourceStaticHolder {
         return sourceHashMap.get(key);
     }
 
+    public void removeGRPCSource(String key) {
+        sourceHashMap.remove(key);
+    }
+
 }

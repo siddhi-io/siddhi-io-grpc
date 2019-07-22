@@ -1,5 +1,6 @@
 package io.siddhi.extension.io.grpc.sink;
 
+import com.google.protobuf.Empty;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
@@ -22,6 +23,7 @@ public class TestCaseOfGrpcSink {
     private Server server;
         @Test
         public void test1() throws Exception {
+            logger.info("Test case to call process");
             logger.setLevel(Level.DEBUG);
             SiddhiManager siddhiManager = new SiddhiManager();
 
@@ -66,17 +68,17 @@ public class TestCaseOfGrpcSink {
 
     @Test
     public void test2() throws Exception {
+        logger.info("Test case to call consume");
+        logger.setLevel(Level.DEBUG);
         SiddhiManager siddhiManager = new SiddhiManager();
 
         startServer();
         String port = String.valueOf(server.getPort());
         String inStreamDefinition = ""
                 + "@sink(type='grpc', " +
-                "host = 'dns:///localhost', " +
-                "port = '" + port + "', " +
+                "url = 'dns:///localhost:" + port + "/EventService/consume', " +
                 "sequence = 'mySeq', " +
-                "response = 'true', " +
-                "sink.id= '1', @map(type='protobuf', mode='MIConnect')) "
+                "sink.id= '1', @map(type='json')) "
                 + "define stream FooStream (message String);";
 
         String stream2 = "@source(type='grpc', sequence='mySeq', response='true', sink.id= '1') " +
@@ -100,7 +102,7 @@ public class TestCaseOfGrpcSink {
             siddhiAppRuntime.start();
 
             fooStream.send(new Object[]{"niruhan"});
-            fooStream.send(new Object[]{"niruhan"});
+            fooStream.send(new Object[]{"niru"});
 
             Thread.sleep(5000);
             siddhiAppRuntime.shutdown();
@@ -108,6 +110,51 @@ public class TestCaseOfGrpcSink {
             stopServer();
         }
     }
+
+//    @Test
+//    public void test2() throws Exception {
+//        SiddhiManager siddhiManager = new SiddhiManager();
+//
+//        startServer();
+//        String port = String.valueOf(server.getPort());
+//        String inStreamDefinition = ""
+//                + "@sink(type='grpc', " +
+//                "host = 'dns:///localhost', " +
+//                "port = '" + port + "', " +
+//                "sequence = 'mySeq', " +
+//                "response = 'true', " +
+//                "sink.id= '1', @map(type='protobuf', mode='MIConnect')) "
+//                + "define stream FooStream (message String);";
+//
+//        String stream2 = "@source(type='grpc', sequence='mySeq', response='true', sink.id= '1') " +
+//                "define stream BarStream (message String);";
+//        String query = "@info(name = 'query') "
+//                + "from BarStream "
+//                + "select *  "
+//                + "insert into outputStream;";
+//
+//        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition + stream2 +
+//                query);
+//        siddhiAppRuntime.addCallback("query", new QueryCallback() {
+//            @Override
+//            public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
+//                EventPrinter.print(timeStamp, inEvents, removeEvents);
+//            }
+//        });
+//        InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
+//
+//        try {
+//            siddhiAppRuntime.start();
+//
+//            fooStream.send(new Object[]{"niruhan"});
+//            fooStream.send(new Object[]{"niruhan"});
+//
+//            Thread.sleep(5000);
+//            siddhiAppRuntime.shutdown();
+//        } finally {
+//            stopServer();
+//        }
+//    }
 
     private void startServer() throws IOException {
         if (server != null) {
@@ -124,6 +171,16 @@ public class TestCaseOfGrpcSink {
                 responseBuilder.setPayload("server data");
                 io.siddhi.extension.io.grpc.util.service.Event response = responseBuilder.build();
                 responseObserver.onNext(response);
+                responseObserver.onCompleted();
+            }
+
+            @Override
+            public void consume(io.siddhi.extension.io.grpc.util.service.Event request,
+                                StreamObserver<Empty> responseObserver) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Server hit");
+                }
+                responseObserver.onNext(Empty.getDefaultInstance());
                 responseObserver.onCompleted();
             }
         }).build();
