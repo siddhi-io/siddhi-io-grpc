@@ -29,10 +29,8 @@ public class TestCaseOfGrpcSink {
             String port = String.valueOf(server.getPort());
             String inStreamDefinition = ""
                     + "@sink(type='grpc', " +
-                    "host = 'dns:///localhost', " +
-                    "port = '" + port + "', " +
+                    "url = 'dns:///localhost:" + port + "/EventService/process', " +
                     "sequence = 'mySeq', " +
-                    "response = 'true', " +
                     "sink.id= '1', @map(type='json')) "
                     + "define stream FooStream (message String);";
 

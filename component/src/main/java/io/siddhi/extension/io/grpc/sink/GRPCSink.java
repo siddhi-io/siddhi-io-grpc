@@ -37,6 +37,7 @@ import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.SourceStaticHolder;
 import io.siddhi.extension.io.grpc.util.service.EventServiceGrpc;
 import io.siddhi.query.api.definition.StreamDefinition;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import io.siddhi.extension.io.grpc.util.service.Event;
 
@@ -118,29 +119,28 @@ public class GRPCSink extends Sink {
     protected StateFactory init(StreamDefinition streamDefinition, OptionHolder optionHolder, ConfigReader configReader,
                                 SiddhiAppContext siddhiAppContext) {
         this.siddhiAppContext = siddhiAppContext;
-        String port = optionHolder.validateAndGetOption("port").getValue();
-        String host = optionHolder.validateAndGetOption("host").getValue();
+//        String port = optionHolder.validateAndGetOption("port").getValue();
+        String url = optionHolder.validateAndGetOption("url").getValue();
+        String[] temp = url.split("/");
+        StringBuilder target = new StringBuilder();
+        for (int i = 0; i < temp.length - 2; i++) {
+            target.append("/").append(temp[i]);
+        }
+        serviceName = temp[temp.length - 2];
+        methodName = temp[temp.length - 1];
+
         sinkID = optionHolder.validateAndGetOption("sink.id").getValue();
-        channel = ManagedChannelBuilder.forTarget(host + ":" + port)
+        channel = ManagedChannelBuilder.forTarget(target.toString().substring(1))
                 .usePlaintext(true)
                 .build();
 
-        if (!optionHolder.isOptionExists("service")) {
+        if (optionHolder.isOptionExists("sequence")) {
             isMIConnect = true;
-            serviceName = "EventService";
-            sequenceName = optionHolder.validateAndGetOption("sequence").getValue();
-            boolean isResponseExpected = optionHolder.validateAndGetOption("response").getValue()
-                    .equalsIgnoreCase("True");
-            if (isResponseExpected) {
-                methodName = "process";
-            } else {
-                methodName = "consume";
-            }
             futureStub = EventServiceGrpc.newFutureStub(channel);
         } else {
-            serviceName = optionHolder.validateAndGetOption("service").getValue();
-            methodName = optionHolder.validateAndGetOption("method").getValue();
+            //todo: handle generic grpc service
         }
+        logger.setLevel(Level.DEBUG);
         return null;
     }
 
