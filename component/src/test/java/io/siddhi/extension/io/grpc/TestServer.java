@@ -26,7 +26,8 @@ public class TestServer {
                 if (logger.isDebugEnabled()) {
                     logger.debug("Server hit");
                 }
-                io.siddhi.extension.io.grpc.util.service.Event.Builder responseBuilder = io.siddhi.extension.io.grpc.util.service.Event.newBuilder();
+                io.siddhi.extension.io.grpc.util.service.Event.Builder responseBuilder =
+                        io.siddhi.extension.io.grpc.util.service.Event.newBuilder();
                 responseBuilder.setPayload("server data");
                 io.siddhi.extension.io.grpc.util.service.Event response = responseBuilder.build();
                 responseObserver.onNext(response);

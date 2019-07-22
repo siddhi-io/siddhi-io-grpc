@@ -26,11 +26,16 @@ import io.siddhi.core.util.EventPrinter;
 import io.siddhi.extension.io.grpc.TestServer;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class TestCaseOfGrpcSink {
     private static final Logger logger = Logger.getLogger(TestCaseOfGrpcSink.class.getName());
     private TestServer server = new TestServer();
+    private AtomicInteger eventCount = new AtomicInteger(0);
+
         @Test
         public void test1() throws Exception {
             logger.info("Test case to call process");
@@ -59,17 +64,24 @@ public class TestCaseOfGrpcSink {
                 @Override
                 public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
                     EventPrinter.print(timeStamp, inEvents, removeEvents);
+                    for (int i = 0; i < inEvents.length; i++) {
+                        eventCount.incrementAndGet();
+                        switch (i) {
+                            case 0:
+                                Assert.assertEquals((String) inEvents[i].getData()[0], "server data");
+                                break;
+
+                            default:
+                                Assert.fail();
+                        }
+                    }
                 }
             });
             InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
-
             try {
                 siddhiAppRuntime.start();
-
-                fooStream.send(new Object[]{"niruhan"});
-                fooStream.send(new Object[]{"niru"});
-
-                Thread.sleep(5000);
+                fooStream.send(new Object[]{"Request 1"});
+                Thread.sleep(1000);
                 siddhiAppRuntime.shutdown();
             } finally {
                 server.stop();
@@ -107,62 +119,68 @@ public class TestCaseOfGrpcSink {
             }
         });
         InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
-
         try {
             siddhiAppRuntime.start();
-
-            fooStream.send(new Object[]{"niruhan"});
-            fooStream.send(new Object[]{"niru"});
-
-            Thread.sleep(5000);
+            fooStream.send(new Object[]{"Request 1"});
+            Thread.sleep(1000);
             siddhiAppRuntime.shutdown();
         } finally {
             server.stop();
         }
     }
 
-//    @Test
-//    public void test2() throws Exception {
-//        SiddhiManager siddhiManager = new SiddhiManager();
-//
-//        startServer();
-//        String port = String.valueOf(server.getPort());
-//        String inStreamDefinition = ""
-//                + "@sink(type='grpc', " +
-//                "host = 'dns:///localhost', " +
-//                "port = '" + port + "', " +
-//                "sequence = 'mySeq', " +
-//                "response = 'true', " +
-//                "sink.id= '1', @map(type='protobuf', mode='MIConnect')) "
-//                + "define stream FooStream (message String);";
-//
-//        String stream2 = "@source(type='grpc', sequence='mySeq', response='true', sink.id= '1') " +
-//                "define stream BarStream (message String);";
-//        String query = "@info(name = 'query') "
-//                + "from BarStream "
-//                + "select *  "
-//                + "insert into outputStream;";
-//
-//        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition + stream2 +
-//                query);
-//        siddhiAppRuntime.addCallback("query", new QueryCallback() {
-//            @Override
-//            public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
-//                EventPrinter.print(timeStamp, inEvents, removeEvents);
-//            }
-//        });
-//        InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
-//
-//        try {
-//            siddhiAppRuntime.start();
-//
-//            fooStream.send(new Object[]{"niruhan"});
-//            fooStream.send(new Object[]{"niruhan"});
-//
-//            Thread.sleep(5000);
-//            siddhiAppRuntime.shutdown();
-//        } finally {
-//            stopServer();
-//        }
-//    }
+    @Test
+    public void test3() throws Exception {
+        logger.info("Test case to call process sending 2 requests");
+        logger.setLevel(Level.DEBUG);
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        server.start();
+        String port = String.valueOf(server.getPort());
+        String inStreamDefinition = ""
+                + "@sink(type='grpc', " +
+                "url = 'dns:///localhost:" + port + "/EventService/process', " +
+                "sequence = 'mySeq', " +
+                "sink.id= '1', @map(type='json')) "
+                + "define stream FooStream (message String);";
+
+        String stream2 = "@source(type='grpc', sequence='mySeq', sink.id= '1') " +
+                "define stream BarStream (message String);";
+        String query = "@info(name = 'query') "
+                + "from BarStream "
+                + "select *  "
+                + "insert into outputStream;";
+
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition + stream2 +
+                query);
+        siddhiAppRuntime.addCallback("query", new QueryCallback() {
+            @Override
+            public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
+                EventPrinter.print(timeStamp, inEvents, removeEvents);
+                for (int i = 0; i < inEvents.length; i++) {
+                    eventCount.incrementAndGet();
+                    switch (i) {
+                        case 0:
+                            Assert.assertEquals((String) inEvents[i].getData()[0], "server data");
+                            break;
+                        case 1:
+                            Assert.assertEquals((String) inEvents[i].getData()[0], "server data");
+                            break;
+                        default:
+                            Assert.fail();
+                    }
+                }
+            }
+        });
+        InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
+        try {
+            siddhiAppRuntime.start();
+            fooStream.send(new Object[]{"Request 1"});
+            fooStream.send(new Object[]{"Request 2"});
+            Thread.sleep(1000);
+            siddhiAppRuntime.shutdown();
+        } finally {
+            server.stop();
+        }
+    }
 }

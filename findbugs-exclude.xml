@@ -19,15 +19,7 @@
 
 <FindBugsFilter>
     <Match>
-        <Class name="io.siddhi.extension.io.grpc.util.service.EmptyResponse$Builder"/>
-        <Bug pattern="UCF_USELESS_CONTROL_FLOW"/>
-    </Match>
-    <Match>
-        <Class name="io.siddhi.extension.io.grpc.util.service.SequenceCallRequest$Builder"/>
-        <Bug pattern="UCF_USELESS_CONTROL_FLOW"/>
-    </Match>
-    <Match>
-        <Class name="io.siddhi.extension.io.grpc.util.service.SequenceCallResponse$Builder"/>
+        <Class name="io.siddhi.extension.io.grpc.util.service.Event$Builder"/>
         <Bug pattern="UCF_USELESS_CONTROL_FLOW"/>
     </Match>
     <Match>

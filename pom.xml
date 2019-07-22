@@ -40,11 +40,21 @@
                 <artifactId>siddhi-query-compiler</artifactId>
                 <version>${siddhi.version}</version>
             </dependency>
-            <!--<dependency>-->
-                <!--<groupId>io.siddhi.extension.map.protobuf</groupId>-->
-                <!--<artifactId>siddhi-map-protobuf</artifactId>-->
-                <!--<version>${siddhi.map.protobuf.version}</version>-->
-            <!--</dependency>-->
+            <dependency>
+                <groupId>io.grpc</groupId>
+                <artifactId>grpc-netty-shaded</artifactId>
+                <version>${grpc.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.grpc</groupId>
+                <artifactId>grpc-protobuf</artifactId>
+                <version>${grpc.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.grpc</groupId>
+                <artifactId>grpc-stub</artifactId>
+                <version>${grpc.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.apache.log4j.wso2</groupId>
                 <artifactId>log4j</artifactId>
@@ -166,8 +176,7 @@
         </plugins>
     </build>
     <properties>
-        <!--<netty.version>4.1.19.Final</netty.version>-->
-        <!--<maven.checkstyleplugin.excludes>io.siddhi.extension.io.grpc.util.service.SequenceCallResponse</maven.checkstyleplugin.excludes>-->
+        <grpc.version>1.21.0</grpc.version>
         <transport.http.version>6.0.294</transport.http.version>
         <mavan.findbugsplugin.exclude.file>findbugs-exclude.xml</mavan.findbugsplugin.exclude.file>
         <siddhi.version>5.0.0</siddhi.version>

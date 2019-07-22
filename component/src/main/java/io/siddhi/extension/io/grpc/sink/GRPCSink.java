@@ -40,12 +40,11 @@ import io.siddhi.core.util.transport.DynamicOptions;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
 import io.siddhi.extension.io.grpc.util.SourceStaticHolder;
+import io.siddhi.extension.io.grpc.util.service.Event;
 import io.siddhi.extension.io.grpc.util.service.EventServiceGrpc;
 import io.siddhi.query.api.definition.StreamDefinition;
-import io.siddhi.extension.io.grpc.util.service.Event;
 import org.apache.log4j.Logger;
 
-import javax.annotation.Nullable;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -140,7 +139,7 @@ public class GRPCSink extends Sink {
      */
     @Override
     public String[] getSupportedDynamicOptions() {
-            return null;
+            return new String[0];
     }
 
     /**
@@ -216,7 +215,7 @@ public class GRPCSink extends Sink {
                         futureStub.consume(sequenceCallRequest);
                 Futures.addCallback(futureResponse, new FutureCallback<Empty>() {
                     @Override
-                    public void onSuccess(@Nullable Empty result) {
+                    public void onSuccess(Empty result) {
 
                     }
 

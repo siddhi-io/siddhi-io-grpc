@@ -17,6 +17,9 @@
  */
 package io.siddhi.extension.io.grpc.util;
 
+/**
+ * Class to hold the constants used by gRPC source and sink
+ */
 public class GrpcConstants {
     public static final String PORT_HOST_SEPARATOR = ":";
     public static final String PUBLISHER_URL = "url";
