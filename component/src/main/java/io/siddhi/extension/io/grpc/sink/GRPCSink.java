@@ -25,7 +25,6 @@ import io.grpc.ManagedChannelBuilder;
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
 import io.siddhi.core.config.SiddhiAppContext;
-import io.siddhi.core.event.Event;
 import io.siddhi.core.exception.ConnectionUnavailableException;
 import io.siddhi.core.exception.SiddhiAppRuntimeException;
 import io.siddhi.core.stream.ServiceDeploymentInfo;
@@ -36,11 +35,10 @@ import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.core.util.transport.DynamicOptions;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.SourceStaticHolder;
-import io.siddhi.extension.map.protobuf.utils.service.InvokeSequenceGrpc;
-import io.siddhi.extension.map.protobuf.utils.service.SequenceCallRequest;
-import io.siddhi.extension.map.protobuf.utils.service.SequenceCallResponse;
+import io.siddhi.extension.io.grpc.util.service.EventServiceGrpc;
 import io.siddhi.query.api.definition.StreamDefinition;
 import org.apache.log4j.Logger;
+import io.siddhi.extension.io.grpc.util.service.Event;
 
 import java.util.concurrent.TimeUnit;
 
@@ -74,7 +72,7 @@ public class GRPCSink extends Sink {
     private String serviceName;
     private String methodName;
     private String sequenceName;
-    private InvokeSequenceGrpc.InvokeSequenceFutureStub futureStub;
+    private EventServiceGrpc.EventServiceFutureStub futureStub;
     private boolean isMIConnect = false;
     private SourceStaticHolder sourceStaticHolder = SourceStaticHolder.getInstance();
     private String sinkID;
@@ -88,7 +86,7 @@ public class GRPCSink extends Sink {
      */
     @Override
     public Class[] getSupportedInputEventClasses() {
-            return new Class[]{Event.class};
+            return new Class[]{io.siddhi.core.event.Event.class, String.class};
     }
 
     @Override
@@ -129,16 +127,16 @@ public class GRPCSink extends Sink {
 
         if (!optionHolder.isOptionExists("service")) {
             isMIConnect = true;
-            serviceName = "InvokeSequence";
+            serviceName = "EventService";
             sequenceName = optionHolder.validateAndGetOption("sequence").getValue();
             boolean isResponseExpected = optionHolder.validateAndGetOption("response").getValue()
                     .equalsIgnoreCase("True");
             if (isResponseExpected) {
-                methodName = "CallSequenceWithResponse";
+                methodName = "process";
             } else {
-                methodName = "CallSequenceWithoutResponse";
+                methodName = "consume";
             }
-            futureStub = InvokeSequenceGrpc.newFutureStub(channel);
+            futureStub = EventServiceGrpc.newFutureStub(channel);
         } else {
             serviceName = optionHolder.validateAndGetOption("service").getValue();
             methodName = optionHolder.validateAndGetOption("method").getValue();
@@ -150,33 +148,33 @@ public class GRPCSink extends Sink {
     public void publish(Object payload, DynamicOptions dynamicOptions, State state)
             throws ConnectionUnavailableException {
         if (isMIConnect) {
-//            System.out.println(payload.getClass().getName());
-            if (payload.getClass().getName().equals("io.siddhi.extension.map.protobuf.utils.service.SequenceCallRequest")) {
-                if (methodName.equalsIgnoreCase("CallSequenceWithResponse")) {
-                    ListenableFuture<SequenceCallResponse> futureResponse =
-                            futureStub.callSequenceWithResponse((SequenceCallRequest) payload);
-                    Futures.addCallback(futureResponse, new FutureCallback<SequenceCallResponse>() {
-                        @Override
-                        public void onSuccess(SequenceCallResponse result) {
-                            sourceStaticHolder.getGRPCSource(sinkID).onResponse(result);
-                            if (logger.isDebugEnabled()) {
-                                logger.debug("Success!");
-                            }
+            if (!(payload instanceof String)) {
+                throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": Payload should be of type String " +
+                        "for communicating with Micro Integrator but found " + payload.getClass().getName());
+            }
+            if (methodName.equalsIgnoreCase("process")) {
+                Event.Builder requestBuilder = Event.newBuilder();
+                requestBuilder.setPayload((String) payload);
+                Event sequenceCallRequest = requestBuilder.build();
+                ListenableFuture<Event> futureResponse =
+                        futureStub.process(sequenceCallRequest);
+                Futures.addCallback(futureResponse, new FutureCallback<Event>() {
+                    @Override
+                    public void onSuccess(Event result) {
+                        sourceStaticHolder.getGRPCSource(sinkID).onResponse(result);
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("Success!");
                         }
+                    }
 
-                        @Override
-                        public void onFailure(Throwable t) {
-                            if (logger.isDebugEnabled()) {
-                                logger.debug("Failure!");
-                            }
-                            throw new SiddhiAppRuntimeException(t.getMessage());
+                    @Override
+                    public void onFailure(Throwable t) {
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("Failure!");
                         }
-                    });
-                }
-            } else {
-                throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": To communicate with Micro " +
-                        "Integrator the gRPC sink payload must be of class SequenceCallRequest but found " +
-                        payload.getClass());
+                        throw new SiddhiAppRuntimeException(t.getMessage());
+                    }
+                });
             }
         }
     }

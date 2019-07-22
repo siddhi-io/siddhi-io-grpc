@@ -40,11 +40,11 @@
                 <artifactId>siddhi-query-compiler</artifactId>
                 <version>${siddhi.version}</version>
             </dependency>
-            <dependency>
-                <groupId>io.siddhi.extension.map.protobuf</groupId>
-                <artifactId>siddhi-map-protobuf</artifactId>
-                <version>${siddhi.map.protobuf.version}</version>
-            </dependency>
+            <!--<dependency>-->
+                <!--<groupId>io.siddhi.extension.map.protobuf</groupId>-->
+                <!--<artifactId>siddhi-map-protobuf</artifactId>-->
+                <!--<version>${siddhi.map.protobuf.version}</version>-->
+            <!--</dependency>-->
             <dependency>
                 <groupId>org.apache.log4j.wso2</groupId>
                 <artifactId>log4j</artifactId>

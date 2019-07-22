@@ -29,7 +29,7 @@ import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.SourceStaticHolder;
-import io.siddhi.extension.map.protobuf.utils.service.SequenceCallResponse;
+import io.siddhi.extension.io.grpc.util.service.Event;
 import org.apache.log4j.Logger;
 
 /**
@@ -107,8 +107,8 @@ public class GRPCSource extends Source {
         return null;
     }
 
-    public void onResponse(SequenceCallResponse response) {
-        sourceEventListener.onEvent(new Object[]{response.getResponseAsJSON()}, new String[]{"1"});
+    public void onResponse(Event response) {
+        sourceEventListener.onEvent(new Object[]{response.getPayload()}, new String[]{"1"});
     }
 
     /**

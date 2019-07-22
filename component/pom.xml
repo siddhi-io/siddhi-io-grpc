@@ -41,11 +41,11 @@
             <artifactId>siddhi-map-xml</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>io.siddhi.extension.map.protobuf</groupId>
-            <artifactId>siddhi-map-protobuf</artifactId>
-            <scope>test</scope>
-        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>io.siddhi.extension.map.protobuf</groupId>-->
+            <!--<artifactId>siddhi-map-protobuf</artifactId>-->
+            <!--<scope>test</scope>-->
+        <!--</dependency>-->
         <dependency>
             <groupId>io.siddhi.extension.map.json</groupId>
             <artifactId>siddhi-map-json</artifactId>

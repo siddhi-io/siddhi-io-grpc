@@ -9,9 +9,8 @@ import io.siddhi.core.event.Event;
 import io.siddhi.core.query.output.callback.QueryCallback;
 import io.siddhi.core.stream.input.InputHandler;
 import io.siddhi.core.util.EventPrinter;
-import io.siddhi.extension.map.protobuf.utils.service.InvokeSequenceGrpc;
-import io.siddhi.extension.map.protobuf.utils.service.SequenceCallRequest;
-import io.siddhi.extension.map.protobuf.utils.service.SequenceCallResponse;
+import io.siddhi.extension.io.grpc.util.service.EventServiceGrpc;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.testng.annotations.Test;
 
@@ -23,6 +22,7 @@ public class TestCaseOfGrpcSink {
     private Server server;
         @Test
         public void test1() throws Exception {
+            logger.setLevel(Level.DEBUG);
             SiddhiManager siddhiManager = new SiddhiManager();
 
             startServer();
@@ -33,7 +33,7 @@ public class TestCaseOfGrpcSink {
                     "port = '" + port + "', " +
                     "sequence = 'mySeq', " +
                     "response = 'true', " +
-                    "sink.id= '1') "
+                    "sink.id= '1', @map(type='json')) "
                     + "define stream FooStream (message String);";
 
             String stream2 = "@source(type='grpc', sequence='mySeq', response='true', sink.id= '1') " +
@@ -53,16 +53,11 @@ public class TestCaseOfGrpcSink {
             });
             InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
 
-            SequenceCallRequest.Builder requestBuilder = SequenceCallRequest.newBuilder();
-            requestBuilder.setPayloadAsJSON("niruhan");
-            requestBuilder.setSequenceName("mySeq");
-            SequenceCallRequest sequenceCallRequest = requestBuilder.build();
-
             try {
                 siddhiAppRuntime.start();
 
-                fooStream.send(new Object[]{sequenceCallRequest});
-                fooStream.send(new Object[]{sequenceCallRequest});
+                fooStream.send(new Object[]{"niruhan"});
+                fooStream.send(new Object[]{"niru"});
 
                 Thread.sleep(5000);
                 siddhiAppRuntime.shutdown();
@@ -103,11 +98,6 @@ public class TestCaseOfGrpcSink {
         });
         InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
 
-//        SequenceCallRequest.Builder requestBuilder = SequenceCallRequest.newBuilder();
-//        requestBuilder.setPayloadAsJSON("niruhan");
-//        requestBuilder.setSequenceName("mySeq");
-//        SequenceCallRequest sequenceCallRequest = requestBuilder.build();
-
         try {
             siddhiAppRuntime.start();
 
@@ -125,16 +115,16 @@ public class TestCaseOfGrpcSink {
         if (server != null) {
             throw new IllegalStateException("Already started");
         }
-        server = ServerBuilder.forPort(0).addService(new InvokeSequenceGrpc.InvokeSequenceImplBase() {
+        server = ServerBuilder.forPort(0).addService(new EventServiceGrpc.EventServiceImplBase() {
             @Override
-            public void callSequenceWithResponse(SequenceCallRequest request,
-                                                 StreamObserver<SequenceCallResponse> responseObserver) {
+            public void process(io.siddhi.extension.io.grpc.util.service.Event request,
+                                                 StreamObserver<io.siddhi.extension.io.grpc.util.service.Event> responseObserver) {
                 if (logger.isDebugEnabled()) {
                     logger.debug("Server hit");
                 }
-                SequenceCallResponse.Builder responseBuilder = SequenceCallResponse.newBuilder();
-                responseBuilder.setResponseAsJSON("server data");
-                SequenceCallResponse response = responseBuilder.build();
+                io.siddhi.extension.io.grpc.util.service.Event.Builder responseBuilder = io.siddhi.extension.io.grpc.util.service.Event.newBuilder();
+                responseBuilder.setPayload("server data");
+                io.siddhi.extension.io.grpc.util.service.Event response = responseBuilder.build();
                 responseObserver.onNext(response);
                 responseObserver.onCompleted();
             }
