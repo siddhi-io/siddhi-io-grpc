@@ -110,7 +110,7 @@ public class GRPCSource extends Source {
     }
 
     public void onResponse(Event response) {
-        sourceEventListener.onEvent(new Object[]{response.getPayload()}, new String[]{"1"});
+        sourceEventListener.onEvent(response.getPayload(), new String[]{"1"});
         //todo: here I am sending the entire JSON string into the output event. Need to format and extract the data
         // and send as separate values in data array. Will do after some MI side implementation and finalizing the
         // JSON message format
@@ -124,7 +124,7 @@ public class GRPCSource extends Source {
      */
     @Override
     public Class[] getOutputEventClasses() {
-        return new Class[]{io.siddhi.core.event.Event.class};
+        return new Class[]{io.siddhi.core.event.Event.class, String.class};
     }
 
     @Override

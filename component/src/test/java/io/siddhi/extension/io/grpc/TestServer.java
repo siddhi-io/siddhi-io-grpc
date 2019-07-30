@@ -28,7 +28,7 @@ public class TestServer {
                 }
                 io.siddhi.extension.io.grpc.util.service.Event.Builder responseBuilder =
                         io.siddhi.extension.io.grpc.util.service.Event.newBuilder();
-                responseBuilder.setPayload("server data");
+                responseBuilder.setPayload("{name:\"niruhan\"}");
                 io.siddhi.extension.io.grpc.util.service.Event response = responseBuilder.build();
                 responseObserver.onNext(response);
                 responseObserver.onCompleted();
