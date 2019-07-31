@@ -40,7 +40,7 @@ import org.wso2.grpc.Event;
  */
 
 @Extension(
-        name = "grpc",
+        name = "grpc-call-response",
         namespace = "source",
         description = "This grpc source receives responses received from gRPC server for requests sent from a gRPC " +
                 "sink. The source will receive responses for sink with the same sink.id. For example if you have a " +
@@ -56,24 +56,13 @@ import org.wso2.grpc.Event;
                                 "the responses to requests published from that sink. So the same sink.id should be " +
                                 "given when writing the sink also." ,
                         type = {DataType.INT}),
-                @Parameter(name = "sequence",
-                        description = "This is an optional parameter to be used when connecting to Micro Integrator " +
-                                "sequences from Siddhi. Micro integrator will expose a service called EventService " +
-                                "which has 2 rpc's as mentioned in the extension description. Both of these rpc can " +
-                                "access many different sequences in Micro Integrator. This parameter is used to " +
-                                "specify the sequence which we want to use. When this parameter is given gRPC source " +
-                                "will listen to MI." ,
-                        optional = true, defaultValue = "NA. When sequence is not given the service name and method " +
-                        "name should be specified in the url",
-                        type = {DataType.STRING}),
         },
         examples = {
                 @Example(
-                        syntax = "@source(type='grpc', sequence='mySeq', sink.id= '1') " +
+                        syntax = "@source(type='grpc-call-response', sink.id= '1') " +
                                 "define stream BarStream (message String);",
-                        description = "Here we are listening to responses from a sequence called mySeq. In addition, " +
-                                "only the responses for requests sent from the sink with sink.id 1 will be received " +
-                                "here. The results will be injected into BarStream"
+                        description = "Here we are listening to responses  for requests sent from the sink with " +
+                                "sink.id 1 will be received here. The results will be injected into BarStream"
                 )
         }
 )
@@ -111,9 +100,6 @@ public class GrpcCallResponseSource extends Source {
 
     public void onResponse(Event response) {
         sourceEventListener.onEvent(response.getPayload(), new String[]{"1"});
-        //todo: here I am sending the entire JSON string into the output event. Need to format and extract the data
-        // and send as separate values in data array. Will do after some MI side implementation and finalizing the
-        // JSON message format
     }
 
     /**

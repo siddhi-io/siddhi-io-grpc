@@ -111,7 +111,8 @@ public class GrpcSinkSuper extends Sink {
                     GrpcConstants.GRPC_PROTOCOL_NAME + "\" for all grpc sinks");
         }
 
-        this.serviceName = URLParts.get(GrpcConstants.URL_SERVICE_NAME_POSITION);
+        String[] fullyQualifiedServiceNameParts = URLParts.get(GrpcConstants.URL_SERVICE_NAME_POSITION).split("\\.");
+        this.serviceName = fullyQualifiedServiceNameParts[fullyQualifiedServiceNameParts.length - 1];
         this.methodName = URLParts.get(GrpcConstants.URL_METHOD_NAME_POSITION);
         if (optionHolder.isOptionExists(GrpcConstants.SINK_ID)) {
             this.sinkID = optionHolder.validateAndGetOption(GrpcConstants.SINK_ID).getValue();

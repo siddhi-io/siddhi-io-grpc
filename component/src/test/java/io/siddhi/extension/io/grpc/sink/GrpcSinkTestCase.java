@@ -27,8 +27,8 @@ import org.testng.annotations.Test;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class TestCaseOfGrpcSink {
-    private static final Logger logger = Logger.getLogger(TestCaseOfGrpcSink.class.getName());
+public class GrpcSinkTestCase {
+    private static final Logger logger = Logger.getLogger(GrpcSinkTestCase.class.getName());
     private TestServer server = new TestServer();
     private AtomicInteger eventCount = new AtomicInteger(0);
 
@@ -40,7 +40,7 @@ public class TestCaseOfGrpcSink {
 
         server.start();
         String inStreamDefinition = ""
-                + "@sink(type='grpc', url = 'grpc://localhost:8888/EventService/consume/mySeq', @map(type='json')) "
+                + "@sink(type='grpc', url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume/mySeq', @map(type='json')) "
                 + "define stream FooStream (message String);";
 
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);

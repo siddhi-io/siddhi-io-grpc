@@ -32,7 +32,7 @@ import org.testng.annotations.Test;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class GrpcCallSinkTestCase {
-    private static final Logger logger = Logger.getLogger(TestCaseOfGrpcSink.class.getName());
+    private static final Logger logger = Logger.getLogger(GrpcSinkTestCase.class.getName());
     private TestServer server = new TestServer();
     private AtomicInteger eventCount = new AtomicInteger(0);
 
@@ -46,12 +46,11 @@ public class GrpcCallSinkTestCase {
         String port = String.valueOf(server.getPort());
         String inStreamDefinition = ""
                 + "@sink(type='grpc-call', " +
-                "url = 'localhost:" + port + "/EventService/process', " +
-                "sequence = 'mySeq', " +
+                "url = 'grpc://localhost:8888/org.wso2.grpc.EventService/process/mySeq', " +
                 "sink.id= '1', @map(type='json')) "
                 + "define stream FooStream (message String);";
 
-        String stream2 = "@source(type='grpc', sequence='mySeq', sink.id= '1', @map(type='json')) " +
+        String stream2 = "@source(type='grpc-call-response', sequence='mySeq', sink.id= '1', @map(type='json')) " +
                 "define stream BarStream (message String);";
         String query = "@info(name = 'query') "
                 + "from BarStream "
