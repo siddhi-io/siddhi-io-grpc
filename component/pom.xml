@@ -67,6 +67,16 @@
             <artifactId>org.wso2.transport.http.netty</artifactId>
             <version>${transport.http.version}</version>
         </dependency>
+
+
+
+<!--    **************************************************************************    -->
+        <dependency>
+            <groupId>io.siddhi.extension.map.protobuf</groupId>
+            <artifactId>siddhi-map-protobuf</artifactId>
+        </dependency>
+<!--        ************************************************************************-->
+
     </dependencies>
 
     <profiles>

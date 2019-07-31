@@ -17,6 +17,7 @@
  */
 package io.siddhi.extension.io.grpc.sink;
 
+import io.grpc.Channel;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.siddhi.core.config.SiddhiAppContext;
@@ -36,6 +37,8 @@ import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.log4j.Logger;
 import org.wso2.grpc.EventServiceGrpc;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -60,10 +63,19 @@ public class GrpcSinkSuper extends Sink {
     private String url;
     private String streamID;
 
+
+    //-------------------------------
+    protected String packageName;
+    protected Class stubClass;
+    protected Object stubObject;
+
+
+
     /**
      * Returns the list of classes which this sink can consume.
      * Based on the type of the sink, it may be limited to being able to publish specific type of classes.
      * For example, a sink of type file can only write objects of type String .
+     *
      * @return array of supported classes , if extension can support of any types of classes
      * then return empty array .
      */
@@ -91,11 +103,12 @@ public class GrpcSinkSuper extends Sink {
     /**
      * The initialization method for {@link Sink}, will be called before other methods. It used to validate
      * all configurations and to get initial values.
-     * @param streamDefinition  containing stream definition bind to the {@link Sink}
-     * @param optionHolder            Option holder containing static and dynamic configuration related
-     *                                to the {@link Sink}
-     * @param configReader        to read the sink related system configuration.
-     * @param siddhiAppContext        the context of the {@link io.siddhi.query.api.SiddhiApp} used to
+     *
+     * @param streamDefinition containing stream definition bind to the {@link Sink}
+     * @param optionHolder     Option holder containing static and dynamic configuration related
+     *                         to the {@link Sink}
+     * @param configReader     to read the sink related system configuration.
+     * @param siddhiAppContext the context of the {@link io.siddhi.query.api.SiddhiApp} used to
      */
     @Override
     protected StateFactory init(StreamDefinition streamDefinition, OptionHolder optionHolder, ConfigReader configReader,
@@ -124,7 +137,7 @@ public class GrpcSinkSuper extends Sink {
             }
         }
         this.channel = ManagedChannelBuilder.forTarget(URLParts.get(GrpcConstants.URL_HOST_AND_PORT_POSITION))
-                .usePlaintext(true)
+                .usePlaintext()
                 .build();
         this.streamID = siddhiAppContext.getName() + GrpcConstants.PORT_HOST_SEPARATOR + streamDefinition.toString();
 
@@ -137,6 +150,25 @@ public class GrpcSinkSuper extends Sink {
             sequenceName = URLParts.get(GrpcConstants.URL_SEQUENCE_NAME_POSITION);
         } else {
             //todo: handle generic grpc service
+            this.packageName = URLParts.get(GrpcConstants.URL_SERVICE_NAME_POSITION).replace(this.serviceName, "");
+            String futureStubName = this.packageName + this.serviceName + "Grpc$" + this.serviceName + "FutureStub";
+
+            try {
+                stubClass = Class.forName(futureStubName);
+                Constructor constructor = stubClass.getDeclaredConstructor(Channel.class);
+                constructor.setAccessible(true);
+                this.stubObject = constructor.newInstance(this.channel);
+
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            } catch (NoSuchMethodException e) {
+                System.out.println("Constructor");
+                e.printStackTrace();
+            } catch (IllegalAccessException|InstantiationException|InvocationTargetException e) {
+                System.out.println("Instantiate");
+                e.printStackTrace();
+            }
+
         }
         return null;
     }
@@ -150,6 +182,7 @@ public class GrpcSinkSuper extends Sink {
     /**
      * This method will be called before the processing method.
      * Intention to establish connection to publish event.
+     *
      * @throws ConnectionUnavailableException if end point is unavailable the ConnectionUnavailableException thrown
      *                                        such that the  system will take care retrying for connection
      */

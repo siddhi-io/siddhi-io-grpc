@@ -33,6 +33,10 @@ import io.siddhi.core.util.transport.DynamicOptions;
 import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
 
+import javax.annotation.Nullable;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
 /**
  * {@code GrpcSink} Handle the gRPC publishing tasks.
  */
@@ -100,6 +104,35 @@ public class GrpcSink extends GrpcSinkSuper {
             }, MoreExecutors.directExecutor());
         } else {
             //todo: handle publishing to generic service
+            try {
+                Class requestClass = payload.getClass();
+                Method m = super.stubClass.getDeclaredMethod(super.methodName,requestClass);
+
+                ListenableFuture<Empty> genericResponse = (ListenableFuture<Empty>) m.invoke(super.stubObject,payload);
+                Futures.addCallback(genericResponse, new FutureCallback<Empty>() {
+                    @Override
+                    public void onSuccess(@Nullable Empty o) {
+
+                    }
+
+                    @Override
+                    public void onFailure(Throwable t) {
+                        if (logger.isDebugEnabled()) {
+                            logger.debug(siddhiAppContext.getName() + ": " + t.getMessage());
+                        }
+                        throw new SiddhiAppRuntimeException(t.getMessage());
+                    }
+                },MoreExecutors.directExecutor());
+
+
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+            }
+
         }
     }
 }

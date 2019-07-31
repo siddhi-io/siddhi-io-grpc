@@ -54,4 +54,26 @@ public class GrpcSinkTestCase {
             server.stop();
         }
     }
+    @Test
+    public void test2() throws Exception {
+        logger.info("Test case 2 to call process");
+        logger.setLevel(Level.DEBUG);
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+//        server.start();
+        String inStreamDefinition = ""
+                + "@sink(type='grpc', url = 'grpc://localhost:8888/package01.test.MyService/send', @map(type='protobuf')) "
+                + "define stream FooStream (stringValue string, intValue int,longValue long,booleanValue bool,floatValue float,doubleValue double);";
+
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
+        InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
+        try {
+            siddhiAppRuntime.start();
+            fooStream.send(new Object[]{"Empty", 60, 10000L, true, 522.7586f, 34.5668});
+            Thread.sleep(1000);
+            siddhiAppRuntime.shutdown();
+        } finally {
+//            server.stop();
+        }
+    }
 }
