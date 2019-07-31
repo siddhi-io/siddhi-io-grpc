@@ -19,13 +19,10 @@ package io.siddhi.extension.io.grpc.sink;
 
 import io.siddhi.core.SiddhiAppRuntime;
 import io.siddhi.core.SiddhiManager;
-import io.siddhi.core.event.Event;
-import io.siddhi.core.query.output.callback.QueryCallback;
 import io.siddhi.core.stream.input.InputHandler;
 import io.siddhi.extension.io.grpc.TestServer;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -47,12 +44,6 @@ public class TestCaseOfGrpcSink {
                 + "define stream FooStream (message String);";
 
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
-//        siddhiAppRuntime.addCallback("query", new QueryCallback() {
-//            @Override
-//            public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
-//                Assert.assertEquals(inEvents.length, 0);
-//            }
-//        });
         InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
         try {
             siddhiAppRuntime.start();

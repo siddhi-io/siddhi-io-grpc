@@ -31,8 +31,8 @@ import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.SourceStaticHolder;
-import io.siddhi.extension.io.grpc.util.service.Event;
 import org.apache.log4j.Logger;
+import org.wso2.grpc.Event;
 
 /**
  * {@code GrpcSource} Handle receiving of responses for gRPC calls. Does not have connection logics as sink will add a

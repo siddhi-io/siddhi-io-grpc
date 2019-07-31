@@ -17,11 +17,6 @@
  */
 package io.siddhi.extension.io.grpc.sink;
 
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.MoreExecutors;
-import com.google.protobuf.Empty;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.siddhi.core.config.SiddhiAppContext;
@@ -36,11 +31,10 @@ import io.siddhi.core.util.transport.DynamicOptions;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
 import io.siddhi.extension.io.grpc.util.SourceStaticHolder;
-import io.siddhi.extension.io.grpc.util.service.Event;
-import io.siddhi.extension.io.grpc.util.service.EventServiceGrpc;
 import io.siddhi.query.api.definition.StreamDefinition;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.log4j.Logger;
+import org.wso2.grpc.EventServiceGrpc;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -149,55 +143,7 @@ public class GrpcSinkSuper extends Sink {
     @Override
     public void publish(Object payload, DynamicOptions dynamicOptions, State state)
             throws ConnectionUnavailableException {
-        if (isMIConnect) {
-            if (!(payload instanceof String)) {
-                throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": Payload should be of type String " +
-                        "for communicating with Micro Integrator but found " + payload.getClass().getName());
-            }
-            if (methodName.equalsIgnoreCase(GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE)) {
-                Event.Builder requestBuilder = Event.newBuilder();
-                requestBuilder.setPayload((String) payload);
-                Event sequenceCallRequest = requestBuilder.build();
-                ListenableFuture<Event> futureResponse =
-                        futureStub.process(sequenceCallRequest);
-                Futures.addCallback(futureResponse, new FutureCallback<Event>() {
-                    @Override
-                    public void onSuccess(Event result) {
-                        sourceStaticHolder.getGRPCSource(sinkID).onResponse(result);
-                    }
 
-                    @Override
-                    public void onFailure(Throwable t) {
-                        if (logger.isDebugEnabled()) {
-                            logger.debug(siddhiAppContext.getName() + ": " + t.getMessage());
-                        }
-                        throw new SiddhiAppRuntimeException(t.getMessage());
-                    }
-                }, MoreExecutors.directExecutor());
-            } else if (methodName.equalsIgnoreCase(GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE)) {
-                Event.Builder requestBuilder = Event.newBuilder();
-                requestBuilder.setPayload((String) payload);
-                Event sequenceCallRequest = requestBuilder.build();
-                ListenableFuture<Empty> futureResponse =
-                        futureStub.consume(sequenceCallRequest);
-                Futures.addCallback(futureResponse, new FutureCallback<Empty>() {
-                    @Override
-                    public void onSuccess(Empty result) {
-
-                    }
-
-                    @Override
-                    public void onFailure(Throwable t) {
-                        if (logger.isDebugEnabled()) {
-                            logger.debug(siddhiAppContext.getName() + ": " + t.getMessage());
-                        }
-                        throw new SiddhiAppRuntimeException(t.getMessage());
-                    }
-                }, MoreExecutors.directExecutor());
-            }
-        } else {
-            //todo: handle publishing to generic service
-        }
     }
 
     /**

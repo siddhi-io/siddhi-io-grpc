@@ -12,8 +12,8 @@ import io.siddhi.core.exception.ConnectionUnavailableException;
 import io.siddhi.core.exception.SiddhiAppRuntimeException;
 import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.transport.DynamicOptions;
-import io.siddhi.extension.io.grpc.util.service.Event;
 import org.apache.log4j.Logger;
+import org.wso2.grpc.Event;
 
 /**
  * {@code GrpcSink} Handle the gRPC publishing tasks.

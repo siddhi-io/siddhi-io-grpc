@@ -4,9 +4,9 @@ import com.google.protobuf.Empty;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
-import io.siddhi.extension.io.grpc.util.service.Event;
-import io.siddhi.extension.io.grpc.util.service.EventServiceGrpc;
 import org.apache.log4j.Logger;
+import org.wso2.grpc.Event;
+import org.wso2.grpc.EventServiceGrpc;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
@@ -21,21 +21,20 @@ public class TestServer {
         }
         server = ServerBuilder.forPort(8888).addService(new EventServiceGrpc.EventServiceImplBase() {
             @Override
-            public void process(io.siddhi.extension.io.grpc.util.service.Event request,
+            public void process(Event request,
                                 StreamObserver<Event> responseObserver) {
                 if (logger.isDebugEnabled()) {
                     logger.debug("Server hit");
                 }
-                io.siddhi.extension.io.grpc.util.service.Event.Builder responseBuilder =
-                        io.siddhi.extension.io.grpc.util.service.Event.newBuilder();
+                Event.Builder responseBuilder = Event.newBuilder();
                 responseBuilder.setPayload("{name:\"niruhan\"}");
-                io.siddhi.extension.io.grpc.util.service.Event response = responseBuilder.build();
+                Event response = responseBuilder.build();
                 responseObserver.onNext(response);
                 responseObserver.onCompleted();
             }
 
             @Override
-            public void consume(io.siddhi.extension.io.grpc.util.service.Event request,
+            public void consume(Event request,
                                 StreamObserver<Empty> responseObserver) {
                 if (logger.isDebugEnabled()) {
                     logger.debug("Server hit");
