@@ -176,7 +176,7 @@
         </plugins>
     </build>
     <properties>
-        <grpc.version>1.21.0</grpc.version>
+        <grpc.version>1.22.1</grpc.version>
         <transport.http.version>6.0.294</transport.http.version>
         <mavan.findbugsplugin.exclude.file>findbugs-exclude.xml</mavan.findbugsplugin.exclude.file>
         <siddhi.version>5.0.0</siddhi.version>
