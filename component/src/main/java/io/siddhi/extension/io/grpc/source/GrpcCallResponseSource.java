@@ -77,8 +77,8 @@ import org.apache.log4j.Logger;
                 )
         }
 )
-public class GRPCSource extends Source {
-    private static final Logger logger = Logger.getLogger(GRPCSource.class.getName());
+public class GrpcCallResponseSource extends Source {
+    private static final Logger logger = Logger.getLogger(GrpcCallResponseSource.class.getName());
     private SiddhiAppContext siddhiAppContext;
     private SourceStaticHolder sourceStaticHolder = SourceStaticHolder.getInstance();
     private String sinkID;

@@ -25,7 +25,18 @@ public class GrpcConstants {
     public static final String PUBLISHER_URL = "url";
     public static final String PORT_SERVICE_SEPARATOR = "/";
     public static final String SINK_ID = "sink.id";
-    public static final String SEQUENCE = "sequence";
     public static final String DEFAULT_METHOD_NAME_WITH_RESPONSE = "process";
     public static final String DEFAULT_METHOD_NAME_WITHOUT_RESPONSE = "consume";
+    public static final String EMPTY_STRING = "";
+    public static final String GRPC_PROTOCOL_NAME = "grpc";
+    public static final String DEFAULT_SERVICE_NAME = "EventService";
+    public static final String SINK_TYPE_OPTION = "type";
+    public static final String GRPC_CALL_SINK_NAME = "grpc-call";
+
+    public static final int URL_PROTOCOL_POSITION = 0;
+    public static final int URL_HOST_AND_PORT_POSITION = 1;
+    public static final int URL_SERVICE_NAME_POSITION = 2;
+    public static final int URL_METHOD_NAME_POSITION = 3;
+    public static final int URL_SEQUENCE_NAME_POSITION = 4;
+    public static final int NUM_URL_PARTS_FOR_MI_CONNECT = 5;
 }

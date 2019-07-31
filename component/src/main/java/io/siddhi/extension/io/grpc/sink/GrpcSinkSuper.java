@@ -39,8 +39,12 @@ import io.siddhi.extension.io.grpc.util.SourceStaticHolder;
 import io.siddhi.extension.io.grpc.util.service.Event;
 import io.siddhi.extension.io.grpc.util.service.EventServiceGrpc;
 import io.siddhi.query.api.definition.StreamDefinition;
+import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.log4j.Logger;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -104,23 +108,38 @@ public class GrpcSinkSuper extends Sink {
                                 SiddhiAppContext siddhiAppContext) {
         this.siddhiAppContext = siddhiAppContext;
         this.url = optionHolder.validateAndGetOption(GrpcConstants.PUBLISHER_URL).getValue();
-        String[] temp = url.split(GrpcConstants.PORT_SERVICE_SEPARATOR);
-        StringBuilder target = new StringBuilder();
-        for (int i = 0; i < temp.length - 2; i++) {
-            target.append(GrpcConstants.PORT_SERVICE_SEPARATOR).append(temp[i]);
+        List<String> URLParts = new ArrayList<>(Arrays.asList(url.split(GrpcConstants.PORT_SERVICE_SEPARATOR)));
+        URLParts.removeAll(Arrays.asList(GrpcConstants.EMPTY_STRING));
+
+        if (!URLParts.get(GrpcConstants.URL_PROTOCOL_POSITION)
+                .equalsIgnoreCase(GrpcConstants.GRPC_PROTOCOL_NAME + ":")) {
+            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": The url must begin with \"" +
+                    GrpcConstants.GRPC_PROTOCOL_NAME + "\" for all grpc sinks");
         }
-        this.serviceName = temp[temp.length - 2];
-        this.methodName = temp[temp.length - 1];
-        this.sinkID = optionHolder.validateAndGetOption(GrpcConstants.SINK_ID).getValue();
-        this.channel = ManagedChannelBuilder.forTarget(target.toString().substring(1))
+
+        this.serviceName = URLParts.get(GrpcConstants.URL_SERVICE_NAME_POSITION);
+        this.methodName = URLParts.get(GrpcConstants.URL_METHOD_NAME_POSITION);
+        if (optionHolder.isOptionExists(GrpcConstants.SINK_ID)) {
+            this.sinkID = optionHolder.validateAndGetOption(GrpcConstants.SINK_ID).getValue();
+        } else {
+            if (optionHolder.validateAndGetOption(GrpcConstants.SINK_TYPE_OPTION)
+                    .getValue().equalsIgnoreCase(GrpcConstants.GRPC_CALL_SINK_NAME)) {
+                throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": For grpc-call sink the " +
+                        "parameter sink.id is mandatory for receiving responses. Please provide a sink.id");
+            }
+        }
+        this.channel = ManagedChannelBuilder.forTarget(URLParts.get(GrpcConstants.URL_HOST_AND_PORT_POSITION))
                 .usePlaintext(true)
                 .build();
         this.streamID = siddhiAppContext.getName() + GrpcConstants.PORT_HOST_SEPARATOR + streamDefinition.toString();
 
-        if (optionHolder.isOptionExists(GrpcConstants.SEQUENCE)) {
+        if (serviceName.equals(GrpcConstants.DEFAULT_SERVICE_NAME)
+                && (methodName.equals(GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE)
+                || methodName.equals(GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE))
+                && URLParts.size() == GrpcConstants.NUM_URL_PARTS_FOR_MI_CONNECT) {
             isMIConnect = true;
             futureStub = EventServiceGrpc.newFutureStub(channel);
-            sequenceName = optionHolder.validateAndGetOption(GrpcConstants.SEQUENCE).getValue();
+            sequenceName = URLParts.get(GrpcConstants.URL_SEQUENCE_NAME_POSITION);
         } else {
             //todo: handle generic grpc service
         }

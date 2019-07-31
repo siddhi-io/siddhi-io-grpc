@@ -19,7 +19,7 @@ public class TestServer {
         if (server != null) {
             throw new IllegalStateException("Already started");
         }
-        server = ServerBuilder.forPort(0).addService(new EventServiceGrpc.EventServiceImplBase() {
+        server = ServerBuilder.forPort(8888).addService(new EventServiceGrpc.EventServiceImplBase() {
             @Override
             public void process(io.siddhi.extension.io.grpc.util.service.Event request,
                                 StreamObserver<Event> responseObserver) {

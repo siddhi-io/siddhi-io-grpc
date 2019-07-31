@@ -17,7 +17,7 @@
  */
 package io.siddhi.extension.io.grpc.util;
 
-import io.siddhi.extension.io.grpc.source.GRPCSource;
+import io.siddhi.extension.io.grpc.source.GrpcCallResponseSource;
 
 import java.util.HashMap;
 
@@ -27,7 +27,7 @@ import java.util.HashMap;
  */
 public class SourceStaticHolder {
     private static SourceStaticHolder instance = new SourceStaticHolder();
-    private HashMap<String, GRPCSource> sourceHashMap = new HashMap<>();
+    private HashMap<String, GrpcCallResponseSource> sourceHashMap = new HashMap<>();
 
     private SourceStaticHolder() {
 
@@ -37,11 +37,11 @@ public class SourceStaticHolder {
         return instance;
     }
 
-    public void putSource(String key, GRPCSource source) {
+    public void putSource(String key, GrpcCallResponseSource source) {
         sourceHashMap.put(key, source);
     }
 
-    public GRPCSource getGRPCSource(String key) {
+    public GrpcCallResponseSource getGRPCSource(String key) {
         return sourceHashMap.get(key);
     }
 
