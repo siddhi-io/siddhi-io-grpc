@@ -17,7 +17,6 @@
  */
 package io.siddhi.extension.io.grpc.source;
 
-import com.google.protobuf.Empty;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
 import io.siddhi.annotation.Example;
@@ -32,7 +31,7 @@ import org.wso2.grpc.EventServiceGrpc;
  *
  */
 @Extension(
-        name = "grpc",
+        name = "grpc-service",
         namespace = "source",
         description = "sdfsdf",
         parameters = {
@@ -48,20 +47,22 @@ import org.wso2.grpc.EventServiceGrpc;
                 )
         }
 )
-public class GrpcSource extends GrpcSourceSuper {
+public class GrpcServiceSource extends GrpcSourceSuper {
     private static final Logger logger = Logger.getLogger(GrpcCallResponseSource.class.getName());
 
     @Override
     public void initializeGrpcServer(int port) {
         this.server = ServerBuilder.forPort(port).addService(new EventServiceGrpc.EventServiceImplBase() {
             @Override
-            public void consume(Event request,
-                                StreamObserver<Empty> responseObserver) {
+            public void process(Event request,
+                                StreamObserver<Event> responseObserver) { //todo message id & another correlation id for iding source from sink
                 if (logger.isDebugEnabled()) {
-                    logger.debug(siddhiAppContext.getName() + ": Server hit");
+                    logger.debug("Server hit");
                 }
-                sourceEventListener.onEvent(request.getPayload(), new String[]{"1"});
-                responseObserver.onNext(Empty.getDefaultInstance());
+                Event.Builder responseBuilder = Event.newBuilder();
+                responseBuilder.setPayload("{name:\"niruhan\"}");
+                Event response = responseBuilder.build();
+                responseObserver.onNext(response);
                 responseObserver.onCompleted();
             }
         }).build();

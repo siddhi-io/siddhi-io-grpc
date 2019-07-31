@@ -23,7 +23,7 @@
         <Bug pattern="UCF_USELESS_CONTROL_FLOW"/>
     </Match>
     <Match>
-        <Class name="io.siddhi.extension.io.grpc.sink.GRPCSink$1"/>
+        <Class name="io.siddhi.extension.io.grpc.sink.GrpcSink$1"/>
         <Bug pattern="NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE"/>
     </Match>
 </FindBugsFilter>

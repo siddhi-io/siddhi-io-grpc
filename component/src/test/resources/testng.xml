@@ -6,7 +6,7 @@
     <test name="Siddhi-io-grpc-tests" enabled="true" preserve-order="true" parallel="false">
         <classes>
             <class name="io.siddhi.extension.io.grpc.sink.GrpcSinkTestCase"/>
-            <class name="io.siddhi.extension.io.grpc.source.TestCaseOfGrpcSource"/>
+            <!--todo: add all the test classes-->
         </classes>
     </test>
 </suite>
