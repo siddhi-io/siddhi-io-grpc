@@ -73,7 +73,7 @@ public class GrpcCallSink extends GrpcSinkSuper {
     @Override
     public void publish(Object payload, DynamicOptions dynamicOptions, State state)
             throws ConnectionUnavailableException {
-        if (isMIConnect) {
+        if (isDefaultMode) {
             if (!(payload instanceof String)) {
                 throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": Payload should be of type String " +
                         "for communicating with Micro Integrator but found " + payload.getClass().getName());

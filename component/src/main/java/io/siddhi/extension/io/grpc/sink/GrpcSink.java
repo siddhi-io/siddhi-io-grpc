@@ -78,7 +78,7 @@ public class GrpcSink extends GrpcSinkSuper {
     @Override
     public void publish(Object payload, DynamicOptions dynamicOptions, State state)
             throws ConnectionUnavailableException {
-        if (isMIConnect) {
+        if (isDefaultMode) {
             Event.Builder requestBuilder = Event.newBuilder();
             requestBuilder.setPayload((String) payload);
             Event sequenceCallRequest = requestBuilder.build();

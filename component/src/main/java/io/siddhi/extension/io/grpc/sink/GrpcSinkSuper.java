@@ -38,6 +38,7 @@ import org.wso2.grpc.EventServiceGrpc;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -54,7 +55,7 @@ public class GrpcSinkSuper extends Sink {
     protected String methodName;
     private String sequenceName;
     protected EventServiceGrpc.EventServiceFutureStub futureStub;
-    protected boolean isMIConnect = false;
+    protected boolean isDefaultMode = false;
     protected SourceStaticHolder sourceStaticHolder = SourceStaticHolder.getInstance();
     protected String sinkID;
     private String url;
@@ -103,7 +104,7 @@ public class GrpcSinkSuper extends Sink {
         this.siddhiAppContext = siddhiAppContext;
         this.url = optionHolder.validateAndGetOption(GrpcConstants.PUBLISHER_URL).getValue();
         List<String> URLParts = new ArrayList<>(Arrays.asList(url.split(GrpcConstants.PORT_SERVICE_SEPARATOR)));
-        URLParts.removeAll(Arrays.asList(GrpcConstants.EMPTY_STRING));
+        URLParts.removeAll(Collections.singletonList(GrpcConstants.EMPTY_STRING));
 
         if (!URLParts.get(GrpcConstants.URL_PROTOCOL_POSITION)
                 .equalsIgnoreCase(GrpcConstants.GRPC_PROTOCOL_NAME + ":")) {
@@ -131,10 +132,10 @@ public class GrpcSinkSuper extends Sink {
         if (serviceName.equals(GrpcConstants.DEFAULT_SERVICE_NAME)
                 && (methodName.equals(GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE)
                 || methodName.equals(GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE))
-                && URLParts.size() == GrpcConstants.NUM_URL_PARTS_FOR_MI_CONNECT) {
-            isMIConnect = true;
-            futureStub = EventServiceGrpc.newFutureStub(channel);
-            sequenceName = URLParts.get(GrpcConstants.URL_SEQUENCE_NAME_POSITION);
+                && URLParts.size() == GrpcConstants.NUM_URL_PARTS_FOR_DEFAULT_MODE_SINK) {
+            this.isDefaultMode = true;
+            this.futureStub = EventServiceGrpc.newFutureStub(channel);
+            this.sequenceName = URLParts.get(GrpcConstants.URL_SEQUENCE_NAME_POSITION);
         } else {
             //todo: handle generic grpc service
         }
