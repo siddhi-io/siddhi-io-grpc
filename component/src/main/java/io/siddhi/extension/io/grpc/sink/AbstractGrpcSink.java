@@ -30,7 +30,7 @@ import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.core.util.transport.DynamicOptions;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
-import io.siddhi.extension.io.grpc.util.SourceStaticHolder;
+import io.siddhi.extension.io.grpc.util.GrpcSourceRegistry;
 import io.siddhi.query.api.definition.StreamDefinition;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.log4j.Logger;
@@ -56,7 +56,7 @@ public abstract class AbstractGrpcSink extends Sink {
     private String sequenceName;
     protected EventServiceGrpc.EventServiceFutureStub futureStub;
     protected boolean isDefaultMode = false;
-    protected SourceStaticHolder sourceStaticHolder = SourceStaticHolder.getInstance();
+    protected GrpcSourceRegistry grpcSourceRegistry = GrpcSourceRegistry.getInstance();
     protected String sinkID;
     private String url;
     private String streamID;

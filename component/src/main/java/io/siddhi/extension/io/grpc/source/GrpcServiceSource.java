@@ -27,6 +27,10 @@ import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
 
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
  *
  */
@@ -41,7 +45,7 @@ import org.wso2.grpc.EventServiceGrpc;
         },
         examples = {
                 @Example(
-                        syntax = "@source(type='grpc', url='') " +
+                        syntax = "@source(type='grpc', url='', source.id='1') " +
                                 "define stream BarStream (message String);",
                         description = "asdfasdf"
                 )
@@ -49,6 +53,7 @@ import org.wso2.grpc.EventServiceGrpc;
 )
 public class GrpcServiceSource extends AbstractGrpcSource {
     private static final Logger logger = Logger.getLogger(GrpcCallResponseSource.class.getName());
+    private Map<String, StreamObserver<Event>> streamObserverMap = new ConcurrentHashMap<>();
 
     @Override
     public void initializeGrpcServer(int port) {
@@ -57,14 +62,21 @@ public class GrpcServiceSource extends AbstractGrpcSource {
             public void process(Event request,
                                 StreamObserver<Event> responseObserver) { //todo message id & another correlation id for iding source from sink
                 if (logger.isDebugEnabled()) {
-                    logger.debug("Server hit");
+                    logger.debug(siddhiAppContext.getName() + ": Server hit");
                 }
-                Event.Builder responseBuilder = Event.newBuilder();
-                responseBuilder.setPayload("{name:\"niruhan\"}");
-                Event response = responseBuilder.build();
-                responseObserver.onNext(response);
-                responseObserver.onCompleted();
+                String messageId = UUID.randomUUID().toString();
+                sourceEventListener.onEvent(request.getPayload(), new String[]{messageId});
+                streamObserverMap.put(messageId, responseObserver);
             }
         }).build();
+    }
+
+    public void handleCallback(String messageId, String responsePayload) {
+        Event.Builder responseBuilder = Event.newBuilder();
+        responseBuilder.setPayload(responsePayload);
+        Event response = responseBuilder.build();
+        StreamObserver<Event> streamObserver = streamObserverMap.get(messageId);
+        streamObserver.onNext(response);
+        streamObserver.onCompleted();
     }
 }

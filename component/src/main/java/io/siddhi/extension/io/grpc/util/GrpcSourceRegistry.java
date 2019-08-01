@@ -18,6 +18,7 @@
 package io.siddhi.extension.io.grpc.util;
 
 import io.siddhi.extension.io.grpc.source.GrpcCallResponseSource;
+import io.siddhi.extension.io.grpc.source.GrpcServiceSource;
 
 import java.util.HashMap;
 
@@ -25,28 +26,29 @@ import java.util.HashMap;
  * a class to maintain pointers to source with sink id as key.
  * used by sink to push responses into respective source
  */
-public class SourceStaticHolder {
-    private static SourceStaticHolder instance = new SourceStaticHolder();
-    private HashMap<String, GrpcCallResponseSource> sourceHashMap = new HashMap<>();
+public class GrpcSourceRegistry {
+    private static GrpcSourceRegistry instance = new GrpcSourceRegistry();
+    private HashMap<String, GrpcCallResponseSource> grpcCallResponseSourceHashMap = new HashMap<>();
+    private HashMap<String, GrpcServiceSource> grpcServiceSourceHashMap = new HashMap<>();
 
-    private SourceStaticHolder() {
+    private GrpcSourceRegistry() {
 
     }
 
-    public static SourceStaticHolder getInstance() {
+    public static GrpcSourceRegistry getInstance() {
         return instance;
     }
 
-    public void putSource(String key, GrpcCallResponseSource source) {
-        sourceHashMap.put(key, source);
+    public void putGrpcCallResponseSource(String key, GrpcCallResponseSource source) {
+        grpcCallResponseSourceHashMap.put(key, source);
     }
 
-    public GrpcCallResponseSource getGRPCSource(String key) {
-        return sourceHashMap.get(key);
+    public GrpcCallResponseSource getGrpcCallResponseSourceSource(String key) {
+        return grpcCallResponseSourceHashMap.get(key);
     }
 
     public void removeGRPCSource(String key) {
-        sourceHashMap.remove(key);
+        grpcCallResponseSourceHashMap.remove(key);
     }
 
 }

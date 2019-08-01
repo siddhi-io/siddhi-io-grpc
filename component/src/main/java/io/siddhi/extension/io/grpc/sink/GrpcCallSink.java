@@ -16,7 +16,7 @@ import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
 
 /**
- * {@code GrpcSink} Handle the gRPC publishing tasks.
+ * {@code GrpcCallSink} Handle the gRPC publishing tasks.
  */
 @Extension(
         name = "grpc-call", namespace = "sink",
@@ -86,7 +86,7 @@ public class GrpcCallSink extends AbstractGrpcSink {
             Futures.addCallback(futureResponse, new FutureCallback<Event>() {
                 @Override
                 public void onSuccess(Event result) {
-                    sourceStaticHolder.getGRPCSource(sinkID).onResponse(result);
+                    grpcSourceRegistry.getGrpcCallResponseSourceSource(sinkID).onResponse(result);
                 }
 
                 @Override

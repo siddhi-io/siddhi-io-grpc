@@ -53,6 +53,7 @@ public abstract class AbstractGrpcSource extends Source {
     private boolean isDefaultMode;
     private int port;
     private String hostAddress;
+    protected String[] requestedTransportPropertyNames;
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
@@ -66,6 +67,7 @@ public abstract class AbstractGrpcSource extends Source {
         this.siddhiAppContext = siddhiAppContext;
         this.sourceEventListener = sourceEventListener;
         this.url = optionHolder.validateAndGetOption(GrpcConstants.PUBLISHER_URL).getValue();
+        this.requestedTransportPropertyNames = requestedTransportPropertyNames.clone();
         List<String> URLParts = new ArrayList<>(Arrays.asList(url.split(GrpcConstants.PORT_SERVICE_SEPARATOR)));
         URLParts.removeAll(Collections.singletonList(GrpcConstants.EMPTY_STRING));
 
@@ -99,16 +101,16 @@ public abstract class AbstractGrpcSource extends Source {
     public abstract void initializeGrpcServer(int port);
 
     private void stop() throws InterruptedException { //todo move into disconnect
-        Server s = server; //todo:
+        Server s = server; //todo: put meaningful names
         if (s == null) {
-            throw new IllegalStateException("Already stopped");
+            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": Illeagal state. Server already stopped");
         }
         server = null;
         s.shutdown();
         if (s.awaitTermination(1, TimeUnit.SECONDS)) {
 
             if (logger.isDebugEnabled()) {
-                logger.debug("Server stopped");
+                logger.debug(siddhiAppContext.getName() + ": Server stopped");
             }
             return;
         }
@@ -116,7 +118,7 @@ public abstract class AbstractGrpcSource extends Source {
         if (s.awaitTermination(1, TimeUnit.SECONDS)) {
             return;
         }
-        throw new RuntimeException("Unable to shutdown server");
+        throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": Unable to shutdown server");
     }
 
     @Override
