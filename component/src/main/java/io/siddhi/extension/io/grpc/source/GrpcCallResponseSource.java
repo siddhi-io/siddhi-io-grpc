@@ -131,7 +131,7 @@ public class GrpcCallResponseSource extends Source {
      */
     @Override
     public void destroy() {
-        grpcSourceRegistry.removeGRPCSource(sinkID);
+        grpcSourceRegistry.removeGrpcCallResponseSource(sinkID);
     }
 
     /**

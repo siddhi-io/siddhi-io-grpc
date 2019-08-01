@@ -32,6 +32,8 @@ public class GrpcConstants {
     public static final String DEFAULT_SERVICE_NAME = "EventService";
     public static final String SINK_TYPE_OPTION = "type";
     public static final String GRPC_CALL_SINK_NAME = "grpc-call";
+    public static final String SOURCE_ID = "source.id";
+    public static final String MESSAGE_ID = "message.id";
 
     public static final int URL_PROTOCOL_POSITION = 0;
     public static final int URL_HOST_AND_PORT_POSITION = 1;

@@ -82,16 +82,18 @@ public abstract class AbstractGrpcSource extends Source {
         this.hostAddress = URLParts.get(GrpcConstants.URL_HOST_AND_PORT_POSITION).split(":")[0];
         this.port = Integer.parseInt(URLParts.get(GrpcConstants.URL_HOST_AND_PORT_POSITION).split(":")[1]);
 
+        initSource(optionHolder);
+
         if (serviceName.equals(GrpcConstants.DEFAULT_SERVICE_NAME)
                 && URLParts.size() == GrpcConstants.NUM_URL_PARTS_FOR_DEFAULT_MODE_SOURCE) {
-            if (methodName.equals(GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE)) {
+//            if (methodName.equals(GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE)) {
                 this.isDefaultMode = true;
                 initializeGrpcServer(port);
-            } else if (methodName.equals(GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE)) {
-                throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": grpc source only accepts " +
-                        "method consume in EventService when started in the default mode. If you want to use process " +
-                        "method use grpc-service source");
-            }
+//            } else if (methodName.equals(GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE)) {
+//                throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": grpc source only accepts " +
+//                        "method consume in EventService when started in the default mode. If you want to use process " +
+//                        "method use grpc-service source");
+//            }
         } else {
             //todo: handle generic grpc service
         }
@@ -99,6 +101,8 @@ public abstract class AbstractGrpcSource extends Source {
     }
 
     public abstract void initializeGrpcServer(int port);
+
+    public abstract void initSource(OptionHolder optionHolder);
 
     private void stop() throws InterruptedException { //todo move into disconnect
         Server s = server; //todo: put meaningful names

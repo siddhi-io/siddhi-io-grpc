@@ -23,6 +23,9 @@ import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
 import io.siddhi.annotation.Parameter;
 import io.siddhi.annotation.util.DataType;
+import io.siddhi.core.util.transport.OptionHolder;
+import io.siddhi.extension.io.grpc.util.GrpcConstants;
+import io.siddhi.extension.io.grpc.util.GrpcSourceRegistry;
 import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
@@ -54,6 +57,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class GrpcServiceSource extends AbstractGrpcSource {
     private static final Logger logger = Logger.getLogger(GrpcCallResponseSource.class.getName());
     private Map<String, StreamObserver<Event>> streamObserverMap = new ConcurrentHashMap<>();
+    protected GrpcSourceRegistry grpcSourceRegistry = GrpcSourceRegistry.getInstance();
 
     @Override
     public void initializeGrpcServer(int port) {
@@ -61,14 +65,22 @@ public class GrpcServiceSource extends AbstractGrpcSource {
             @Override
             public void process(Event request,
                                 StreamObserver<Event> responseObserver) { //todo message id & another correlation id for iding source from sink
+                System.out.println("received in server");
                 if (logger.isDebugEnabled()) {
                     logger.debug(siddhiAppContext.getName() + ": Server hit");
                 }
                 String messageId = UUID.randomUUID().toString();
-                sourceEventListener.onEvent(request.getPayload(), new String[]{messageId});
                 streamObserverMap.put(messageId, responseObserver);
+                sourceEventListener.onEvent(request.getPayload(), new String[]{messageId});
+                System.out.println("");
             }
         }).build();
+    }
+
+    @Override
+    public void initSource(OptionHolder optionHolder) {
+        String sourceId = optionHolder.validateAndGetOption(GrpcConstants.SOURCE_ID).getValue();
+        grpcSourceRegistry.putGrpcServiceSource(sourceId, this);
     }
 
     public void handleCallback(String messageId, String responsePayload) {

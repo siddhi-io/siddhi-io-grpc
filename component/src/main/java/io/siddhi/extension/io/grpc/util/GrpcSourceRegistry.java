@@ -43,12 +43,24 @@ public class GrpcSourceRegistry {
         grpcCallResponseSourceHashMap.put(key, source);
     }
 
+    public void putGrpcServiceSource(String key, GrpcServiceSource source) {
+        grpcServiceSourceHashMap.put(key,source);
+    }
+
     public GrpcCallResponseSource getGrpcCallResponseSourceSource(String key) {
         return grpcCallResponseSourceHashMap.get(key);
     }
 
-    public void removeGRPCSource(String key) {
+    public GrpcServiceSource getGrpcServiceSource(String key) {
+        return grpcServiceSourceHashMap.get(key);
+    }
+
+    public void removeGrpcCallResponseSource(String key) {
         grpcCallResponseSourceHashMap.remove(key);
+    }
+
+    public void removeGrpcServiceSource(String key) {
+        grpcServiceSourceHashMap.remove(key);
     }
 
 }

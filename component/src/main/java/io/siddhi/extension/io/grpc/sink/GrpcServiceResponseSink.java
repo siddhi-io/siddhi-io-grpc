@@ -24,6 +24,9 @@ import io.siddhi.annotation.util.DataType;
 import io.siddhi.core.exception.ConnectionUnavailableException;
 import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.transport.DynamicOptions;
+import io.siddhi.core.util.transport.Option;
+import io.siddhi.core.util.transport.OptionHolder;
+import io.siddhi.extension.io.grpc.util.GrpcConstants;
 import org.apache.log4j.Logger;
 
 /**
@@ -60,17 +63,30 @@ import org.apache.log4j.Logger;
 )
 public class GrpcServiceResponseSink extends AbstractGrpcSink {
     private static final Logger logger = Logger.getLogger(GrpcServiceResponseSink.class.getName());
+    private String sourceId;
+    private Option messageIdOption;
+
+    @Override
+    void initSink(OptionHolder optionHolder) {
+        sourceId = optionHolder.validateAndGetOption(GrpcConstants.SOURCE_ID).getValue();
+        this.messageIdOption = optionHolder.validateAndGetOption(GrpcConstants.MESSAGE_ID);
+    }
 
     @Override
     public void publish(Object payload, DynamicOptions dynamicOptions, State state) {
-
+        String messageId = messageIdOption.getValue(dynamicOptions);
+        grpcSourceRegistry.getGrpcServiceSource(sourceId).handleCallback(messageId, (String) payload);
     }
 
     @Override
     public void connect() throws ConnectionUnavailableException {
     }
-
     @Override
     public void disconnect() {
+    }
+
+    @Override
+    public String[] getSupportedDynamicOptions() {
+        return new String[]{GrpcConstants.MESSAGE_ID};
     }
 }

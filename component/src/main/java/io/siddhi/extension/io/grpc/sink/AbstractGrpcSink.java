@@ -128,6 +128,7 @@ public abstract class AbstractGrpcSink extends Sink {
                 .usePlaintext(true)
                 .build();
         this.streamID = siddhiAppContext.getName() + GrpcConstants.PORT_HOST_SEPARATOR + streamDefinition.toString();
+        initSink(optionHolder);
 
         if (serviceName.equals(GrpcConstants.DEFAULT_SERVICE_NAME)
                 && (methodName.equals(GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE)
@@ -141,6 +142,8 @@ public abstract class AbstractGrpcSink extends Sink {
         }
         return null;
     }
+
+    abstract void initSink(OptionHolder optionHolder);
 
     @Override
     public void publish(Object payload, DynamicOptions dynamicOptions, State state)

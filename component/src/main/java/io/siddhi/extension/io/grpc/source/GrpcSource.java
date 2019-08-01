@@ -24,6 +24,7 @@ import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
 import io.siddhi.annotation.Parameter;
 import io.siddhi.annotation.util.DataType;
+import io.siddhi.core.util.transport.OptionHolder;
 import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
@@ -65,5 +66,10 @@ public class GrpcSource extends AbstractGrpcSource {
                 responseObserver.onCompleted();
             }
         }).build();
+    }
+
+    @Override
+    public void initSource(OptionHolder optionHolder) {
+
     }
 }

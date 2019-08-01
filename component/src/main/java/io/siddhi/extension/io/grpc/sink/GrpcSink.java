@@ -30,6 +30,7 @@ import io.siddhi.core.exception.ConnectionUnavailableException;
 import io.siddhi.core.exception.SiddhiAppRuntimeException;
 import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.transport.DynamicOptions;
+import io.siddhi.core.util.transport.OptionHolder;
 import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
 
@@ -74,6 +75,11 @@ import org.wso2.grpc.Event;
 
 public class GrpcSink extends AbstractGrpcSink {
     private static final Logger logger = Logger.getLogger(GrpcSink.class.getName());
+
+    @Override
+    void initSink(OptionHolder optionHolder) {
+
+    }
 
     @Override
     public void publish(Object payload, DynamicOptions dynamicOptions, State state)
