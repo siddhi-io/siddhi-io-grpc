@@ -72,7 +72,7 @@ import org.wso2.grpc.Event;
         }
 )
 
-public class GrpcSink extends GrpcSinkSuper {
+public class GrpcSink extends AbstractGrpcSink {
     private static final Logger logger = Logger.getLogger(GrpcSink.class.getName());
 
     @Override

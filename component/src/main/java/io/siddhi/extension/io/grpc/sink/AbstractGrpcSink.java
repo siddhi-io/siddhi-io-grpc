@@ -47,8 +47,8 @@ import java.util.concurrent.TimeUnit;
  * Call sink to implement fire and forget and send request with response cases
  */
 
-public class GrpcSinkSuper extends Sink {
-    private static final Logger logger = Logger.getLogger(GrpcSinkSuper.class.getName());
+public abstract class AbstractGrpcSink extends Sink {
+    private static final Logger logger = Logger.getLogger(AbstractGrpcSink.class.getName());
     protected SiddhiAppContext siddhiAppContext;
     private ManagedChannel channel;
     private String serviceName;

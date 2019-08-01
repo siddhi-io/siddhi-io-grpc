@@ -48,7 +48,7 @@ import org.wso2.grpc.EventServiceGrpc;
                 )
         }
 )
-public class GrpcSource extends GrpcSourceSuper {
+public class GrpcSource extends AbstractGrpcSource {
     private static final Logger logger = Logger.getLogger(GrpcCallResponseSource.class.getName());
 
     @Override

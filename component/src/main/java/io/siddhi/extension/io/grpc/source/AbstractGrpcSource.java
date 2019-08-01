@@ -42,7 +42,7 @@ import java.util.concurrent.TimeUnit;
 /**
  *
  */
-public class GrpcSourceSuper extends Source {
+public abstract class AbstractGrpcSource extends Source {
     private static final Logger logger = Logger.getLogger(GrpcCallResponseSource.class.getName());
     protected SiddhiAppContext siddhiAppContext;
     protected SourceEventListener sourceEventListener;
@@ -96,10 +96,7 @@ public class GrpcSourceSuper extends Source {
         return null;
     }
 
-    public void initializeGrpcServer(int port) {
-    }
-
-
+    public abstract void initializeGrpcServer(int port);
 
     private void stop() throws InterruptedException { //todo move into disconnect
         Server s = server; //todo:

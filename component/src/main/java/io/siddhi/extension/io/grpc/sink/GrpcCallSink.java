@@ -67,7 +67,7 @@ import org.wso2.grpc.Event;
                 )
         }
 )
-public class GrpcCallSink extends GrpcSinkSuper {
+public class GrpcCallSink extends AbstractGrpcSink {
     private static final Logger logger = Logger.getLogger(GrpcCallSink.class.getName());
 
     @Override
