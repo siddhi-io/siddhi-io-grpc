@@ -43,8 +43,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
- * {@code GrpcSink} Handle the gRPC publishing tasks. This is a super class that will be extended by Grpc Sink and Grpc
- * Call sink to implement fire and forget and send request with response cases
+ * {@code AbstractGrpcSink} is a super class extended by GrpcCallSink, and GrpcSink.
+ * This provides most of the initialization implementations
  */
 
 public abstract class AbstractGrpcSink extends Sink {
@@ -128,7 +128,6 @@ public abstract class AbstractGrpcSink extends Sink {
                 .usePlaintext(true)
                 .build();
         this.streamID = siddhiAppContext.getName() + GrpcConstants.PORT_HOST_SEPARATOR + streamDefinition.toString();
-        initSink(optionHolder);
 
         if (serviceName.equals(GrpcConstants.DEFAULT_SERVICE_NAME)
                 && (methodName.equals(GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE)
@@ -142,8 +141,6 @@ public abstract class AbstractGrpcSink extends Sink {
         }
         return null;
     }
-
-    abstract void initSink(OptionHolder optionHolder);
 
     @Override
     public void publish(Object payload, DynamicOptions dynamicOptions, State state)

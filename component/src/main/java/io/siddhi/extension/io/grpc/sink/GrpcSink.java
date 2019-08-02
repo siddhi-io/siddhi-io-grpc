@@ -77,11 +77,6 @@ public class GrpcSink extends AbstractGrpcSink {
     private static final Logger logger = Logger.getLogger(GrpcSink.class.getName());
 
     @Override
-    void initSink(OptionHolder optionHolder) {
-
-    }
-
-    @Override
     public void publish(Object payload, DynamicOptions dynamicOptions, State state)
             throws ConnectionUnavailableException {
         if (isDefaultMode) {

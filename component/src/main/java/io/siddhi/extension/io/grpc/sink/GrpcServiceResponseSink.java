@@ -21,13 +21,26 @@ import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
 import io.siddhi.annotation.Parameter;
 import io.siddhi.annotation.util.DataType;
+import io.siddhi.core.config.SiddhiAppContext;
 import io.siddhi.core.exception.ConnectionUnavailableException;
+import io.siddhi.core.stream.ServiceDeploymentInfo;
+import io.siddhi.core.stream.output.sink.Sink;
+import io.siddhi.core.util.config.ConfigReader;
 import io.siddhi.core.util.snapshot.state.State;
+import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.core.util.transport.DynamicOptions;
 import io.siddhi.core.util.transport.Option;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
+import io.siddhi.extension.io.grpc.util.GrpcSourceRegistry;
+import io.siddhi.query.api.definition.StreamDefinition;
+import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.log4j.Logger;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * {@code GrpcServiceResponseSink} Handle the gRPC publishing tasks.
@@ -61,15 +74,45 @@ import org.apache.log4j.Logger;
                 )
         }
 )
-public class GrpcServiceResponseSink extends AbstractGrpcSink {
+public class GrpcServiceResponseSink extends Sink {
     private static final Logger logger = Logger.getLogger(GrpcServiceResponseSink.class.getName());
+    protected GrpcSourceRegistry grpcSourceRegistry = GrpcSourceRegistry.getInstance();
     private String sourceId;
     private Option messageIdOption;
+    private SiddhiAppContext siddhiAppContext;
+    private String url;
+    private String serviceName;
+    private String methodName;
+    private String sinkID;
 
     @Override
-    void initSink(OptionHolder optionHolder) {
-        sourceId = optionHolder.validateAndGetOption(GrpcConstants.SOURCE_ID).getValue();
+    protected StateFactory init(StreamDefinition outputStreamDefinition, OptionHolder optionHolder, ConfigReader sinkConfigReader, SiddhiAppContext siddhiAppContext) {
+        this.siddhiAppContext = siddhiAppContext;
+        this.url = optionHolder.validateAndGetOption(GrpcConstants.PUBLISHER_URL).getValue();
+        List<String> URLParts = new ArrayList<>(Arrays.asList(url.split(GrpcConstants.PORT_SERVICE_SEPARATOR)));
+        URLParts.removeAll(Collections.singletonList(GrpcConstants.EMPTY_STRING));
+
+        if (!URLParts.get(GrpcConstants.URL_PROTOCOL_POSITION)
+                .equalsIgnoreCase(GrpcConstants.GRPC_PROTOCOL_NAME + ":")) {
+            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": The url must begin with \"" +
+                    GrpcConstants.GRPC_PROTOCOL_NAME + "\" for all grpc sinks");
+        }
+
+        String[] fullyQualifiedServiceNameParts = URLParts.get(GrpcConstants.URL_SERVICE_NAME_POSITION).split("\\.");
+        this.serviceName = fullyQualifiedServiceNameParts[fullyQualifiedServiceNameParts.length - 1];
+        this.methodName = URLParts.get(GrpcConstants.URL_METHOD_NAME_POSITION);
+        if (optionHolder.isOptionExists(GrpcConstants.SINK_ID)) {
+            this.sinkID = optionHolder.validateAndGetOption(GrpcConstants.SINK_ID).getValue();
+        } else {
+            if (optionHolder.validateAndGetOption(GrpcConstants.SINK_TYPE_OPTION)
+                    .getValue().equalsIgnoreCase(GrpcConstants.GRPC_CALL_SINK_NAME)) {
+                throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": For grpc-call sink the " +
+                        "parameter sink.id is mandatory for receiving responses. Please provide a sink.id");
+            }
+        }
+        this.sourceId = optionHolder.validateAndGetOption(GrpcConstants.SOURCE_ID).getValue();
         this.messageIdOption = optionHolder.validateAndGetOption(GrpcConstants.MESSAGE_ID);
+        return null;
     }
 
     @Override
@@ -83,6 +126,22 @@ public class GrpcServiceResponseSink extends AbstractGrpcSink {
     }
     @Override
     public void disconnect() {
+    }
+
+    @Override
+    public void destroy() {
+
+    }
+
+    @Override
+    public Class[] getSupportedInputEventClasses() {
+        return new Class[]{Object.class}; // in default case json mapper will inject String. In custom gRPC service
+         // case protobuf mapper will inject gRPC message class
+    }
+
+    @Override
+    protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
+        return null;
     }
 
     @Override
