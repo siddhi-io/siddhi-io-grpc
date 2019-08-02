@@ -40,6 +40,6 @@ public class GrpcConstants {
     public static final int URL_SERVICE_NAME_POSITION = 2;
     public static final int URL_METHOD_NAME_POSITION = 3;
     public static final int URL_SEQUENCE_NAME_POSITION = 4;
-    public static final int NUM_URL_PARTS_FOR_DEFAULT_MODE_SINK = 5;
+    public static final int NUM_URL_PARTS_FOR_MI_MODE_SINK = 5;
     public static final int NUM_URL_PARTS_FOR_DEFAULT_MODE_SOURCE = 4;
 }

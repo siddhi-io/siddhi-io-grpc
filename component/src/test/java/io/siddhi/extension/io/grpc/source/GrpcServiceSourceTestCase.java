@@ -148,7 +148,7 @@ public class GrpcServiceSourceTestCase {
 
         client.start();
 
-        Thread.sleep(1000000);
+        Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
     }
 

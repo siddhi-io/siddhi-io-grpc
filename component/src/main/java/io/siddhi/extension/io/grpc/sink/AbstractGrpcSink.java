@@ -70,7 +70,8 @@ public abstract class AbstractGrpcSink extends Sink {
      */
     @Override
     public Class[] getSupportedInputEventClasses() {
-        return new Class[]{Object.class};
+        return new Class[]{Object.class}; // in default case json mapper will inject String. In custom gRPC service
+        // case protobuf mapper will inject gRPC message class
     }
 
     @Override
@@ -131,11 +132,12 @@ public abstract class AbstractGrpcSink extends Sink {
 
         if (serviceName.equals(GrpcConstants.DEFAULT_SERVICE_NAME)
                 && (methodName.equals(GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE)
-                || methodName.equals(GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE))
-                && URLParts.size() == GrpcConstants.NUM_URL_PARTS_FOR_DEFAULT_MODE_SINK) {
+                || methodName.equals(GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE))) {
             this.isDefaultMode = true;
             this.futureStub = EventServiceGrpc.newFutureStub(channel);
-            this.sequenceName = URLParts.get(GrpcConstants.URL_SEQUENCE_NAME_POSITION);
+            if (URLParts.size() == GrpcConstants.NUM_URL_PARTS_FOR_MI_MODE_SINK) { //todo: we need to pass sequence name in event?
+                this.sequenceName = URLParts.get(GrpcConstants.URL_SEQUENCE_NAME_POSITION);
+            }
         } else {
             //todo: handle generic grpc service
         }

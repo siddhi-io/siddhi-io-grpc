@@ -60,6 +60,15 @@ public abstract class AbstractGrpcSource extends Source {
         return null;
     }
 
+    /**
+     * The initialization method for {@link Source}, will be called before other methods. It used to validate
+     * all configurations and to get initial values.
+     * @param sourceEventListener After receiving events, the source should trigger onEvent() of this listener.
+     *                            Listener will then pass on the events to the appropriate mappers for processing .
+     * @param optionHolder        Option holder containing static configuration related to the {@link Source}
+     * @param configReader        ConfigReader is used to read the {@link Source} related system configuration.
+     * @param siddhiAppContext    the context of the {@link io.siddhi.query.api.SiddhiApp} used to get Siddhi
+     */
     @Override
     public StateFactory init(SourceEventListener sourceEventListener, OptionHolder optionHolder,
                              String[] requestedTransportPropertyNames, ConfigReader configReader,
@@ -86,14 +95,8 @@ public abstract class AbstractGrpcSource extends Source {
 
         if (serviceName.equals(GrpcConstants.DEFAULT_SERVICE_NAME)
                 && URLParts.size() == GrpcConstants.NUM_URL_PARTS_FOR_DEFAULT_MODE_SOURCE) {
-//            if (methodName.equals(GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE)) {
                 this.isDefaultMode = true;
                 initializeGrpcServer(port);
-//            } else if (methodName.equals(GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE)) {
-//                throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": grpc source only accepts " +
-//                        "method consume in EventService when started in the default mode. If you want to use process " +
-//                        "method use grpc-service source");
-//            }
         } else {
             //todo: handle generic grpc service
         }
@@ -104,27 +107,12 @@ public abstract class AbstractGrpcSource extends Source {
 
     public abstract void initSource(OptionHolder optionHolder);
 
-    private void stop() throws InterruptedException { //todo move into disconnect
-        Server s = server; //todo: put meaningful names
-        if (s == null) {
-            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": Illeagal state. Server already stopped");
-        }
-        server = null;
-        s.shutdown();
-        if (s.awaitTermination(1, TimeUnit.SECONDS)) {
-
-            if (logger.isDebugEnabled()) {
-                logger.debug(siddhiAppContext.getName() + ": Server stopped");
-            }
-            return;
-        }
-        s.shutdownNow();
-        if (s.awaitTermination(1, TimeUnit.SECONDS)) {
-            return;
-        }
-        throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": Unable to shutdown server");
-    }
-
+    /**
+     * Returns the list of classes which this source can output.
+     *
+     * @return Array of classes that will be output by the source.
+     * Null or empty array if it can produce any type of class.
+     */
     @Override
     public Class[] getOutputEventClasses() {
         return new Class[0];
@@ -142,25 +130,55 @@ public abstract class AbstractGrpcSource extends Source {
         }
     }
 
+    /**
+     * This method can be called when it is needed to disconnect from the end point.
+     */
     @Override
     public void disconnect() {
         try {
-            stop();
+            Server serverPointer = server;
+            if (serverPointer == null) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug(siddhiAppContext.getName() + ": Illegal state. Server already stopped.");
+                }
+                return;
+            }
+            serverPointer.shutdown();
+            if (serverPointer.awaitTermination(1, TimeUnit.SECONDS)) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug(siddhiAppContext.getName() + ": Server stopped");
+                }
+                return;
+            }
+            serverPointer.shutdownNow();
+            if (serverPointer.awaitTermination(1, TimeUnit.SECONDS)) {
+                return;
+            }
+            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": Unable to shutdown server");
         } catch (InterruptedException e) {
             throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": " + e.getMessage());
         }
     }
 
+    /**
+     * Called at the end to clean all the resources consumed by the {@link Source}
+     */
     @Override
     public void destroy() {
-
+        server = null;
     }
 
+    /**
+     * Called to pause event consumption
+     */
     @Override
     public void pause() {
 
     }
 
+    /**
+     * Called to resume event consumption
+     */
     @Override
     public void resume() {
 

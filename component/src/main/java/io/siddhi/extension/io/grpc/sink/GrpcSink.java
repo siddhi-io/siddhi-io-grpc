@@ -27,10 +27,8 @@ import io.siddhi.annotation.Extension;
 import io.siddhi.annotation.Parameter;
 import io.siddhi.annotation.util.DataType;
 import io.siddhi.core.exception.ConnectionUnavailableException;
-import io.siddhi.core.exception.SiddhiAppRuntimeException;
 import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.transport.DynamicOptions;
-import io.siddhi.core.util.transport.OptionHolder;
 import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
 
@@ -40,23 +38,19 @@ import org.wso2.grpc.Event;
 @Extension(
         name = "grpc", namespace = "sink",
         description = "This extension publishes event data encoded into GRPC Classes as defined in the user input " +
-                "jar. This extension has a default gRPC service classes jar added. The default service is called " +
+                "jar. This extension has a default gRPC service classes added. The default service is called " +
                 "\"EventService\" and it has 2 rpc's. They are process and consume. Process sends a request of type " +
                 "Event and receives a response of the same type. Consume sends a request of type Event and expects " +
                 "no response from gRPC server. Please note that the Event type mentioned here is not " +
-                "io.siddhi.core.event.Event but a type defined in the default service protobuf given in the readme.",
+                "io.siddhi.core.event.Event but a type defined in the default service protobuf provided in " +
+                "resources folder. This grpc sink is used for scenarios where we send a request and don't expect " +
+                "a response back. I.e getting a google.protobuf.Empty response back.",
         parameters = {
                 @Parameter(name = "url",
                         description = "The url to which the outgoing events should be published via this extension. " +
                                 "This url should consist the host address, port, service name, method name in the " +
                                 "following format. grpc://hostAddress:port/serviceName/methodName/sequenceName" ,
                         type = {DataType.STRING}),
-                @Parameter(name = "sink.id",
-                        description = "a unique ID that should be set for each gRPC sink. There is a 1:1 mapping " +
-                                "between gRPC sinks and sources. Each sink has one particular source listening to " +
-                                "the responses to requests published from that sink. So the same sink.id should be " +
-                                "given when writing the source also." ,
-                        type = {DataType.INT}),
         },
         examples = {
                 @Example(
@@ -96,7 +90,6 @@ public class GrpcSink extends AbstractGrpcSink {
                     if (logger.isDebugEnabled()) {
                         logger.debug(siddhiAppContext.getName() + ": " + t.getMessage());
                     }
-                    throw new SiddhiAppRuntimeException(t.getMessage());
                 }
             }, MoreExecutors.directExecutor());
         } else {

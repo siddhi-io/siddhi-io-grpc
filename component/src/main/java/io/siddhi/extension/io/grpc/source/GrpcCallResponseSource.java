@@ -67,8 +67,6 @@ import org.wso2.grpc.Event;
         }
 )
 public class GrpcCallResponseSource extends Source {
-    private static final Logger logger = Logger.getLogger(GrpcCallResponseSource.class.getName());
-    private SiddhiAppContext siddhiAppContext;
     private GrpcSourceRegistry grpcSourceRegistry = GrpcSourceRegistry.getInstance();
     private String sinkID;
     private SourceEventListener sourceEventListener;
@@ -91,7 +89,6 @@ public class GrpcCallResponseSource extends Source {
     public StateFactory init(SourceEventListener sourceEventListener, OptionHolder optionHolder,
                              String[] requestedTransportPropertyNames, ConfigReader configReader,
                              SiddhiAppContext siddhiAppContext) {
-        this.siddhiAppContext = siddhiAppContext;
         this.sourceEventListener = sourceEventListener;
         sinkID = optionHolder.validateAndGetOption("sink.id").getValue();
         grpcSourceRegistry.putGrpcCallResponseSource(sinkID, this);

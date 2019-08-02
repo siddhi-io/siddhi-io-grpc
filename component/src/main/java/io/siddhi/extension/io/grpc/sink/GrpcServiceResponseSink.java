@@ -43,16 +43,13 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * {@code GrpcServiceResponseSink} Handle the gRPC publishing tasks.
+ * {@code GrpcServiceResponseSink} Handle sending responses for requests received via grpc-service source.
  */
 @Extension(
         name = "grpc-service-response", namespace = "sink",
-        description = "This extension publishes event data encoded into GRPC Classes as defined in the user input " +
-                "jar. This extension has a default gRPC service classes jar added. The default service is called " +
-                "\"EventService\" and it has 2 rpc's. They are process and consume. Process sends a request of type " +
-                "Event and receives a response of the same type. Consume sends a request of type Event and expects " +
-                "no response from gRPC server. Please note that the Event type mentioned here is not " +
-                "io.siddhi.core.event.Event but a type defined in the default service protobuf given in the readme.",
+        description = "This extension is used to send responses back to a gRPC client after receiving requests " +
+                "through grpc-service source. This calls a callback in grpc-service source to put response back in " +
+                "StreamObserver.",
         parameters = {
                 @Parameter(name = "url",
                         description = "The url to which the outgoing events should be published via this extension. " +
@@ -60,15 +57,17 @@ import java.util.List;
                                 "following format. grpc://hostAddress:port/serviceName/methodName/sequenceName" ,
                         type = {DataType.STRING}),
                 @Parameter(name = "source.id",
-                        description = "sadf" ,
+                        description = "A unique id to identify the coorect source to which this sink is mapped. " +
+                                "There is a 1:1 mapping between source and sink" ,
                         type = {DataType.INT}),
         },
         examples = {
                 @Example(
-                        syntax = "@sink(type='grpc', " +
+                        syntax = "@sink(type='grpc-service-response', " +
                                 "url = 'grpc://134.23.43.35:8080/org.wso2.grpc.EventService/consume/mySequence', " +
+                                "source.id='1'" +
                                 "@map(type='json')) "
-                                + "define stream FooStream (message String);",
+                                + "define stream FooStream (messageId String, message String);",
                         description = "asdf"
                         //todo: add an example for generic service access
                 )

@@ -58,28 +58,24 @@ public class GrpcServiceSource extends AbstractGrpcSource {
     private static final Logger logger = Logger.getLogger(GrpcCallResponseSource.class.getName());
     private Map<String, StreamObserver<Event>> streamObserverMap = new ConcurrentHashMap<>();
     protected GrpcSourceRegistry grpcSourceRegistry = GrpcSourceRegistry.getInstance();
+    private String sourceId;
 
     @Override
     public void initializeGrpcServer(int port) {
         this.server = ServerBuilder.forPort(port).addService(new EventServiceGrpc.EventServiceImplBase() {
             @Override
             public void process(Event request,
-                                StreamObserver<Event> responseObserver) { //todo message id & another correlation id for iding source from sink
-                System.out.println("received in server");
-                if (logger.isDebugEnabled()) {
-                    logger.debug(siddhiAppContext.getName() + ": Server hit");
-                }
+                                StreamObserver<Event> responseObserver) {
                 String messageId = UUID.randomUUID().toString();
                 streamObserverMap.put(messageId, responseObserver);
                 sourceEventListener.onEvent(request.getPayload(), new String[]{messageId});
-                System.out.println("");
             }
         }).build();
     }
 
     @Override
     public void initSource(OptionHolder optionHolder) {
-        String sourceId = optionHolder.validateAndGetOption(GrpcConstants.SOURCE_ID).getValue();
+        this.sourceId = optionHolder.validateAndGetOption(GrpcConstants.SOURCE_ID).getValue();
         grpcSourceRegistry.putGrpcServiceSource(sourceId, this);
     }
 
@@ -88,7 +84,13 @@ public class GrpcServiceSource extends AbstractGrpcSource {
         responseBuilder.setPayload(responsePayload);
         Event response = responseBuilder.build();
         StreamObserver<Event> streamObserver = streamObserverMap.get(messageId);
+        streamObserverMap.remove(messageId);
         streamObserver.onNext(response);
         streamObserver.onCompleted();
+    }
+
+    @Override
+    public void destroy() {
+        grpcSourceRegistry.removeGrpcServiceSource(sourceId);
     }
 }
