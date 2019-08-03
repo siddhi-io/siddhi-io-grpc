@@ -31,7 +31,6 @@ import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.GrpcSourceRegistry;
-import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
 
 /**
@@ -107,7 +106,7 @@ public class GrpcCallResponseSource extends Source {
      */
     @Override
     public Class[] getOutputEventClasses() {
-        return new Class[]{io.siddhi.core.event.Event.class, String.class};
+        return new Class[]{String.class, Object.class};
     }
 
     @Override

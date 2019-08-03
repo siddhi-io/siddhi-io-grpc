@@ -21,6 +21,7 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.siddhi.core.SiddhiAppRuntime;
 import io.siddhi.core.SiddhiManager;
+import io.siddhi.core.exception.SiddhiAppRuntimeException;
 import io.siddhi.core.query.output.callback.QueryCallback;
 import io.siddhi.core.util.EventPrinter;
 import org.apache.log4j.Level;
@@ -29,7 +30,6 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
-import org.wso2.grpc.EventServiceGrpc.EventServiceBlockingStub;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -43,7 +43,8 @@ public class GrpcServiceSourceTestCase {
         logger.setLevel(Level.DEBUG);
         SiddhiManager siddhiManager = new SiddhiManager();
 
-        String stream2 = "@source(type='grpc-service', url='grpc://localhost:8888/org.wso2.grpc.EventService/consume', source.id='1', " +
+        String stream2 = "@source(type='grpc-service', " +
+                "url='grpc://localhost:8888/org.wso2.grpc.EventService/consume', source.id='1', " +
                 "@map(type='json', @attributes(messageId='trp:messageId', message='message'))) " +
                 "define stream BarStream (messageId String, message String);";
         String query = "@info(name = 'query') "
@@ -54,7 +55,8 @@ public class GrpcServiceSourceTestCase {
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(stream2 + query);
         siddhiAppRuntime.addCallback("query", new QueryCallback() {
             @Override
-            public void receive(long timeStamp, io.siddhi.core.event.Event[] inEvents, io.siddhi.core.event.Event[] removeEvents) {
+            public void receive(long timeStamp, io.siddhi.core.event.Event[] inEvents,
+                                io.siddhi.core.event.Event[] removeEvents) {
                 EventPrinter.print(timeStamp, inEvents, removeEvents);
                 for (int i = 0; i < inEvents.length; i++) {
                     eventCount.incrementAndGet();
@@ -78,7 +80,7 @@ public class GrpcServiceSourceTestCase {
         ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888")
                 .usePlaintext(true)
                 .build();
-        EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
+        EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
 
         siddhiAppRuntime.start();
         Event emptyResponse = blockingStub.process(sequenceCallRequest);
@@ -92,11 +94,14 @@ public class GrpcServiceSourceTestCase {
         logger.setLevel(Level.DEBUG);
         SiddhiManager siddhiManager = new SiddhiManager();
 
-        String stream1 = "@source(type='grpc-service', url='grpc://localhost:8888/org.wso2.grpc.EventService/process', source.id='1', " +
+        String stream1 = "@source(type='grpc-service', " +
+                "url='grpc://localhost:8888/org.wso2.grpc.EventService/process', source.id='1', " +
                 "@map(type='json', @attributes(messageId='trp:messageId', message='message'))) " +
                 "define stream FooStream (messageId String, message String);";
 
-        String stream2 = "@sink(type='grpc-service-response', url='grpc://localhost:8888/org.wso2.grpc.EventService/process', source.id='1', message.id='{{messageId}}', " +
+        String stream2 = "@sink(type='grpc-service-response', " +
+                "url='grpc://localhost:8888/org.wso2.grpc.EventService/process', source.id='1', " +
+                "message.id='{{messageId}}', " +
                 "@map(type='json')) " +
                 "define stream BarStream (messageId String, message String);";
         String query = "@info(name = 'query') "
@@ -107,7 +112,8 @@ public class GrpcServiceSourceTestCase {
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(stream1 + stream2 + query);
         siddhiAppRuntime.addCallback("query", new QueryCallback() {
             @Override
-            public void receive(long timeStamp, io.siddhi.core.event.Event[] inEvents, io.siddhi.core.event.Event[] removeEvents) {
+            public void receive(long timeStamp, io.siddhi.core.event.Event[] inEvents,
+                                io.siddhi.core.event.Event[] removeEvents) {
                 EventPrinter.print(timeStamp, inEvents, removeEvents);
                 for (int i = 0; i < inEvents.length; i++) {
                     eventCount.incrementAndGet();
@@ -133,14 +139,14 @@ public class GrpcServiceSourceTestCase {
                 ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888")
                         .usePlaintext(true)
                         .build();
-                EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
+                EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    throw new SiddhiAppRuntimeException(e.getMessage());
                 }
                 Event response = blockingStub.process(sequenceCallRequest);
-                System.out.println(response.toString());
+                Assert.assertNotNull(response);
             }
         };
 

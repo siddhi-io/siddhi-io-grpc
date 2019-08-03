@@ -22,6 +22,8 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.Empty;
+import io.grpc.Metadata;
+import io.grpc.stub.MetadataUtils;
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
 import io.siddhi.annotation.Parameter;
@@ -49,19 +51,20 @@ import org.wso2.grpc.Event;
                 @Parameter(name = "url",
                         description = "The url to which the outgoing events should be published via this extension. " +
                                 "This url should consist the host address, port, service name, method name in the " +
-                                "following format. grpc://hostAddress:port/serviceName/methodName/sequenceName" ,
+                                "following format. grpc://hostAddress:port/serviceName/methodName" ,
                         type = {DataType.STRING}),
         },
         examples = {
                 @Example(
                         syntax = "@sink(type='grpc', " +
-                                "url = 'grpc://134.23.43.35:8080/org.wso2.grpc.EventService/consume/mySequence', " +
-                                "@map(type='json')) "
+                                "url = 'grpc://134.23.43.35:8080/org.wso2.grpc.EventService/consume', " +
+                                "@map(type='json')) " //todo: check if we need to specify the grpc connection properties
                                 + "define stream FooStream (message String);",
-                        description = "Here a stream named FooStream is defined with grpc sink. Since sequence is " +
-                                "specified here sink will be in default mode. i.e communicating to MI. The " +
-                                "MicroIntegrator should be running at 134.23.43.35 host and listening on port 8080. " +
-                                "The sequence called mySeq will be accessed."
+                        description = "Here a stream named FooStream is defined with grpc sink. A grpc server " +
+                                "should be running at 194.23.98.100 listening to port 8080. sink.id is set to 1 " +
+                                "here. So we can write a source with sink.id 1 so that it will listen to responses " +
+                                "for requests published from this stream. Note that since we are using " +
+                                "EventService/consume the sink will be operating in default mode"
                         //todo: add an example for generic service access
                 )
         }
@@ -72,11 +75,17 @@ public class GrpcSink extends AbstractGrpcSink {
 
     @Override
     public void publish(Object payload, DynamicOptions dynamicOptions, State state)
-            throws ConnectionUnavailableException {
+            throws ConnectionUnavailableException { //todo:
         if (isDefaultMode) {
             Event.Builder requestBuilder = Event.newBuilder();
             requestBuilder.setPayload((String) payload);
             Event sequenceCallRequest = requestBuilder.build();
+
+            Metadata header = new Metadata();
+            Metadata.Key<String> key =
+                    Metadata.Key.of("Name", Metadata.ASCII_STRING_MARSHALLER);
+            header.put(key, "Niruhan");
+            futureStub = MetadataUtils.attachHeaders(futureStub, header);
             ListenableFuture<Empty> futureResponse =
                     futureStub.consume(sequenceCallRequest);
             Futures.addCallback(futureResponse, new FutureCallback<Empty>() {
@@ -96,4 +105,5 @@ public class GrpcSink extends AbstractGrpcSink {
             //todo: handle publishing to generic service
         }
     }
+    //todo: do connect and disconnect here
 }

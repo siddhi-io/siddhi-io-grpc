@@ -40,7 +40,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
- *
+ * This is an abstract class extended by GrpcSource and GrpcServiceSource. This provides most of initialization
+ * implementations common for both sources
  */
 public abstract class AbstractGrpcSource extends Source {
     private static final Logger logger = Logger.getLogger(GrpcCallResponseSource.class.getName());
@@ -49,11 +50,9 @@ public abstract class AbstractGrpcSource extends Source {
     private String url;
     protected Server server;
     private String serviceName;
-    private String methodName;
-    private boolean isDefaultMode;
+//    private String methodName;
+    protected boolean isDefaultMode;
     private int port;
-    private String hostAddress;
-    protected String[] requestedTransportPropertyNames;
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
@@ -76,25 +75,23 @@ public abstract class AbstractGrpcSource extends Source {
         this.siddhiAppContext = siddhiAppContext;
         this.sourceEventListener = sourceEventListener;
         this.url = optionHolder.validateAndGetOption(GrpcConstants.PUBLISHER_URL).getValue();
-        this.requestedTransportPropertyNames = requestedTransportPropertyNames.clone();
-        List<String> URLParts = new ArrayList<>(Arrays.asList(url.split(GrpcConstants.PORT_SERVICE_SEPARATOR)));
-        URLParts.removeAll(Collections.singletonList(GrpcConstants.EMPTY_STRING));
+        List<String> urlParts = new ArrayList<>(Arrays.asList(url.split(GrpcConstants.PORT_SERVICE_SEPARATOR)));
+        urlParts.removeAll(Collections.singletonList(GrpcConstants.EMPTY_STRING));
 
-        if (!URLParts.get(GrpcConstants.URL_PROTOCOL_POSITION)
+        if (!urlParts.get(GrpcConstants.URL_PROTOCOL_POSITION)
                 .equalsIgnoreCase(GrpcConstants.GRPC_PROTOCOL_NAME + ":")) {
             throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": The url must begin with \"" +
                     GrpcConstants.GRPC_PROTOCOL_NAME + "\" for all grpc source");
         }
-        String[] fullyQualifiedServiceNameParts = URLParts.get(GrpcConstants.URL_SERVICE_NAME_POSITION).split("\\.");
+        String[] fullyQualifiedServiceNameParts = urlParts.get(GrpcConstants.URL_SERVICE_NAME_POSITION).split("\\.");
         this.serviceName = fullyQualifiedServiceNameParts[fullyQualifiedServiceNameParts.length - 1];
-        this.methodName = URLParts.get(GrpcConstants.URL_METHOD_NAME_POSITION);
-        this.hostAddress = URLParts.get(GrpcConstants.URL_HOST_AND_PORT_POSITION).split(":")[0];
-        this.port = Integer.parseInt(URLParts.get(GrpcConstants.URL_HOST_AND_PORT_POSITION).split(":")[1]);
+//        this.methodName = urlParts.get(GrpcConstants.URL_METHOD_NAME_POSITION);
+        this.port = Integer.parseInt(urlParts.get(GrpcConstants.URL_HOST_AND_PORT_POSITION).split(":")[1]);
 
         initSource(optionHolder);
 
         if (serviceName.equals(GrpcConstants.DEFAULT_SERVICE_NAME)
-                && URLParts.size() == GrpcConstants.NUM_URL_PARTS_FOR_DEFAULT_MODE_SOURCE) {
+                && urlParts.size() == GrpcConstants.NUM_URL_PARTS_FOR_DEFAULT_MODE_SOURCE) {
                 this.isDefaultMode = true;
                 initializeGrpcServer(port);
         } else {

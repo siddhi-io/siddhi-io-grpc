@@ -19,11 +19,11 @@
 
 <FindBugsFilter>
     <Match>
-        <Class name="io.siddhi.extension.io.grpc.util.service.Event$Builder"/>
+        <Class name="org.wso2.grpc.Event$Builder"/>
         <Bug pattern="UCF_USELESS_CONTROL_FLOW"/>
     </Match>
     <Match>
-        <Class name="io.siddhi.extension.io.grpc.sink.GrpcSink$1"/>
+        <Class name="io.siddhi.extension.io.grpc.sink.GrpcCallSink$1"/>
         <Bug pattern="NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE"/>
     </Match>
 </FindBugsFilter>

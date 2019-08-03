@@ -3,6 +3,7 @@ package io.siddhi.extension.io.grpc;
 import com.google.protobuf.Empty;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import io.grpc.ServerInterceptors;
 import io.grpc.stub.StreamObserver;
 import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
@@ -14,12 +15,16 @@ import java.util.concurrent.TimeUnit;
 public class TestServer {
     private static final Logger logger = Logger.getLogger(TestServer.class.getName());
     private Server server;
+    TestServerInterceptor testInterceptor = new TestServerInterceptor();
 
     public void start() throws IOException {
         if (server != null) {
             throw new IllegalStateException("Already started");
         }
-        server = ServerBuilder.forPort(8888).addService(new EventServiceGrpc.EventServiceImplBase() {
+        server = ServerBuilder
+                .forPort(8888)
+                .addService(
+                        ServerInterceptors.intercept(new EventServiceGrpc.EventServiceImplBase() {
             @Override
             public void process(Event request,
                                 StreamObserver<Event> responseObserver) {
@@ -39,10 +44,11 @@ public class TestServer {
                 if (logger.isDebugEnabled()) {
                     logger.debug("Server hit");
                 }
+
                 responseObserver.onNext(Empty.getDefaultInstance());
                 responseObserver.onCompleted();
             }
-        }).build();
+        }, testInterceptor)).build();
         server.start();
         if (logger.isDebugEnabled()) {
             logger.debug("Server started");

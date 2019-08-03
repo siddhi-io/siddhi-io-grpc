@@ -85,21 +85,22 @@ public class GrpcServiceResponseSink extends Sink {
     private String sinkID;
 
     @Override
-    protected StateFactory init(StreamDefinition outputStreamDefinition, OptionHolder optionHolder, ConfigReader sinkConfigReader, SiddhiAppContext siddhiAppContext) {
+    protected StateFactory init(StreamDefinition outputStreamDefinition, OptionHolder optionHolder,
+                                ConfigReader sinkConfigReader, SiddhiAppContext siddhiAppContext) {
         this.siddhiAppContext = siddhiAppContext;
         this.url = optionHolder.validateAndGetOption(GrpcConstants.PUBLISHER_URL).getValue();
-        List<String> URLParts = new ArrayList<>(Arrays.asList(url.split(GrpcConstants.PORT_SERVICE_SEPARATOR)));
-        URLParts.removeAll(Collections.singletonList(GrpcConstants.EMPTY_STRING));
+        List<String> urlParts = new ArrayList<>(Arrays.asList(url.split(GrpcConstants.PORT_SERVICE_SEPARATOR)));
+        urlParts.removeAll(Collections.singletonList(GrpcConstants.EMPTY_STRING));
 
-        if (!URLParts.get(GrpcConstants.URL_PROTOCOL_POSITION)
+        if (!urlParts.get(GrpcConstants.URL_PROTOCOL_POSITION)
                 .equalsIgnoreCase(GrpcConstants.GRPC_PROTOCOL_NAME + ":")) {
             throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": The url must begin with \"" +
                     GrpcConstants.GRPC_PROTOCOL_NAME + "\" for all grpc sinks");
         }
 
-        String[] fullyQualifiedServiceNameParts = URLParts.get(GrpcConstants.URL_SERVICE_NAME_POSITION).split("\\.");
+        String[] fullyQualifiedServiceNameParts = urlParts.get(GrpcConstants.URL_SERVICE_NAME_POSITION).split("\\.");
         this.serviceName = fullyQualifiedServiceNameParts[fullyQualifiedServiceNameParts.length - 1];
-        this.methodName = URLParts.get(GrpcConstants.URL_METHOD_NAME_POSITION);
+        this.methodName = urlParts.get(GrpcConstants.URL_METHOD_NAME_POSITION);
         if (optionHolder.isOptionExists(GrpcConstants.SINK_ID)) {
             this.sinkID = optionHolder.validateAndGetOption(GrpcConstants.SINK_ID).getValue();
         } else {

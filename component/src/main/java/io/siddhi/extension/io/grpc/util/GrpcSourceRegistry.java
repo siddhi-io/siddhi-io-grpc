@@ -23,8 +23,8 @@ import io.siddhi.extension.io.grpc.source.GrpcServiceSource;
 import java.util.HashMap;
 
 /**
- * a class to maintain pointers to source with sink id as key.
- * used by sink to push responses into respective source
+ * a class to register GrpcSource with respective sink.id or source.id. Used by GrpcCallSink and GrpcServiceResponseSink
+ * to push responses
  */
 public class GrpcSourceRegistry {
     private static GrpcSourceRegistry instance = new GrpcSourceRegistry();
@@ -44,7 +44,7 @@ public class GrpcSourceRegistry {
     }
 
     public void putGrpcServiceSource(String key, GrpcServiceSource source) {
-        grpcServiceSourceHashMap.put(key,source);
+        grpcServiceSourceHashMap.put(key, source);
     }
 
     public GrpcCallResponseSource getGrpcCallResponseSourceSource(String key) {

@@ -25,47 +25,53 @@ import io.siddhi.annotation.Extension;
 import io.siddhi.annotation.Parameter;
 import io.siddhi.annotation.util.DataType;
 import io.siddhi.core.util.transport.OptionHolder;
-import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
 
 /**
- *
+ * This handles receiving requests from grpc clients and populating the stream
  */
 @Extension(
         name = "grpc",
         namespace = "source",
-        description = "sdfsdf",
+        description = "This extension starts a grpc server during initialization time. The server listens to " +
+                "requests from grpc stubs. This source has a default mode of operation and custom user defined grpc " +
+                "service mode. In the default mode this source will use EventService consume method. This method " +
+                "will receive requests and injects them into stream through a mapper.",
         parameters = {
                 @Parameter(name = "url",
-                        description = "asdfa" ,
+                        description = "The url which can be used by a client to access the grpc server in this " +
+                                "extension. This url should consist the host address, port, service name, method " +
+                                "name in the following format. grpc://hostAddress:port/serviceName/methodName" ,
                         type = {DataType.STRING}),
         },
         examples = {
                 @Example(
-                        syntax = "@source(type='grpc', url='') " +
+                        syntax = "@source(type='grpc', " +
+                                "url='grpc://locanhost:8888/org.wso2.grpc.EventService/consume', @map(type='json')) " +
                                 "define stream BarStream (message String);",
-                        description = "asdfasdf"
+                        description = "Here the port is given as 8888. So a grpc server will be started on port 8888 " +
+                                "and the server will expose EventService. This is the default service packed with " +
+                                "the source. In EventService the consume method is"
                 )
         }
 )
 public class GrpcSource extends AbstractGrpcSource {
-    private static final Logger logger = Logger.getLogger(GrpcCallResponseSource.class.getName());
-
     @Override
     public void initializeGrpcServer(int port) {
-        this.server = ServerBuilder.forPort(port).addService(new EventServiceGrpc.EventServiceImplBase() {
-            @Override
-            public void consume(Event request,
-                                StreamObserver<Empty> responseObserver) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug(siddhiAppContext.getName() + ": Server hit");
+        if (isDefaultMode) {
+            this.server = ServerBuilder.forPort(port).addService(new EventServiceGrpc.EventServiceImplBase() {
+                @Override
+                public void consume(Event request,
+                                    StreamObserver<Empty> responseObserver) {
+                    sourceEventListener.onEvent(request.getPayload(), new String[]{"1"});
+                    responseObserver.onNext(Empty.getDefaultInstance());
+                    responseObserver.onCompleted();
                 }
-                sourceEventListener.onEvent(request.getPayload(), new String[]{"1"});
-                responseObserver.onNext(Empty.getDefaultInstance());
-                responseObserver.onCompleted();
-            }
-        }).build();
+            }).build();
+        } else {
+            //todo: generic server logic here
+        }
     }
 
     @Override

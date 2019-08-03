@@ -30,7 +30,6 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
-import org.wso2.grpc.EventServiceGrpc.EventServiceBlockingStub;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -44,7 +43,8 @@ public class GrpcSourceTestCase {
         logger.setLevel(Level.DEBUG);
         SiddhiManager siddhiManager = new SiddhiManager();
 
-        String stream2 = "@source(type='grpc', url='grpc://localhost:8888/org.wso2.grpc.EventService/consume', @map(type='json')) " +
+        String stream2 = "@source(type='grpc', url='grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
+                "@map(type='json')) " +
                 "define stream BarStream (message String);";
         String query = "@info(name = 'query') "
                 + "from BarStream "
@@ -54,7 +54,8 @@ public class GrpcSourceTestCase {
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(stream2 + query);
         siddhiAppRuntime.addCallback("query", new QueryCallback() {
             @Override
-            public void receive(long timeStamp, io.siddhi.core.event.Event[] inEvents, io.siddhi.core.event.Event[] removeEvents) {
+            public void receive(long timeStamp, io.siddhi.core.event.Event[] inEvents,
+                                io.siddhi.core.event.Event[] removeEvents) {
                 EventPrinter.print(timeStamp, inEvents, removeEvents);
                 for (int i = 0; i < inEvents.length; i++) {
                     eventCount.incrementAndGet();
@@ -78,7 +79,7 @@ public class GrpcSourceTestCase {
         ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888")
                 .usePlaintext(true)
                 .build();
-        EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
+        EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
 
         siddhiAppRuntime.start();
         Empty emptyResponse = blockingStub.consume(sequenceCallRequest);
