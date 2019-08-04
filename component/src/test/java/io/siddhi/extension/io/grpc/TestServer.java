@@ -44,7 +44,7 @@ public class TestServer {
                 if (logger.isDebugEnabled()) {
                     logger.debug("Server hit");
                 }
-
+                System.out.println("Server consume hit " + request.toString());
                 responseObserver.onNext(Empty.getDefaultInstance());
                 responseObserver.onCompleted();
             }

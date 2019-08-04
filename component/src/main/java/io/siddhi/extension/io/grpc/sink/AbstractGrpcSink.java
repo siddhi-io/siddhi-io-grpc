@@ -28,7 +28,6 @@ import io.siddhi.core.util.config.ConfigReader;
 import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
-import io.siddhi.extension.io.grpc.util.GrpcSourceRegistry;
 import io.siddhi.query.api.definition.StreamDefinition;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.log4j.Logger;
@@ -48,16 +47,15 @@ import java.util.concurrent.TimeUnit;
 public abstract class AbstractGrpcSink extends Sink {
     private static final Logger logger = Logger.getLogger(AbstractGrpcSink.class.getName());
     protected SiddhiAppContext siddhiAppContext;
-    private ManagedChannel channel;
+    protected ManagedChannel channel;
     private String serviceName;
     protected String methodName;
-//    private String sequenceName;
-    protected EventServiceGrpc.EventServiceFutureStub futureStub; //todo: see if we can use async stub
+    private String sequenceName;
     protected boolean isDefaultMode = false;
-    protected GrpcSourceRegistry grpcSourceRegistry = GrpcSourceRegistry.getInstance(); //todo: dont keep reference
-    protected String sinkID; //todo: move
     private String url;
     private String streamID; //todo: no need. check if we need this for error throwing
+    private String address;
+    protected EventServiceGrpc.EventServiceFutureStub futureStub;
 
     /**
      * Returns the list of classes which this sink can consume.
@@ -68,8 +66,9 @@ public abstract class AbstractGrpcSink extends Sink {
      */
     @Override
     public Class[] getSupportedInputEventClasses() {
-        return new Class[]{Object.class}; // in default case json mapper will inject String. In custom gRPC service
-        // case protobuf mapper will inject gRPC message class todo: put grpc message super class
+        return new Class[]{com.google.protobuf.GeneratedMessageV3.class, String.class};
+        // in default case json mapper will inject String. In custom gRPC service
+        // case protobuf mapper will inject gRPC message class
     }
 
     @Override
@@ -86,7 +85,7 @@ public abstract class AbstractGrpcSink extends Sink {
     @Override
     public String[] getSupportedDynamicOptions() {
         return new String[0];
-    } //todo:
+    }
     /**
      * The initialization method for {@link Sink}, will be called before other methods. It used to validate
      * all configurations and to get initial values.
@@ -101,40 +100,27 @@ public abstract class AbstractGrpcSink extends Sink {
                                 SiddhiAppContext siddhiAppContext) {
         this.siddhiAppContext = siddhiAppContext;
         this.url = optionHolder.validateAndGetOption(GrpcConstants.PUBLISHER_URL).getValue();
+        this.streamID = siddhiAppContext.getName() + GrpcConstants.PORT_HOST_SEPARATOR + streamDefinition.getId();
+
         List<String> urlParts = new ArrayList<>(Arrays.asList(url.split(GrpcConstants.PORT_SERVICE_SEPARATOR)));
         urlParts.removeAll(Collections.singletonList(GrpcConstants.EMPTY_STRING)); //todo: use java url validator. dont split by urself
-
         if (!urlParts.get(GrpcConstants.URL_PROTOCOL_POSITION)
                 .equalsIgnoreCase(GrpcConstants.GRPC_PROTOCOL_NAME + ":")) {
-            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": The url must begin with \"" +
-                    GrpcConstants.GRPC_PROTOCOL_NAME + "\" for all grpc sinks"); //todo: give stream name
+            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": " + streamID +
+                    "The url must begin with \"" + GrpcConstants.GRPC_PROTOCOL_NAME + "\" for all grpc sinks");
         }
-
         String[] fullyQualifiedServiceNameParts = urlParts.get(GrpcConstants.URL_SERVICE_NAME_POSITION).split("\\.");
         this.serviceName = fullyQualifiedServiceNameParts[fullyQualifiedServiceNameParts.length - 1];
         this.methodName = urlParts.get(GrpcConstants.URL_METHOD_NAME_POSITION);
-        if (optionHolder.isOptionExists(GrpcConstants.SINK_ID)) { //todo: move it to grpc call sink
-            this.sinkID = optionHolder.validateAndGetOption(GrpcConstants.SINK_ID).getValue();
-        } else {
-            if (optionHolder.validateAndGetOption(GrpcConstants.SINK_TYPE_OPTION)
-                    .getValue().equalsIgnoreCase(GrpcConstants.GRPC_CALL_SINK_NAME)) {
-                throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": For grpc-call sink the " +
-                        "parameter sink.id is mandatory for receiving responses. Please provide a sink.id");
-            }
-        }
-        this.channel = ManagedChannelBuilder.forTarget(urlParts.get(GrpcConstants.URL_HOST_AND_PORT_POSITION))
-                .usePlaintext(true) //todo: use current api. remove it
-                .build();
-        this.streamID = siddhiAppContext.getName() + GrpcConstants.PORT_HOST_SEPARATOR + streamDefinition.toString(); //todo: stream id
+        this.address = urlParts.get(GrpcConstants.URL_HOST_AND_PORT_POSITION);
+        initSink(optionHolder);
 
         if (serviceName.equals(GrpcConstants.DEFAULT_SERVICE_NAME)
                 && (methodName.equals(GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE)
                 || methodName.equals(GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE))) {
             this.isDefaultMode = true;
-            this.futureStub = EventServiceGrpc.newFutureStub(channel);
             if (urlParts.size() == GrpcConstants.NUM_URL_PARTS_FOR_MI_MODE_SINK) {
-                //todo: we need to pass sequence name in event?
-//                this.sequenceName = urlParts.get(GrpcConstants.URL_SEQUENCE_NAME_POSITION);
+                this.sequenceName = urlParts.get(GrpcConstants.URL_SEQUENCE_NAME_POSITION);
             }
         } else {
             //todo: handle generic grpc service
@@ -142,11 +128,7 @@ public abstract class AbstractGrpcSink extends Sink {
         return null;
     }
 
-//    @Override
-//    public void publish(Object payload, DynamicOptions dynamicOptions, State state)
-//            throws ConnectionUnavailableException {
-//
-//    }
+    public abstract void initSink(OptionHolder optionHolder);
 
     /**
      * This method will be called before the processing method.
@@ -156,7 +138,10 @@ public abstract class AbstractGrpcSink extends Sink {
      */
     @Override
     public void connect() throws ConnectionUnavailableException {
-        if (!channel.isShutdown()) { //todo: do channel creating and stub here
+        this.channel = ManagedChannelBuilder.forTarget(address).usePlaintext(true)
+                .build();
+        this.futureStub = EventServiceGrpc.newFutureStub(channel);
+        if (!channel.isShutdown()) {
             logger.info(streamID + " has successfully connected to " + url);
         }
     }
@@ -170,9 +155,9 @@ public abstract class AbstractGrpcSink extends Sink {
         try {
             channel.shutdown().awaitTermination(5, TimeUnit.SECONDS); //todo: check for optimal time. check if we want user to configure this
         } catch (InterruptedException e) {
-            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": " + e.getMessage()); //todo: say there is an error i\n shutting down
+            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": Error in shutting down the channel. "
+                    + e.getMessage());
         }
-        logger.info("Channel for url " + url + " shutdown.");
     }
 
     /**
@@ -182,6 +167,5 @@ public abstract class AbstractGrpcSink extends Sink {
     @Override
     public void destroy() {
         channel = null;
-        futureStub = null;
     }
 }

@@ -36,9 +36,11 @@ public class TestServerInterceptor implements ServerInterceptor {
   public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> serverCall,
                                                                Metadata metadata,
                                                                ServerCallHandler<ReqT, RespT> serverCallHandler) {
-    String name = metadata.get(Metadata.Key.of("Name", ASCII_STRING_MARSHALLER));
+    Metadata.Key<String> headerKey = Metadata.Key.of("headers", ASCII_STRING_MARSHALLER);
+    String headers = metadata.get(headerKey);
+    metadata.removeAll(headerKey);
     Set<String> keys = metadata.keys();
-    System.out.println("Header received" + name);
+    System.out.println("Header received: " + headers);
     Context ctx;
     ctx = Context.ROOT;
 

@@ -55,4 +55,32 @@ public class GrpcSinkTestCase {
             server.stop();
         }
     }
+
+    @Test
+    public void testWithHeader() throws Exception {
+        logger.info("Test case to call process");
+        logger.setLevel(Level.DEBUG);
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        server.start();
+        String inStreamDefinition = ""
+                + "@sink(type='grpc', " +
+                "url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume/mySeq', " +
+                "headers='{{headers}}', " +
+                "@map(type='json', @payload('{{message}}'))) " +
+                "define stream FooStream (message String, headers String);";
+
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
+        InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
+        try {
+            siddhiAppRuntime.start();
+            fooStream.send(new Object[]{"Request 1", "'Name:John','Age:23','Content-Type:text'"});
+            Thread.sleep(5000);
+            fooStream.send(new Object[]{"Request 2", "'Name:Nash','Age:54','Content-Type:json'"});
+            Thread.sleep(1000);
+            siddhiAppRuntime.shutdown();
+        } finally {
+            server.stop();
+        }
+    }
 }

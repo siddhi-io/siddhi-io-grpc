@@ -12,8 +12,14 @@ import io.siddhi.core.exception.ConnectionUnavailableException;
 import io.siddhi.core.exception.SiddhiAppRuntimeException;
 import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.transport.DynamicOptions;
+import io.siddhi.core.util.transport.OptionHolder;
+import io.siddhi.extension.io.grpc.util.GrpcConstants;
+import io.siddhi.extension.io.grpc.util.GrpcSourceRegistry;
+import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
+import org.wso2.grpc.EventServiceGrpc;
+import org.wso2.grpc.EventServiceGrpc.EventServiceFutureStub;
 
 /**
  * {@code GrpcCallSink} Handle the gRPC publishing tasks and injects response into grpc-call-response source.
@@ -58,6 +64,20 @@ import org.wso2.grpc.Event;
 )
 public class GrpcCallSink extends AbstractGrpcSink {
     private static final Logger logger = Logger.getLogger(GrpcCallSink.class.getName());
+    protected String sinkID;
+
+    @Override
+    public void initSink(OptionHolder optionHolder) {
+        if (optionHolder.isOptionExists(GrpcConstants.SINK_ID)) {
+            this.sinkID = optionHolder.validateAndGetOption(GrpcConstants.SINK_ID).getValue();
+        } else {
+            if (optionHolder.validateAndGetOption(GrpcConstants.SINK_TYPE_OPTION)
+                    .getValue().equalsIgnoreCase(GrpcConstants.GRPC_CALL_SINK_NAME)) {
+                throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": For grpc-call sink the " +
+                        "parameter sink.id is mandatory for receiving responses. Please provide a sink.id");
+            }
+        }
+    }
 
     @Override
     public void publish(Object payload, DynamicOptions dynamicOptions, State state)
@@ -70,12 +90,13 @@ public class GrpcCallSink extends AbstractGrpcSink {
             Event.Builder requestBuilder = Event.newBuilder();
             requestBuilder.setPayload((String) payload);
             Event sequenceCallRequest = requestBuilder.build();
+            EventServiceFutureStub futureStub = EventServiceGrpc.newFutureStub(channel);
             ListenableFuture<Event> futureResponse =
                     futureStub.process(sequenceCallRequest);
             Futures.addCallback(futureResponse, new FutureCallback<Event>() {
                 @Override
                 public void onSuccess(Event result) {
-                    grpcSourceRegistry.getGrpcCallResponseSourceSource(sinkID).onResponse(result);
+                    GrpcSourceRegistry.getInstance().getGrpcCallResponseSourceSource(sinkID).onResponse(result);
                 }
 
                 @Override
