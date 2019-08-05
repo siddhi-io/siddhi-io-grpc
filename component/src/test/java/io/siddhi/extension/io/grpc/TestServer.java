@@ -32,7 +32,8 @@ public class TestServer {
                     logger.debug("Server hit");
                 }
                 Event.Builder responseBuilder = Event.newBuilder();
-                responseBuilder.setPayload("{name:\"niruhan\"}");
+                String json = "{ \"message\": \"Benjamin Watson\"}";
+                responseBuilder.setPayload(json);
                 Event response = responseBuilder.build();
                 responseObserver.onNext(response);
                 responseObserver.onCompleted();

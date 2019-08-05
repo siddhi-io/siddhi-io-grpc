@@ -67,7 +67,7 @@ public class GrpcCallSinkTestCase {
                     eventCount.incrementAndGet();
                     switch (i) {
                         case 0:
-                            Assert.assertEquals((String) inEvents[i].getData()[0], "server data");
+                            Assert.assertEquals((String) inEvents[i].getData()[0], "Benjamin Watson");
                             break;
                         default:
                             Assert.fail();
@@ -79,6 +79,60 @@ public class GrpcCallSinkTestCase {
         try {
             siddhiAppRuntime.start();
             fooStream.send(new Object[]{"Request 1"});
+            Thread.sleep(1000);
+            siddhiAppRuntime.shutdown();
+        } finally {
+            server.stop();
+        }
+    }
+
+    @Test
+    public void testWithHeaders() throws Exception {
+        logger.info("Test case to call process sending 2 requests");
+        logger.setLevel(Level.DEBUG);
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        server.start();
+        String port = String.valueOf(server.getPort());
+        String inStreamDefinition = ""
+                + "@sink(type='grpc-call', " +
+                "url = 'grpc://localhost:8888/org.wso2.grpc.EventService/process/mySeq', " +
+                "sink.id= '1', " +
+                "headers='{{headers}}', " +
+                "@map(type='json')) "
+                + "define stream FooStream (message String, headers String);";
+
+        String stream2 = "@source(type='grpc-call-response', sequence='mySeq', sink.id= '1', @map(type='json')) " +
+                "define stream BarStream (message String);";
+        String query = "@info(name = 'query') "
+                + "from BarStream "
+                + "select *  "
+                + "insert into outputStream;";
+
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition + stream2 +
+                query);
+        siddhiAppRuntime.addCallback("query", new QueryCallback() {
+            @Override
+            public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
+                EventPrinter.print(timeStamp, inEvents, removeEvents);
+                for (int i = 0; i < inEvents.length; i++) {
+                    eventCount.incrementAndGet();
+                    switch (i) {
+                        case 0:
+                            Assert.assertEquals((String) inEvents[i].getData()[0], "Benjamin Watson");
+                            break;
+                        default:
+                            Assert.fail();
+                    }
+                }
+            }
+        });
+        InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
+        try {
+            siddhiAppRuntime.start();
+            fooStream.send(new Object[]{"Request 1", "'Name:John','Age:23','Content-Type:text'"});
+//            Thread.sleep(5000);
+            fooStream.send(new Object[]{"Request 2", "'Name:Nash','Age:54','Content-Type:json'"});
             Thread.sleep(1000);
             siddhiAppRuntime.shutdown();
         } finally {

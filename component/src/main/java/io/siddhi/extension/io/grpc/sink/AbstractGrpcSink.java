@@ -26,6 +26,7 @@ import io.siddhi.core.stream.ServiceDeploymentInfo;
 import io.siddhi.core.stream.output.sink.Sink;
 import io.siddhi.core.util.config.ConfigReader;
 import io.siddhi.core.util.snapshot.state.StateFactory;
+import io.siddhi.core.util.transport.Option;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
 import io.siddhi.query.api.definition.StreamDefinition;
@@ -56,6 +57,7 @@ public abstract class AbstractGrpcSink extends Sink {
     private String streamID; //todo: no need. check if we need this for error throwing
     private String address;
     protected EventServiceGrpc.EventServiceFutureStub futureStub;
+    protected Option headersOption;
 
     /**
      * Returns the list of classes which this sink can consume.
@@ -84,8 +86,9 @@ public abstract class AbstractGrpcSink extends Sink {
      */
     @Override
     public String[] getSupportedDynamicOptions() {
-        return new String[0];
+        return new String[]{GrpcConstants.HEADERS};
     }
+
     /**
      * The initialization method for {@link Sink}, will be called before other methods. It used to validate
      * all configurations and to get initial values.
@@ -101,6 +104,9 @@ public abstract class AbstractGrpcSink extends Sink {
         this.siddhiAppContext = siddhiAppContext;
         this.url = optionHolder.validateAndGetOption(GrpcConstants.PUBLISHER_URL).getValue();
         this.streamID = siddhiAppContext.getName() + GrpcConstants.PORT_HOST_SEPARATOR + streamDefinition.getId();
+        if (optionHolder.isOptionExists(GrpcConstants.HEADERS)) {
+            this.headersOption = optionHolder.validateAndGetOption(GrpcConstants.HEADERS);
+        }
 
         List<String> urlParts = new ArrayList<>(Arrays.asList(url.split(GrpcConstants.PORT_SERVICE_SEPARATOR)));
         urlParts.removeAll(Collections.singletonList(GrpcConstants.EMPTY_STRING)); //todo: use java url validator. dont split by urself

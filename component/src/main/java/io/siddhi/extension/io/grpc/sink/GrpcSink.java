@@ -33,6 +33,7 @@ import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.transport.DynamicOptions;
 import io.siddhi.core.util.transport.Option;
 import io.siddhi.core.util.transport.OptionHolder;
+import io.siddhi.extension.io.grpc.util.GrpcConstants;
 import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc.EventServiceFutureStub;
@@ -75,32 +76,34 @@ import org.wso2.grpc.EventServiceGrpc.EventServiceFutureStub;
 
 public class GrpcSink extends AbstractGrpcSink {
     private static final Logger logger = Logger.getLogger(GrpcSink.class.getName());
-    private Option headersOption;
 
     @Override
     public void initSink(OptionHolder optionHolder) {
-        this.headersOption = optionHolder.validateAndGetOption("headers");
+
     }
 
     @Override
     public void publish(Object payload, DynamicOptions dynamicOptions, State state)
-            throws ConnectionUnavailableException { //todo:
+            throws ConnectionUnavailableException {
         if (isDefaultMode) {
             Event.Builder requestBuilder = Event.newBuilder();
             requestBuilder.setPayload((String) payload);
             Event sequenceCallRequest = requestBuilder.build();
+            EventServiceFutureStub currentFutureStub = futureStub;
 
-            Metadata header = new Metadata();
-            String headers = headersOption.getValue(dynamicOptions);
+            if (headersOption != null) {
+                Metadata header = new Metadata();
+                String headers = headersOption.getValue(dynamicOptions);
 
-            Metadata.Key<String> key =
-                    Metadata.Key.of("headers", Metadata.ASCII_STRING_MARSHALLER);
-            header.put(key, headers);
+                Metadata.Key<String> key =
+                        Metadata.Key.of(GrpcConstants.HEADERS, Metadata.ASCII_STRING_MARSHALLER);
+                header.put(key, headers);
 
-            EventServiceFutureStub futureStubWithHeader = MetadataUtils.attachHeaders(futureStub, header);
+                currentFutureStub = MetadataUtils.attachHeaders(futureStub, header);
+            }
 
             ListenableFuture<Empty> futureResponse =
-                    futureStubWithHeader.consume(sequenceCallRequest);
+                    currentFutureStub.consume(sequenceCallRequest);
             Futures.addCallback(futureResponse, new FutureCallback<Empty>() {
                 @Override
                 public void onSuccess(Empty result) {
@@ -119,16 +122,5 @@ public class GrpcSink extends AbstractGrpcSink {
         }
     }
 
-    /**
-     * Returns a list of supported dynamic options (that means for each event value of the option can change) by
-     * the transport
-     *
-     * @return the list of supported dynamic option keys
-     */
-    @Override
-    public String[] getSupportedDynamicOptions() {
-        return new String[]{"headers"};
-
-    }
     //todo: do connect and disconnect here
 }

@@ -4,6 +4,8 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
+import io.grpc.Metadata;
+import io.grpc.stub.MetadataUtils;
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
 import io.siddhi.annotation.Parameter;
@@ -85,14 +87,25 @@ public class GrpcCallSink extends AbstractGrpcSink {
         if (isDefaultMode) {
             if (!(payload instanceof String)) {
                 throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": Payload should be of type String " +
-                        "for communicating with Micro Integrator but found " + payload.getClass().getName());
+                        "for default EventService but found " + payload.getClass().getName());
             }
             Event.Builder requestBuilder = Event.newBuilder();
             requestBuilder.setPayload((String) payload);
             Event sequenceCallRequest = requestBuilder.build();
-            EventServiceFutureStub futureStub = EventServiceGrpc.newFutureStub(channel);
+            EventServiceFutureStub currentFutureStub = futureStub;
+
+            if (headersOption != null) {
+                Metadata header = new Metadata();
+                String headers = headersOption.getValue(dynamicOptions);
+
+                Metadata.Key<String> key =
+                        Metadata.Key.of(GrpcConstants.HEADERS, Metadata.ASCII_STRING_MARSHALLER);
+                header.put(key, headers);
+
+                currentFutureStub = MetadataUtils.attachHeaders(futureStub, header);
+            }
             ListenableFuture<Event> futureResponse =
-                    futureStub.process(sequenceCallRequest);
+                    currentFutureStub.process(sequenceCallRequest);
             Futures.addCallback(futureResponse, new FutureCallback<Event>() {
                 @Override
                 public void onSuccess(Event result) {
