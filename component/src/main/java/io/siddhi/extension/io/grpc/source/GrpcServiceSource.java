@@ -69,7 +69,6 @@ import java.util.concurrent.ConcurrentHashMap;
 )
 public class GrpcServiceSource extends AbstractGrpcSource {
     private Map<String, StreamObserver<Event>> streamObserverMap = new ConcurrentHashMap<>();
-    private GrpcSourceRegistry grpcSourceRegistry = GrpcSourceRegistry.getInstance();
     private String sourceId;
 
     @Override
@@ -90,7 +89,12 @@ public class GrpcServiceSource extends AbstractGrpcSource {
     @Override
     public void initSource(OptionHolder optionHolder) {
         this.sourceId = optionHolder.validateAndGetOption(GrpcConstants.SOURCE_ID).getValue();
-        grpcSourceRegistry.putGrpcServiceSource(sourceId, this);
+        GrpcSourceRegistry.getInstance().putGrpcServiceSource(sourceId, this);
+    }
+
+    @Override
+    public void populateHeaderString(String headerString) {
+
     }
 
     public void handleCallback(String messageId, String responsePayload) {
@@ -107,6 +111,6 @@ public class GrpcServiceSource extends AbstractGrpcSource {
 
     @Override
     public void destroy() {
-        grpcSourceRegistry.removeGrpcServiceSource(sourceId);
+        GrpcSourceRegistry.getInstance().removeGrpcServiceSource(sourceId);
     }
 }

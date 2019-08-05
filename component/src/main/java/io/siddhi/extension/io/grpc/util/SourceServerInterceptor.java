@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.siddhi.extension.io.grpc;
+package io.siddhi.extension.io.grpc.util;
 
 import io.grpc.Context;
 import io.grpc.Contexts;
@@ -22,6 +22,8 @@ import io.grpc.Metadata;
 import io.grpc.ServerCall;
 import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
+import io.siddhi.core.stream.input.source.Source;
+import io.siddhi.extension.io.grpc.source.AbstractGrpcSource;
 
 import java.util.Set;
 
@@ -30,11 +32,13 @@ import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
 /**
  * Server interceptor to receive headers
  */
-public class TestServerInterceptor implements ServerInterceptor {
-  private static final ServerCall.Listener NOOP_LISTENER = new ServerCall.Listener() {
-  };
+public class SourceServerInterceptor implements ServerInterceptor {
+  private AbstractGrpcSource associatedGrpcSource;
+//  private static final ServerCall.Listener NOOP_LISTENER = new ServerCall.Listener() {
+//  };
 
-  public TestServerInterceptor() {
+  public SourceServerInterceptor(AbstractGrpcSource associatedGrpcSource) {
+    this.associatedGrpcSource = associatedGrpcSource;
   }
 
   @Override
@@ -43,8 +47,7 @@ public class TestServerInterceptor implements ServerInterceptor {
                                                                ServerCallHandler<ReqT, RespT> serverCallHandler) {
     Metadata.Key<String> headerKey = Metadata.Key.of("headers", ASCII_STRING_MARSHALLER);
     String headers = metadata.get(headerKey);
-    metadata.removeAll(headerKey);
-    Set<String> keys = metadata.keys();
+    associatedGrpcSource.populateHeaderString(headers);
     System.out.println("Header received: " + headers);
     Context ctx;
     ctx = Context.ROOT;

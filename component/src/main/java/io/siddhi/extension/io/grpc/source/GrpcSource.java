@@ -19,12 +19,16 @@ package io.siddhi.extension.io.grpc.source;
 
 import com.google.protobuf.Empty;
 import io.grpc.ServerBuilder;
+import io.grpc.ServerInterceptors;
 import io.grpc.stub.StreamObserver;
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
 import io.siddhi.annotation.Parameter;
 import io.siddhi.annotation.util.DataType;
+import io.siddhi.core.exception.SiddhiAppRuntimeException;
 import io.siddhi.core.util.transport.OptionHolder;
+import io.siddhi.extension.io.grpc.util.SourceServerInterceptor;
+import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
 
@@ -57,18 +61,31 @@ import org.wso2.grpc.EventServiceGrpc;
         }
 )
 public class GrpcSource extends AbstractGrpcSource {
+    private static final Logger logger = Logger.getLogger(GrpcSource.class.getName());
+    SourceServerInterceptor serverInterceptor;
+    String headerString;
+
     @Override
     public void initializeGrpcServer(int port) {
         if (isDefaultMode) {
-            this.server = ServerBuilder.forPort(port).addService(new EventServiceGrpc.EventServiceImplBase() {
+            this.server = ServerBuilder.forPort(port).addService(ServerInterceptors.intercept(new EventServiceGrpc.EventServiceImplBase() {
                 @Override
                 public void consume(Event request,
                                     StreamObserver<Empty> responseObserver) {
-                    sourceEventListener.onEvent(request.getPayload(), new String[]{"1"});
+                    if (headerString != null) {
+                        try {
+                            sourceEventListener.onEvent(request.getPayload(), extractHeaders(headerString));
+                        } catch (SiddhiAppRuntimeException e) {
+                            logger.error(siddhiAppContext.getName() + ": Dropping request. " + e.getMessage());
+                        }
+
+                    } else {
+                        sourceEventListener.onEvent(request.getPayload(), null);
+                    }
                     responseObserver.onNext(Empty.getDefaultInstance());
                     responseObserver.onCompleted();
                 }
-            }).build();
+            }, serverInterceptor)).build();
         } else {
             //todo: generic server logic here
         }
@@ -76,6 +93,11 @@ public class GrpcSource extends AbstractGrpcSource {
 
     @Override
     public void initSource(OptionHolder optionHolder) {
+        serverInterceptor = new SourceServerInterceptor(this);
+    }
 
+    @Override
+    public void populateHeaderString(String headerString) {
+        this.headerString = headerString;
     }
 }

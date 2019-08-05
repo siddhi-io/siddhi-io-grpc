@@ -55,6 +55,7 @@ public abstract class AbstractGrpcSource extends Source {
     protected boolean isDefaultMode;
     private int port;
     protected Option headersOption;
+    protected String[] requestedTransportPropertyNames;
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
@@ -76,6 +77,7 @@ public abstract class AbstractGrpcSource extends Source {
                              SiddhiAppContext siddhiAppContext) {
         this.siddhiAppContext = siddhiAppContext;
         this.sourceEventListener = sourceEventListener;
+        this.requestedTransportPropertyNames = requestedTransportPropertyNames;
         this.url = optionHolder.validateAndGetOption(GrpcConstants.PUBLISHER_URL).getValue();
         if (optionHolder.isOptionExists(GrpcConstants.HEADERS)) { //todo: what to do with headers?
             this.headersOption = optionHolder.validateAndGetOption(GrpcConstants.HEADERS);
@@ -108,6 +110,8 @@ public abstract class AbstractGrpcSource extends Source {
     public abstract void initializeGrpcServer(int port);
 
     public abstract void initSource(OptionHolder optionHolder);
+
+    public abstract void populateHeaderString(String headerString);
 
     /**
      * Returns the list of classes which this source can output.
@@ -160,6 +164,27 @@ public abstract class AbstractGrpcSource extends Source {
         } catch (InterruptedException e) {
             throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": " + e.getMessage());
         }
+    }
+
+    protected String[] extractHeaders(String headerString) {
+        String[] headersArray = new String[requestedTransportPropertyNames.length];
+        String[] headerParts = headerString.split(",");
+        for (String headerPart: headerParts) {
+            String cleanA = headerPart.replaceAll("'", "");
+            String[] keyValue = cleanA.split(":");
+            for (int i = 0; i < requestedTransportPropertyNames.length; i++) {
+                if (keyValue[0].equalsIgnoreCase(requestedTransportPropertyNames[i])) {
+                    headersArray[i] = keyValue[1];
+                }
+            }
+        }
+        for (int i = 0; i < requestedTransportPropertyNames.length; i++) {
+            if (headersArray[i] == null || headersArray[i].equalsIgnoreCase("")) {
+                throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ":  Missing header " +
+                        requestedTransportPropertyNames[i]);
+            }
+        }
+        return headersArray;
     }
 
     /**
