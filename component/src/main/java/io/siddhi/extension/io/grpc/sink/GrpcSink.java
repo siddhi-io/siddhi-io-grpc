@@ -17,13 +17,11 @@
  */
 package io.siddhi.extension.io.grpc.sink;
 
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.Empty;
+import io.grpc.ManagedChannelBuilder;
 import io.grpc.Metadata;
 import io.grpc.stub.MetadataUtils;
+import io.grpc.stub.StreamObserver;
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
 import io.siddhi.annotation.Parameter;
@@ -31,12 +29,12 @@ import io.siddhi.annotation.util.DataType;
 import io.siddhi.core.exception.ConnectionUnavailableException;
 import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.transport.DynamicOptions;
-import io.siddhi.core.util.transport.Option;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
 import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
-import org.wso2.grpc.EventServiceGrpc.EventServiceFutureStub;
+import org.wso2.grpc.EventServiceGrpc;
+import org.wso2.grpc.EventServiceGrpc.EventServiceStub;
 
 /**
  * {@code GrpcSink} Handle the gRPC publishing tasks.
@@ -76,11 +74,10 @@ import org.wso2.grpc.EventServiceGrpc.EventServiceFutureStub;
 
 public class GrpcSink extends AbstractGrpcSink {
     private static final Logger logger = Logger.getLogger(GrpcSink.class.getName());
+    EventServiceStub asyncStub;
 
     @Override
-    public void initSink(OptionHolder optionHolder) {
-
-    }
+    public void initSink(OptionHolder optionHolder) {}
 
     @Override
     public void publish(Object payload, DynamicOptions dynamicOptions, State state)
@@ -89,36 +86,50 @@ public class GrpcSink extends AbstractGrpcSink {
             Event.Builder requestBuilder = Event.newBuilder();
             requestBuilder.setPayload((String) payload);
             Event sequenceCallRequest = requestBuilder.build();
-            EventServiceFutureStub currentFutureStub = futureStub;
+            EventServiceStub currentAsyncStub = asyncStub;
 
             if (headersOption != null) {
                 Metadata header = new Metadata();
                 String headers = headersOption.getValue(dynamicOptions);
-
                 Metadata.Key<String> key =
                         Metadata.Key.of(GrpcConstants.HEADERS, Metadata.ASCII_STRING_MARSHALLER);
                 header.put(key, headers);
-
-                currentFutureStub = MetadataUtils.attachHeaders(futureStub, header);
+                currentAsyncStub = MetadataUtils.attachHeaders(asyncStub, header);
             }
 
-            ListenableFuture<Empty> futureResponse =
-                    currentFutureStub.consume(sequenceCallRequest);
-            Futures.addCallback(futureResponse, new FutureCallback<Empty>() {
+            StreamObserver<Empty> responseObserver = new StreamObserver<Empty>() {
                 @Override
-                public void onSuccess(Empty result) {
-                    System.out.println("success returned");
-                }
+                public void onNext(Empty event) {}
 
                 @Override
-                public void onFailure(Throwable t) {
+                public void onError(Throwable t) {
                     if (logger.isDebugEnabled()) {
                         logger.debug(siddhiAppContext.getName() + ": " + t.getMessage());
                     }
                 }
-            }, MoreExecutors.directExecutor());
+
+                @Override
+                public void onCompleted() {}
+            };
+            currentAsyncStub.consume(sequenceCallRequest, responseObserver);
         } else {
             //todo: handle publishing to generic service
+        }
+    }
+
+    /**
+     * This method will be called before the processing method.
+     * Intention to establish connection to publish event.
+     * @throws ConnectionUnavailableException if end point is unavailable the ConnectionUnavailableException thrown
+     *                                        such that the  system will take care retrying for connection
+     */
+    @Override
+    public void connect() throws ConnectionUnavailableException {
+        this.channel = ManagedChannelBuilder.forTarget(address).usePlaintext(true)
+                .build();
+        this.asyncStub = EventServiceGrpc.newStub(channel);
+        if (!channel.isShutdown()) {
+            logger.info(streamID + " has successfully connected to " + url);
         }
     }
 

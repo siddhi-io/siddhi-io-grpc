@@ -20,7 +20,6 @@ import io.siddhi.extension.io.grpc.util.GrpcSourceRegistry;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
-import org.wso2.grpc.EventServiceGrpc;
 import org.wso2.grpc.EventServiceGrpc.EventServiceFutureStub;
 
 /**

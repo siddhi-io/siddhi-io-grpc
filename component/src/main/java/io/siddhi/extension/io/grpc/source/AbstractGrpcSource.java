@@ -27,6 +27,7 @@ import io.siddhi.core.stream.input.source.SourceEventListener;
 import io.siddhi.core.util.config.ConfigReader;
 import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.snapshot.state.StateFactory;
+import io.siddhi.core.util.transport.Option;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
@@ -53,6 +54,7 @@ public abstract class AbstractGrpcSource extends Source {
 //    private String methodName;
     protected boolean isDefaultMode;
     private int port;
+    protected Option headersOption;
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
@@ -75,6 +77,9 @@ public abstract class AbstractGrpcSource extends Source {
         this.siddhiAppContext = siddhiAppContext;
         this.sourceEventListener = sourceEventListener;
         this.url = optionHolder.validateAndGetOption(GrpcConstants.PUBLISHER_URL).getValue();
+        if (optionHolder.isOptionExists(GrpcConstants.HEADERS)) { //todo: what to do with headers?
+            this.headersOption = optionHolder.validateAndGetOption(GrpcConstants.HEADERS);
+        }
         List<String> urlParts = new ArrayList<>(Arrays.asList(url.split(GrpcConstants.PORT_SERVICE_SEPARATOR)));
         urlParts.removeAll(Collections.singletonList(GrpcConstants.EMPTY_STRING));
 

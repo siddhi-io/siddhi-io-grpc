@@ -53,9 +53,9 @@ public abstract class AbstractGrpcSink extends Sink {
     protected String methodName;
     private String sequenceName;
     protected boolean isDefaultMode = false;
-    private String url;
-    private String streamID; //todo: no need. check if we need this for error throwing
-    private String address;
+    protected String url;
+    protected String streamID; //todo: no need. check if we need this for error throwing
+    protected String address;
     protected EventServiceGrpc.EventServiceFutureStub futureStub;
     protected Option headersOption;
 
