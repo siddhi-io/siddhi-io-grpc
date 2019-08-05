@@ -18,7 +18,7 @@
 package io.siddhi.extension.io.grpc.util;
 
 /**
- * Class to hold the constants used by gRPC source and sink
+ * Class to hold the constants used by gRPC sources and sinks
  */
 public class GrpcConstants {
     public static final String PORT_HOST_SEPARATOR = ":";
@@ -32,11 +32,15 @@ public class GrpcConstants {
     public static final String DEFAULT_SERVICE_NAME = "EventService";
     public static final String SINK_TYPE_OPTION = "type";
     public static final String GRPC_CALL_SINK_NAME = "grpc-call";
+    public static final String SOURCE_ID = "source.id";
+    public static final String MESSAGE_ID = "message.id";
+    public static final String HEADERS = "headers";
 
     public static final int URL_PROTOCOL_POSITION = 0;
     public static final int URL_HOST_AND_PORT_POSITION = 1;
     public static final int URL_SERVICE_NAME_POSITION = 2;
     public static final int URL_METHOD_NAME_POSITION = 3;
     public static final int URL_SEQUENCE_NAME_POSITION = 4;
-    public static final int NUM_URL_PARTS_FOR_MI_CONNECT = 5;
+    public static final int NUM_URL_PARTS_FOR_MI_MODE_SINK = 5;
+    public static final int NUM_URL_PARTS_FOR_DEFAULT_MODE_SOURCE = 4;
 }

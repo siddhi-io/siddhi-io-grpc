@@ -105,7 +105,7 @@ public class GrpcSink extends GrpcSinkSuper {
         } else {
             //todo: handle publishing to generic service
             try {
-//                Class requestClass = payload.getClass();
+
                 Method m = super.stubClass.getDeclaredMethod(super.methodName,requestClass);
 
                 ListenableFuture<Empty> genericResponse = (ListenableFuture<Empty>) m.invoke(super.stubObject,payload);

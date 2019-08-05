@@ -4,6 +4,8 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
+import io.grpc.Metadata;
+import io.grpc.stub.MetadataUtils;
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
 import io.siddhi.annotation.Parameter;
@@ -12,8 +14,13 @@ import io.siddhi.core.exception.ConnectionUnavailableException;
 import io.siddhi.core.exception.SiddhiAppRuntimeException;
 import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.transport.DynamicOptions;
+import io.siddhi.core.util.transport.OptionHolder;
+import io.siddhi.extension.io.grpc.util.GrpcConstants;
+import io.siddhi.extension.io.grpc.util.GrpcSourceRegistry;
+import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
+import org.wso2.grpc.EventServiceGrpc;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -70,26 +77,39 @@ import java.lang.reflect.Method;
                 )
         }
 )
-public class GrpcCallSink extends GrpcSinkSuper {
+public class GrpcCallSink extends AbstractGrpcSink {
     private static final Logger logger = Logger.getLogger(GrpcCallSink.class.getName());
+    protected String sinkID;
 
     @Override
     public void publish(Object payload, DynamicOptions dynamicOptions, State state)
             throws ConnectionUnavailableException {
-        if (isMIConnect) {
+        if (isDefaultMode) {
             if (!(payload instanceof String)) {
                 throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": Payload should be of type String " +
-                        "for communicating with Micro Integrator but found " + payload.getClass().getName());
+                        "for default EventService but found " + payload.getClass().getName());
             }
             Event.Builder requestBuilder = Event.newBuilder();
             requestBuilder.setPayload((String) payload);
             Event sequenceCallRequest = requestBuilder.build();
+            EventServiceGrpc.EventServiceFutureStub currentFutureStub = futureStub;
+
+            if (headersOption != null) {
+                Metadata header = new Metadata();
+                String headers = headersOption.getValue(dynamicOptions);
+
+                Metadata.Key<String> key =
+                        Metadata.Key.of(GrpcConstants.HEADERS, Metadata.ASCII_STRING_MARSHALLER);
+                header.put(key, headers);
+
+                currentFutureStub = MetadataUtils.attachHeaders(futureStub, header);
+            }
             ListenableFuture<Event> futureResponse =
-                    futureStub.process(sequenceCallRequest);
+                    currentFutureStub.process(sequenceCallRequest);
             Futures.addCallback(futureResponse, new FutureCallback<Event>() {
                 @Override
                 public void onSuccess(Event result) {
-                    sourceStaticHolder.getGRPCSource(sinkID).onResponse(result);
+                    GrpcSourceRegistry.getInstance().getGrpcCallResponseSourceSource(sinkID).onResponse(result);
                 }
 
                 @Override
@@ -97,7 +117,6 @@ public class GrpcCallSink extends GrpcSinkSuper {
                     if (logger.isDebugEnabled()) {
                         logger.debug(siddhiAppContext.getName() + ": " + t.getMessage());
                     }
-                    throw new SiddhiAppRuntimeException(t.getMessage());
                 }
             }, MoreExecutors.directExecutor());
         } else {
@@ -111,9 +130,9 @@ public class GrpcCallSink extends GrpcSinkSuper {
                     @Override
                     public void onSuccess(Object o) {
                         int fieldsCount = o.getClass().getFields().length;
-                        if (fieldsCount != 0) //to ignore empty responses (Empty response classes have 0 attributes)
+                        if (fieldsCount != 0) //to ignore empty responses (Empty response classes have 0 attributes)//todo not necessary
                             try {
-                                sourceStaticHolder.getGRPCSource(sinkID).onResponse(o);
+                                GrpcSourceRegistry.getInstance().getGrpcCallResponseSourceSource(sinkID).onResponse(o);
                             } catch (NullPointerException e) {
                                 throw new SiddhiAppRuntimeException("Please define a source with the same id (id :" + sinkID + ")");
                             }
@@ -132,6 +151,20 @@ public class GrpcCallSink extends GrpcSinkSuper {
                 e.printStackTrace();
             } catch (InvocationTargetException e) {
                 e.printStackTrace();
+            }
+        }
+    }
+
+
+    @Override
+    public void initSink(OptionHolder optionHolder) {
+        if (optionHolder.isOptionExists(GrpcConstants.SINK_ID)) {
+            this.sinkID = optionHolder.validateAndGetOption(GrpcConstants.SINK_ID).getValue();
+        } else {
+            if (optionHolder.validateAndGetOption(GrpcConstants.SINK_TYPE_OPTION)
+                    .getValue().equalsIgnoreCase(GrpcConstants.GRPC_CALL_SINK_NAME)) {
+                throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": For grpc-call sink the " +
+                        "parameter sink.id is mandatory for receiving responses. Please provide a sink.id");
             }
         }
     }

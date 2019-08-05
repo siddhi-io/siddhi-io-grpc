@@ -30,8 +30,7 @@ import io.siddhi.core.util.config.ConfigReader;
 import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.core.util.transport.OptionHolder;
-import io.siddhi.extension.io.grpc.util.SourceStaticHolder;
-import org.apache.log4j.Logger;
+import io.siddhi.extension.io.grpc.util.GrpcSourceRegistry;
 import org.wso2.grpc.Event;
 
 /**
@@ -67,9 +66,7 @@ import org.wso2.grpc.Event;
         }
 )
 public class GrpcCallResponseSource extends Source {
-    private static final Logger logger = Logger.getLogger(GrpcCallResponseSource.class.getName());
-    private SiddhiAppContext siddhiAppContext;
-    private SourceStaticHolder sourceStaticHolder = SourceStaticHolder.getInstance();
+    private GrpcSourceRegistry grpcSourceRegistry = GrpcSourceRegistry.getInstance();
     private String sinkID;
     private SourceEventListener sourceEventListener;
 
@@ -91,10 +88,9 @@ public class GrpcCallResponseSource extends Source {
     public StateFactory init(SourceEventListener sourceEventListener, OptionHolder optionHolder,
                              String[] requestedTransportPropertyNames, ConfigReader configReader,
                              SiddhiAppContext siddhiAppContext) {
-        this.siddhiAppContext = siddhiAppContext;
         this.sourceEventListener = sourceEventListener;
         sinkID = optionHolder.validateAndGetOption("sink.id").getValue();
-        sourceStaticHolder.putSource(sinkID, this);
+        grpcSourceRegistry.putGrpcCallResponseSource(sinkID, this);
         return null;
     }
 
@@ -114,7 +110,7 @@ public class GrpcCallResponseSource extends Source {
      */
     @Override
     public Class[] getOutputEventClasses() {
-        return new Class[]{io.siddhi.core.event.Event.class, String.class};
+        return new Class[]{String.class, Object.class};
     }
 
     @Override
@@ -135,7 +131,7 @@ public class GrpcCallResponseSource extends Source {
      */
     @Override
     public void destroy() {
-        sourceStaticHolder.removeGRPCSource(sinkID);
+        grpcSourceRegistry.removeGrpcCallResponseSource(sinkID);
     }
 
     /**
