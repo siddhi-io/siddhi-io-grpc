@@ -39,6 +39,7 @@ import org.wso2.grpc.EventServiceGrpc;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -68,7 +69,7 @@ public class GrpcSinkSuper extends Sink {
     protected String packageName;
     protected Class stubClass;
     protected Object stubObject;
-
+    protected Class requestClass;
 
 
     /**
@@ -159,12 +160,23 @@ public class GrpcSinkSuper extends Sink {
                 constructor.setAccessible(true);
                 this.stubObject = constructor.newInstance(this.channel);
 
+
+                String stubName = serviceName + "BlockingStub";
+                Method[] methods = Class.forName(this.packageName + this.serviceName + "Grpc" + "$" + stubName).getMethods();
+                for (Method m : methods) {
+                    if (m.getName().equals(methodName)) {
+                        this.requestClass = m.getParameterTypes()[0];
+                        break;
+                    }
+                }
+
+
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             } catch (NoSuchMethodException e) {
                 System.out.println("Constructor");
                 e.printStackTrace();
-            } catch (IllegalAccessException|InstantiationException|InvocationTargetException e) {
+            } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
                 System.out.println("Instantiate");
                 e.printStackTrace();
             }

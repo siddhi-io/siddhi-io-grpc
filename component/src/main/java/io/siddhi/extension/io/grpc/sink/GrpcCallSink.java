@@ -15,6 +15,9 @@ import io.siddhi.core.util.transport.DynamicOptions;
 import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
 /**
  * {@code GrpcSink} Handle the gRPC publishing tasks.
  */
@@ -30,13 +33,13 @@ import org.wso2.grpc.Event;
                 @Parameter(name = "url",
                         description = "The url to which the outgoing events should be published via this extension. " +
                                 "This url should consist the host address, port, service name, method name in the " +
-                                "following format. hostAddress:port/serviceName/methodName" ,
+                                "following format. hostAddress:port/serviceName/methodName",
                         type = {DataType.STRING}),
                 @Parameter(name = "sink.id",
                         description = "a unique ID that should be set for each gRPC sink. There is a 1:1 mapping " +
                                 "between gRPC sinks and sources. Each sink has one particular source listening to " +
                                 "the responses to requests published from that sink. So the same sink.id should be " +
-                                "given when writing the source also." ,
+                                "given when writing the source also.",
                         type = {DataType.INT}),
                 @Parameter(name = "sequence",
                         description = "This is an optional parameter to be used when connecting to Micro Integrator " +
@@ -45,7 +48,7 @@ import org.wso2.grpc.Event;
                                 "access many different sequences in Micro Integrator. This parameter is used to " +
                                 "specify the sequence which we want to use. When this parameter is given gRPC sink " +
                                 "will comunicate with MI. Json map type should be used in this case to encode event " +
-                                "data and send to MI" ,
+                                "data and send to MI",
                         optional = true, defaultValue = "NA. When sequence is not given the service name and method " +
                         "name should be specified in the url",
                         type = {DataType.STRING}),
@@ -99,6 +102,37 @@ public class GrpcCallSink extends GrpcSinkSuper {
             }, MoreExecutors.directExecutor());
         } else {
             //todo: handle publishing to generic service
+            try {
+                Method m = stubClass.getDeclaredMethod(methodName, requestClass);
+                ListenableFuture<Object> genericRes = (ListenableFuture<Object>) m.invoke(stubObject, payload);
+
+
+                Futures.addCallback(genericRes, new FutureCallback<Object>() {
+                    @Override
+                    public void onSuccess(Object o) {
+                        int fieldsCount = o.getClass().getFields().length;
+                        if (fieldsCount != 0) //to ignore empty responses (Empty response classes have 0 attributes)
+                            try {
+                                sourceStaticHolder.getGRPCSource(sinkID).onResponse(o);
+                            } catch (NullPointerException e) {
+                                throw new SiddhiAppRuntimeException("Please define a source with the same id (id :" + sinkID + ")");
+                            }
+
+                    }
+
+                    @Override
+                    public void onFailure(Throwable throwable) {
+                        System.out.println("Failure");
+                    }
+                }, MoreExecutors.directExecutor());
+
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+            }
         }
     }
 }
