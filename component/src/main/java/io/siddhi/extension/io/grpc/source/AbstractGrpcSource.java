@@ -30,6 +30,7 @@ import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.core.util.transport.Option;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
+import io.siddhi.extension.io.grpc.util.SourceServerInterceptor;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.log4j.Logger;
 
@@ -56,6 +57,7 @@ public abstract class AbstractGrpcSource extends Source {
     private int port;
     protected Option headersOption;
     protected String[] requestedTransportPropertyNames;
+    protected SourceServerInterceptor serverInterceptor;
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
@@ -96,6 +98,7 @@ public abstract class AbstractGrpcSource extends Source {
         this.port = Integer.parseInt(urlParts.get(GrpcConstants.URL_HOST_AND_PORT_POSITION).split(":")[1]);
 
         initSource(optionHolder);
+        this.serverInterceptor = new SourceServerInterceptor(this);
 
         if (serviceName.equals(GrpcConstants.DEFAULT_SERVICE_NAME)
                 && urlParts.size() == GrpcConstants.NUM_URL_PARTS_FOR_DEFAULT_MODE_SOURCE) {
@@ -171,6 +174,7 @@ public abstract class AbstractGrpcSource extends Source {
         String[] headerParts = headerString.split(",");
         for (String headerPart: headerParts) {
             String cleanA = headerPart.replaceAll("'", "");
+            cleanA = cleanA.replaceAll(" ", "");
             String[] keyValue = cleanA.split(":");
             for (int i = 0; i < requestedTransportPropertyNames.length; i++) {
                 if (keyValue[0].equalsIgnoreCase(requestedTransportPropertyNames[i])) {

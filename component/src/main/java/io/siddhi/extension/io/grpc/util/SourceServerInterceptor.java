@@ -22,10 +22,7 @@ import io.grpc.Metadata;
 import io.grpc.ServerCall;
 import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
-import io.siddhi.core.stream.input.source.Source;
 import io.siddhi.extension.io.grpc.source.AbstractGrpcSource;
-
-import java.util.Set;
 
 import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
 
@@ -45,13 +42,9 @@ public class SourceServerInterceptor implements ServerInterceptor {
   public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> serverCall,
                                                                Metadata metadata,
                                                                ServerCallHandler<ReqT, RespT> serverCallHandler) {
-    Metadata.Key<String> headerKey = Metadata.Key.of("headers", ASCII_STRING_MARSHALLER);
-    String headers = metadata.get(headerKey);
-    associatedGrpcSource.populateHeaderString(headers);
-    System.out.println("Header received: " + headers);
-    Context ctx;
-    ctx = Context.ROOT;
-
-    return Contexts.interceptCall(ctx, serverCall, metadata, serverCallHandler);
+    Metadata.Key<String> headerKey = Metadata.Key.of(GrpcConstants.HEADERS, ASCII_STRING_MARSHALLER);
+    associatedGrpcSource.populateHeaderString(metadata.get(headerKey));
+//    System.out.println("Header received: " + headers);
+    return Contexts.interceptCall(Context.ROOT, serverCall, metadata, serverCallHandler);
   }
 }

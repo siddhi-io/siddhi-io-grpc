@@ -62,8 +62,7 @@ import org.wso2.grpc.EventServiceGrpc;
 )
 public class GrpcSource extends AbstractGrpcSource {
     private static final Logger logger = Logger.getLogger(GrpcSource.class.getName());
-    SourceServerInterceptor serverInterceptor;
-    String headerString;
+    private String headerString;
 
     @Override
     public void initializeGrpcServer(int port) {
@@ -92,9 +91,7 @@ public class GrpcSource extends AbstractGrpcSource {
     }
 
     @Override
-    public void initSource(OptionHolder optionHolder) {
-        serverInterceptor = new SourceServerInterceptor(this);
-    }
+    public void initSource(OptionHolder optionHolder) {}
 
     @Override
     public void populateHeaderString(String headerString) {

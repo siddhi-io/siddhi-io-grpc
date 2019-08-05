@@ -18,14 +18,18 @@
 package io.siddhi.extension.io.grpc.source;
 
 import io.grpc.ServerBuilder;
+import io.grpc.ServerInterceptors;
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
 import io.siddhi.annotation.Parameter;
 import io.siddhi.annotation.util.DataType;
+import io.siddhi.core.exception.SiddhiAppRuntimeException;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
 import io.siddhi.extension.io.grpc.util.GrpcSourceRegistry;
+import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
 
@@ -68,21 +72,34 @@ import java.util.concurrent.ConcurrentHashMap;
         }
 )
 public class GrpcServiceSource extends AbstractGrpcSource {
+    private static final Logger logger = Logger.getLogger(GrpcServiceSource.class.getName());
     private Map<String, StreamObserver<Event>> streamObserverMap = new ConcurrentHashMap<>();
     private String sourceId;
+    private String headerString;
 
     @Override
     public void initializeGrpcServer(int port) {
         if (isDefaultMode) {
-            this.server = ServerBuilder.forPort(port).addService(new EventServiceGrpc.EventServiceImplBase() {
+            this.server = ServerBuilder.forPort(port).addService(ServerInterceptors.intercept(new EventServiceGrpc.EventServiceImplBase() {
                 @Override
                 public void process(Event request,
                                     StreamObserver<Event> responseObserver) {
                     String messageId = UUID.randomUUID().toString();
                     streamObserverMap.put(messageId, responseObserver);
-                    sourceEventListener.onEvent(request.getPayload(), new String[]{messageId});
+                    if (headerString != null) {
+                        try {
+                            sourceEventListener.onEvent(request.getPayload(), extractHeaders(headerString + ", '" +
+                                    GrpcConstants.MESSAGE_ID + ":" + messageId + "'"));
+                        } catch (SiddhiAppRuntimeException e) {
+                            logger.error(siddhiAppContext.getName() + "Dropping request. " + e.getMessage());
+                            responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
+                        }
+                    } else {
+                        sourceEventListener.onEvent(request.getPayload(), new String[]{messageId});
+                    }
+                    streamObserverMap.put(messageId, responseObserver);
                 }
-            }).build();
+            }, serverInterceptor)).build();
         }
     }
 
@@ -94,7 +111,7 @@ public class GrpcServiceSource extends AbstractGrpcSource {
 
     @Override
     public void populateHeaderString(String headerString) {
-
+        this.headerString = headerString;
     }
 
     public void handleCallback(String messageId, String responsePayload) {
