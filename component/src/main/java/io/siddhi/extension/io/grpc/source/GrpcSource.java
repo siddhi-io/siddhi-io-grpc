@@ -20,6 +20,7 @@ package io.siddhi.extension.io.grpc.source;
 import com.google.protobuf.Empty;
 import io.grpc.ServerBuilder;
 import io.grpc.ServerInterceptors;
+import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 import io.grpc.stub.StreamObserver;
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
@@ -27,7 +28,6 @@ import io.siddhi.annotation.Parameter;
 import io.siddhi.annotation.util.DataType;
 import io.siddhi.core.exception.SiddhiAppRuntimeException;
 import io.siddhi.core.util.transport.OptionHolder;
-import io.siddhi.extension.io.grpc.util.SourceServerInterceptor;
 import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
@@ -67,7 +67,9 @@ public class GrpcSource extends AbstractGrpcSource {
     @Override
     public void initializeGrpcServer(int port) {
         if (isDefaultMode) {
-            this.server = ServerBuilder.forPort(port).addService(ServerInterceptors.intercept(new EventServiceGrpc.EventServiceImplBase() {
+            NettyServerBuilder serverBuilder = (NettyServerBuilder) ServerBuilder.forPort(port);
+//            serverBuilder.
+            this.server = serverBuilder.addService(ServerInterceptors.intercept(new EventServiceGrpc.EventServiceImplBase() {
                 @Override
                 public void consume(Event request,
                                     StreamObserver<Empty> responseObserver) {

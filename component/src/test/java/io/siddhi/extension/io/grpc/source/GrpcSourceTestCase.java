@@ -34,10 +34,6 @@ import org.testng.annotations.Test;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class GrpcSourceTestCase {
@@ -206,5 +202,11 @@ public class GrpcSourceTestCase {
         Empty emptyResponse = blockingStub.consume(sequenceCallRequest);
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
+    }
+
+    @Test
+    public void test () {
+        long a = 1L << 24;
+        System.out.println(a);
     }
 }

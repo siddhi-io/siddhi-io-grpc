@@ -58,6 +58,8 @@ public abstract class AbstractGrpcSink extends Sink {
     protected String address;
     protected EventServiceGrpc.EventServiceFutureStub futureStub;
     protected Option headersOption;
+    protected ManagedChannelBuilder managedChannelBuilder;
+//    private long idleTimeout;
 
     /**
      * Returns the list of classes which this sink can consume.
@@ -121,6 +123,34 @@ public abstract class AbstractGrpcSink extends Sink {
         this.address = urlParts.get(GrpcConstants.URL_HOST_AND_PORT_POSITION);
         initSink(optionHolder);
 
+        //ManagedChannelBuilder Properties. i.e gRPC connection parameters
+        this.managedChannelBuilder = ManagedChannelBuilder.forTarget(address).usePlaintext();
+        managedChannelBuilder.idleTimeout(Long.parseLong(optionHolder.getOrCreateOption(GrpcConstants.IDLE_TIMEOUT,
+                GrpcConstants.IDLE_TIMEOUT_DEFAULT).getValue()), TimeUnit.SECONDS);
+        managedChannelBuilder.maxInboundMessageSize(Integer.parseInt(optionHolder.getOrCreateOption(  //todo:move to grpccallsink
+                GrpcConstants.MAX_INBOUND_MESSAGE_SIZE, GrpcConstants.MAX_INBOUND_MESSAGE_SIZE_DEFAULT).getValue()));
+        managedChannelBuilder.maxInboundMetadataSize(Integer.parseInt(optionHolder.getOrCreateOption(  //todo:move to grpccallsink
+                GrpcConstants.MAX_INBOUND_METADATA_SIZE, GrpcConstants.MAX_INBOUND_METADATA_SIZE_DEFAULT).getValue()));
+        managedChannelBuilder.keepAliveTime(Long.parseLong(optionHolder.getOrCreateOption(GrpcConstants.KEEP_ALIVE_TIME,
+                GrpcConstants.KEEP_ALIVE_TIME_DEFAULT).getValue()), TimeUnit.SECONDS);
+        managedChannelBuilder.keepAliveTimeout(Long.parseLong(optionHolder.getOrCreateOption(
+                GrpcConstants.KEEP_ALIVE_TIMEOUT, GrpcConstants.KEEP_ALIVE_TIMEOUT_DEFAULT).getValue()),
+                TimeUnit.SECONDS);
+        managedChannelBuilder.keepAliveWithoutCalls(Boolean.parseBoolean(optionHolder.getOrCreateOption(
+                GrpcConstants.KEEP_ALIVE_WITHOUT_CALLS, GrpcConstants.KEEP_ALIVE_WITHOUT_CALLS_DEFAULT).getValue()));
+        managedChannelBuilder.maxRetryAttempts(Integer.parseInt(optionHolder.getOrCreateOption(
+                GrpcConstants.MAX_RETRY_ATTEMPTS, GrpcConstants.MAX_RETRY_ATTEMPTS_DEFAULT).getValue()));
+        managedChannelBuilder.maxHedgedAttempts(Integer.parseInt(optionHolder.getOrCreateOption(
+                GrpcConstants.MAX_HEDGED_ATTEMPTS, GrpcConstants.MAX_HEDGED_ATTEMPTS_DEFAULT).getValue()));
+        if (Boolean.parseBoolean(optionHolder.getOrCreateOption(GrpcConstants.ENABLE_RETRY,
+                GrpcConstants.ENABLE_RETRY_DEFAULT).getValue())) {
+            managedChannelBuilder.enableRetry();
+            managedChannelBuilder.retryBufferSize(Long.parseLong(optionHolder.getOrCreateOption(
+                    GrpcConstants.RETRY_BUFFER_SIZE, GrpcConstants.RETRY_BUFFER_SIZE_DEFAULT).getValue()));
+            managedChannelBuilder.perRpcBufferLimit(Long.parseLong(optionHolder.getOrCreateOption(
+                    GrpcConstants.PER_RPC_BUFFER_SIZE, GrpcConstants.PER_RPC_BUFFER_SIZE_DEFAULT).getValue()));
+        }
+
         if (serviceName.equals(GrpcConstants.DEFAULT_SERVICE_NAME)
                 && (methodName.equals(GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE)
                 || methodName.equals(GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE))) {
@@ -144,8 +174,7 @@ public abstract class AbstractGrpcSink extends Sink {
      */
     @Override
     public void connect() throws ConnectionUnavailableException {
-        this.channel = ManagedChannelBuilder.forTarget(address).usePlaintext(true)
-                .build();
+        this.channel = ManagedChannelBuilder.forTarget(address).usePlaintext().build();
         this.futureStub = EventServiceGrpc.newFutureStub(channel);
         if (!channel.isShutdown()) {
             logger.info(streamID + " has successfully connected to " + url);

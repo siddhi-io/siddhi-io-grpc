@@ -18,7 +18,6 @@
 package io.siddhi.extension.io.grpc.sink;
 
 import com.google.protobuf.Empty;
-import io.grpc.ManagedChannelBuilder;
 import io.grpc.Metadata;
 import io.grpc.stub.MetadataUtils;
 import io.grpc.stub.StreamObserver;
@@ -125,8 +124,7 @@ public class GrpcSink extends AbstractGrpcSink {
      */
     @Override
     public void connect() throws ConnectionUnavailableException {
-        this.channel = ManagedChannelBuilder.forTarget(address).usePlaintext(true)
-                .build();
+        this.channel = managedChannelBuilder.build();
         this.asyncStub = EventServiceGrpc.newStub(channel);
         if (!channel.isShutdown()) {
             logger.info(streamID + " has successfully connected to " + url);
