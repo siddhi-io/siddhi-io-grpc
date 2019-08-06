@@ -140,7 +140,7 @@ public class GrpcServiceSourceTestCase {
                 requestBuilder.setPayload(json);
                 Event sequenceCallRequest = requestBuilder.build();
                 ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888")
-                        .usePlaintext(true)
+                        .usePlaintext()
                         .build();
                 EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
                 Event response = blockingStub.process(sequenceCallRequest);

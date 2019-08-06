@@ -37,10 +37,11 @@ import io.siddhi.query.api.definition.StreamDefinition;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.log4j.Logger;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.net.MalformedURLException;
+import java.net.URL;
+
+import static io.siddhi.extension.io.grpc.util.GrpcUtils.getMethodName;
+import static io.siddhi.extension.io.grpc.util.GrpcUtils.getServiceName;
 
 /**
  * {@code GrpcServiceResponseSink} Handle sending responses for requests received via grpc-service source.
@@ -83,24 +84,27 @@ public class GrpcServiceResponseSink extends Sink {
     private String serviceName;
     private String methodName;
     private String sinkID;
+    private String streamID;
 
     @Override
     protected StateFactory init(StreamDefinition outputStreamDefinition, OptionHolder optionHolder,
                                 ConfigReader sinkConfigReader, SiddhiAppContext siddhiAppContext) {
         this.siddhiAppContext = siddhiAppContext;
+        this.streamID = siddhiAppContext.getName() + GrpcConstants.PORT_HOST_SEPARATOR + outputStreamDefinition.getId();
         this.url = optionHolder.validateAndGetOption(GrpcConstants.PUBLISHER_URL).getValue();
-        List<String> urlParts = new ArrayList<>(Arrays.asList(url.split(GrpcConstants.PORT_SERVICE_SEPARATOR)));
-        urlParts.removeAll(Collections.singletonList(GrpcConstants.EMPTY_STRING));
-
-        if (!urlParts.get(GrpcConstants.URL_PROTOCOL_POSITION)
-                .equalsIgnoreCase(GrpcConstants.GRPC_PROTOCOL_NAME + ":")) {
-            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": The url must begin with \"" +
+        if (!url.substring(0,4).equalsIgnoreCase(GrpcConstants.GRPC_PROTOCOL_NAME)) {
+            throw new SiddhiAppValidationException(streamID + "The url must begin with \"" +
                     GrpcConstants.GRPC_PROTOCOL_NAME + "\" for all grpc sinks");
         }
-
-        String[] fullyQualifiedServiceNameParts = urlParts.get(GrpcConstants.URL_SERVICE_NAME_POSITION).split("\\.");
-        this.serviceName = fullyQualifiedServiceNameParts[fullyQualifiedServiceNameParts.length - 1];
-        this.methodName = urlParts.get(GrpcConstants.URL_METHOD_NAME_POSITION);
+        URL aURL;
+        try {
+            aURL = new URL("http" + url.substring(4));
+        } catch (MalformedURLException e) {
+            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": MalformedURLException. "
+                    + e.getMessage());
+        }
+        this.serviceName = getServiceName(aURL.getPath());
+        this.methodName = getMethodName(aURL.getPath());
         if (optionHolder.isOptionExists(GrpcConstants.SINK_ID)) {
             this.sinkID = optionHolder.validateAndGetOption(GrpcConstants.SINK_ID).getValue();
         } else {

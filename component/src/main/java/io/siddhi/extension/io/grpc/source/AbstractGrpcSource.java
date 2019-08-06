@@ -36,11 +36,12 @@ import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.concurrent.TimeUnit;
+
+import static io.siddhi.extension.io.grpc.util.GrpcUtils.getMethodName;
+import static io.siddhi.extension.io.grpc.util.GrpcUtils.getServiceName;
 
 /**
  * This is an abstract class extended by GrpcSource and GrpcServiceSource. This provides most of initialization
@@ -53,7 +54,7 @@ public abstract class AbstractGrpcSource extends Source {
     private String url;
     protected Server server;
     private String serviceName;
-//    private String methodName;
+    private String methodName;
     protected boolean isDefaultMode;
     private int port;
     protected Option headersOption;
@@ -83,22 +84,23 @@ public abstract class AbstractGrpcSource extends Source {
         this.sourceEventListener = sourceEventListener;
         this.requestedTransportPropertyNames = requestedTransportPropertyNames;
         this.url = optionHolder.validateAndGetOption(GrpcConstants.PUBLISHER_URL).getValue();
-        if (optionHolder.isOptionExists(GrpcConstants.HEADERS)) { //todo: what to do with headers?
+        if (optionHolder.isOptionExists(GrpcConstants.HEADERS)) {
             this.headersOption = optionHolder.validateAndGetOption(GrpcConstants.HEADERS);
         }
-        List<String> urlParts = new ArrayList<>(Arrays.asList(url.split(GrpcConstants.PORT_SERVICE_SEPARATOR)));
-        urlParts.removeAll(Collections.singletonList(GrpcConstants.EMPTY_STRING));
-
-        if (!urlParts.get(GrpcConstants.URL_PROTOCOL_POSITION)
-                .equalsIgnoreCase(GrpcConstants.GRPC_PROTOCOL_NAME + ":")) {
-            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": The url must begin with \"" +
-                    GrpcConstants.GRPC_PROTOCOL_NAME + "\" for all grpc source");
+        if (!url.substring(0,4).equalsIgnoreCase(GrpcConstants.GRPC_PROTOCOL_NAME)) {
+            throw new SiddhiAppValidationException(siddhiAppContext.getName() + "The url must begin with \""
+                    + GrpcConstants.GRPC_PROTOCOL_NAME + "\" for all grpc sinks");
         }
-        String[] fullyQualifiedServiceNameParts = urlParts.get(GrpcConstants.URL_SERVICE_NAME_POSITION).split("\\.");
-        this.serviceName = fullyQualifiedServiceNameParts[fullyQualifiedServiceNameParts.length - 1];
-//        this.methodName = urlParts.get(GrpcConstants.URL_METHOD_NAME_POSITION);
-        this.port = Integer.parseInt(urlParts.get(GrpcConstants.URL_HOST_AND_PORT_POSITION).split(":")[1]);
-
+        URL aURL;
+        try {
+            aURL = new URL("http" + url.substring(4));
+        } catch (MalformedURLException e) {
+            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": MalformedURLException. "
+                    + e.getMessage());
+        }
+        this.serviceName = getServiceName(aURL.getPath());
+        this.methodName = getMethodName(aURL.getPath());
+        this.port = aURL.getPort();
         initSource(optionHolder);
         this.serverInterceptor = new SourceServerInterceptor(this);
 
@@ -108,10 +110,8 @@ public abstract class AbstractGrpcSource extends Source {
                 GrpcConstants.MAX_INBOUND_MESSAGE_SIZE, GrpcConstants.MAX_INBOUND_MESSAGE_SIZE_DEFAULT).getValue()));
         serverBuilder.maxInboundMetadataSize(Integer.parseInt(optionHolder.getOrCreateOption(
                 GrpcConstants.MAX_INBOUND_METADATA_SIZE, GrpcConstants.MAX_INBOUND_METADATA_SIZE_DEFAULT).getValue()));
-        serverBuilder.useTransportSecurity()
 
-        if (serviceName.equals(GrpcConstants.DEFAULT_SERVICE_NAME)
-                && urlParts.size() == GrpcConstants.NUM_URL_PARTS_FOR_DEFAULT_MODE_SOURCE) {
+        if (serviceName.equals(GrpcConstants.DEFAULT_SERVICE_NAME)) {
                 this.isDefaultMode = true;
                 initializeGrpcServer(port);
         } else {
