@@ -45,28 +45,104 @@ import org.wso2.grpc.EventServiceGrpc.EventServiceStub;
                 "\"EventService\" and it has 2 rpc's. They are process and consume. Process sends a request of type " +
                 "Event and receives a response of the same type. Consume sends a request of type Event and expects " +
                 "no response from gRPC server. Please note that the Event type mentioned here is not " +
-                "io.siddhi.core.event.Event but a type defined in the default service protobuf provided in " +
-                "resources folder. This grpc sink is used for scenarios where we send a request and don't expect " +
-                "a response back. I.e getting a google.protobuf.Empty response back.",
+                "io.siddhi.core.event.Event but org.wso2.grpc.Event. This grpc sink is used for scenarios where we " +
+                "send a request and don't expect a response back. I.e getting a google.protobuf.Empty response back.",
         parameters = {
                 @Parameter(name = "url",
                         description = "The url to which the outgoing events should be published via this extension. " +
                                 "This url should consist the host address, port, service name, method name in the " +
                                 "following format. grpc://hostAddress:port/serviceName/methodName" ,
                         type = {DataType.STRING}),
+                @Parameter(name = "headers",
+                        description = "GRPC Request headers in format `\"'<key>:<value>','<key>:<value>'\"`. " +
+                                "If header parameter is not provided just the payload is sent" ,
+                        type = {DataType.STRING},
+                        optional = true,
+                        defaultValue = ""),
+                @Parameter(name = "idle.timeout",
+                        description = "Set the duration in seconds without ongoing RPCs before going to idle mode." ,
+                        type = {DataType.LONG},
+                        optional = true,
+                        defaultValue = "1800"),
+                @Parameter(name = "keep.alive.time",
+                        description = "Sets the time in seconds without read activity before sending a keepalive " +
+                                "ping. Keepalives can increase the load on services so must be used with caution. By " +
+                                "default set to Long.MAX_VALUE which disables keep alive pinging." ,
+                        type = {DataType.LONG},
+                        optional = true,
+                        defaultValue = "Long.MAX_VALUE"),
+                @Parameter(name = "keep.alive.timeout",
+                        description = "Sets the time in seconds waiting for read activity after sending a keepalive " +
+                                "ping." ,
+                        type = {DataType.LONG},
+                        optional = true,
+                        defaultValue = "20"),
+                @Parameter(name = "keep.alive.without.calls",
+                        description = "Sets whether keepalive will be performed when there are no outstanding RPC " +
+                                "on a connection." ,
+                        type = {DataType.BOOL},
+                        optional = true,
+                        defaultValue = "false"),
+                @Parameter(name = "enable.retry",
+                        description = "Enables the retry and hedging mechanism provided by the gRPC library." ,
+                        type = {DataType.BOOL},
+                        optional = true,
+                        defaultValue = "false"),
+                @Parameter(name = "max.retry.attempts",
+                        description = "Sets max number of retry attempts. The total number of retry attempts for " +
+                                "each RPC will not exceed this number even if service config may allow a higher " +
+                                "number." ,
+                        type = {DataType.INT},
+                        optional = true,
+                        defaultValue = "5"),
+                @Parameter(name = "max.hedged.attempts",
+                        description = "Sets max number of hedged attempts. The total number of hedged attempts for " +
+                                "each RPC will not exceed this number even if service config may allow a higher " +
+                                "number." ,
+                        type = {DataType.INT},
+                        optional = true,
+                        defaultValue = "5"),
+                @Parameter(name = "retry.buffer.size",
+                        description = "Sets the retry buffer size in bytes. If the buffer limit is exceeded, no " +
+                                "RPC could retry at the moment, and in hedging case all hedges but one of the same " +
+                                "RPC will cancel." ,
+                        type = {DataType.LONG},
+                        optional = true,
+                        defaultValue = "16777216"),
+                @Parameter(name = "per.rpc.buffer.size",
+                        description = "Sets the per RPC buffer limit in bytes used for retry. The RPC is not " +
+                                "retriable if its buffer limit is exceeded." ,
+                        type = {DataType.LONG},
+                        optional = true,
+                        defaultValue = "1048576"),
+                @Parameter(name = "channel.termination.waiting.time",
+                        description = "The time in seconds to wait for the channel to become terminated, giving up " +
+                                "if the timeout is reached." ,
+                        type = {DataType.LONG},
+                        optional = true,
+                        defaultValue = "5"),
         },
         examples = {
                 @Example(
                         syntax = "@sink(type='grpc', " +
                                 "url = 'grpc://134.23.43.35:8080/org.wso2.grpc.EventService/consume', " +
-                                "@map(type='json')) " //todo: check if we need to specify the grpc connection properties
+                                "@map(type='json')) "
                                 + "define stream FooStream (message String);",
                         description = "Here a stream named FooStream is defined with grpc sink. A grpc server " +
                                 "should be running at 194.23.98.100 listening to port 8080. sink.id is set to 1 " +
                                 "here. So we can write a source with sink.id 1 so that it will listen to responses " +
                                 "for requests published from this stream. Note that since we are using " +
                                 "EventService/consume the sink will be operating in default mode"
-                        //todo: add an example for generic service access
+                ),
+                @Example(
+                        syntax = "@sink(type='grpc', " +
+                                "url = 'grpc://134.23.43.35:8080/org.wso2.grpc.EventService/consume', " +
+                                "headers='{{headers}}', " +
+                                "@map(type='json'), @payload('{{message}}')) "
+                                + "define stream FooStream (message String, headers String);",
+                        description = "A similar example to above but with headers. Headers are also send into the " +
+                                "stream as a data. In the sink headers dynamic property reads the value and sends " +
+                                "it as MetaData with the request"
                 )
         }
 )
@@ -130,6 +206,4 @@ public class GrpcSink extends AbstractGrpcSink {
             logger.info(streamID + " has successfully connected to " + url);
         }
     }
-
-    //todo: do connect and disconnect here
 }

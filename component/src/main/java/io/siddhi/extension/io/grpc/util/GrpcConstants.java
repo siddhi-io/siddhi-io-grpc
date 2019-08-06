@@ -29,6 +29,7 @@ public class GrpcConstants {
     public static final String DEFAULT_METHOD_NAME_WITHOUT_RESPONSE = "consume";
     public static final String EMPTY_STRING = "";
     public static final String GRPC_PROTOCOL_NAME = "grpc";
+    public static final String DUMMY_PROTOCOL_NAME = "http";
     public static final String DEFAULT_SERVICE_NAME = "EventService";
     public static final String SINK_TYPE_OPTION = "type";
     public static final String GRPC_CALL_SINK_NAME = "grpc-call";

@@ -49,9 +49,8 @@ public abstract class AbstractGrpcSink extends Sink {
     private static final Logger logger = Logger.getLogger(AbstractGrpcSink.class.getName());
     protected SiddhiAppContext siddhiAppContext;
     protected ManagedChannel channel;
-    private String serviceName;
     protected String methodName;
-    private String sequenceName;
+    private String sequenceName;  //todo: what to do with seq name
     protected boolean isDefaultMode = false;
     protected String url;
     protected String streamID;
@@ -115,12 +114,12 @@ public abstract class AbstractGrpcSink extends Sink {
         }
         URL aURL;
         try {
-            aURL = new URL("http" + url.substring(4));
+            aURL = new URL(GrpcConstants.DUMMY_PROTOCOL_NAME + url.substring(4));
         } catch (MalformedURLException e) {
             throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": MalformedURLException. "
                     + e.getMessage());
         }
-        this.serviceName = getServiceName(aURL.getPath());
+        String serviceName = getServiceName(aURL.getPath());
         this.methodName = getMethodName(aURL.getPath());
         this.address = aURL.getAuthority();
         this.channelTerminationWaitingTime = Integer.parseInt(optionHolder.getOrCreateOption(

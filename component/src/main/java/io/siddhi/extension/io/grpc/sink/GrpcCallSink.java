@@ -41,12 +41,84 @@ import org.wso2.grpc.EventServiceGrpc.EventServiceFutureStub;
                                 "This url should consist the host address, port, service name, method name in the " +
                                 "following format. grpc://hostAddress:port/serviceName/methodName" ,
                         type = {DataType.STRING}),
-                @Parameter(name = "sink.id",
-                        description = "a unique ID that should be set for each gRPC sink. There is a 1:1 mapping " +
-                                "between gRPC sinks and sources. Each sink has one particular source listening to " +
-                                "the responses to requests published from that sink. So the same sink.id should be " +
-                                "given when writing the source also." ,
-                        type = {DataType.INT}),
+                @Parameter(name = "headers",
+                        description = "GRPC Request headers in format `\"'<key>:<value>','<key>:<value>'\"`. " +
+                                "If header parameter is not provided just the payload is sent" ,
+                        type = {DataType.STRING},
+                        optional = true,
+                        defaultValue = ""),
+                @Parameter(name = "idle.timeout",
+                        description = "Set the duration in seconds without ongoing RPCs before going to idle mode." ,
+                        type = {DataType.LONG},
+                        optional = true,
+                        defaultValue = "1800"),
+                @Parameter(name = "keep.alive.time",
+                        description = "Sets the time in seconds without read activity before sending a keepalive " +
+                                "ping. Keepalives can increase the load on services so must be used with caution. By " +
+                                "default set to Long.MAX_VALUE which disables keep alive pinging." ,
+                        type = {DataType.LONG},
+                        optional = true,
+                        defaultValue = "Long.MAX_VALUE"),
+                @Parameter(name = "keep.alive.timeout",
+                        description = "Sets the time in seconds waiting for read activity after sending a keepalive " +
+                                "ping." ,
+                        type = {DataType.LONG},
+                        optional = true,
+                        defaultValue = "20"),
+                @Parameter(name = "keep.alive.without.calls",
+                        description = "Sets whether keepalive will be performed when there are no outstanding RPC " +
+                                "on a connection." ,
+                        type = {DataType.BOOL},
+                        optional = true,
+                        defaultValue = "false"),
+                @Parameter(name = "enable.retry",
+                        description = "Enables the retry and hedging mechanism provided by the gRPC library." ,
+                        type = {DataType.BOOL},
+                        optional = true,
+                        defaultValue = "false"),
+                @Parameter(name = "max.retry.attempts",
+                        description = "Sets max number of retry attempts. The total number of retry attempts for " +
+                                "each RPC will not exceed this number even if service config may allow a higher " +
+                                "number." ,
+                        type = {DataType.INT},
+                        optional = true,
+                        defaultValue = "5"),
+                @Parameter(name = "max.hedged.attempts",
+                        description = "Sets max number of hedged attempts. The total number of hedged attempts for " +
+                                "each RPC will not exceed this number even if service config may allow a higher " +
+                                "number." ,
+                        type = {DataType.INT},
+                        optional = true,
+                        defaultValue = "5"),
+                @Parameter(name = "retry.buffer.size",
+                        description = "Sets the retry buffer size in bytes. If the buffer limit is exceeded, no " +
+                                "RPC could retry at the moment, and in hedging case all hedges but one of the same " +
+                                "RPC will cancel." ,
+                        type = {DataType.LONG},
+                        optional = true,
+                        defaultValue = "16777216"),
+                @Parameter(name = "per.rpc.buffer.size",
+                        description = "Sets the per RPC buffer limit in bytes used for retry. The RPC is not " +
+                                "retriable if its buffer limit is exceeded." ,
+                        type = {DataType.LONG},
+                        optional = true,
+                        defaultValue = "1048576"),
+                @Parameter(name = "channel.termination.waiting.time",
+                        description = "The time in seconds to wait for the channel to become terminated, giving up " +
+                                "if the timeout is reached." ,
+                        type = {DataType.LONG},
+                        optional = true,
+                        defaultValue = "5"),
+                @Parameter(name = "max.inbound.message.size",
+                        description = "Sets the maximum message size allowed to be received on the channel in bytes" ,
+                        type = {DataType.LONG},
+                        optional = true,
+                        defaultValue = "4194304"),
+                @Parameter(name = "max.inbound.metadata.size",
+                        description = "Sets the maximum size of metadata allowed to be received in bytes" ,
+                        type = {DataType.LONG},
+                        optional = true,
+                        defaultValue = "8192"),
         },
         examples = {
                 @Example(
