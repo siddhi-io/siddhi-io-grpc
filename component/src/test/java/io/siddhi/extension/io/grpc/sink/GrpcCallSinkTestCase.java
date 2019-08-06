@@ -36,7 +36,6 @@ public class GrpcCallSinkTestCase {
     private TestServer server = new TestServer();
     private AtomicInteger eventCount = new AtomicInteger(0);
 
-
     @Test
     public void test1() throws Exception {
         logger.info("Test case to call process sending 2 requests");
@@ -87,24 +86,24 @@ public class GrpcCallSinkTestCase {
         }
     }
 
-
     @Test
-    public void test2() throws Exception {
+    public void testWithHeaders() throws Exception {
         logger.info("Test case to call process sending 2 requests");
         logger.setLevel(Level.DEBUG);
         SiddhiManager siddhiManager = new SiddhiManager();
 
-//        server.start();
-
+        server.start();
+        String port = String.valueOf(server.getPort());
         String inStreamDefinition = ""
                 + "@sink(type='grpc-call', " +
-                "url = 'grpc://localhost:8888/package01.test.MyService/process', " +
-                "sink.id= '1', @map(type='protobuf')) "
-                + "define stream FooStream (stringValue string, intValue int,longValue long,booleanValue bool,floatValue float,doubleValue double);";
+                "url = 'grpc://localhost:8888/org.wso2.grpc.EventService/process/mySeq', " +
+                "sink.id= '1', " +
+                "headers='{{headers}}', " +
+                "@map(type='json')) "
+                + "define stream FooStream (message String, headers String);";
 
-        String stream2 = "@source(type='grpc-call-response', url = 'grpc://localhost:8888/package01.test.MyService/process'," +
-                "sequence='mySeq', sink.id= '1', @map(type='protobuf')) " +
-                "define stream BarStream (stringValue string, intValue int,longValue long,booleanValue bool,floatValue float,doubleValue double);";
+        String stream2 = "@source(type='grpc-call-response', sequence='mySeq', sink.id= '1', @map(type='json')) " +
+                "define stream BarStream (message String);";
         String query = "@info(name = 'query') "
                 + "from BarStream "
                 + "select *  "
@@ -119,26 +118,9 @@ public class GrpcCallSinkTestCase {
                 for (int i = 0; i < inEvents.length; i++) {
                     eventCount.incrementAndGet();
                     switch (i) {
-                        case 0: {
-                            Assert.assertEquals(inEvents[i].getData()[0], "Received");
-                            Assert.assertEquals(inEvents[i].getData()[1], 200 * 2);
-                            Assert.assertEquals(inEvents[i].getData()[2], 10000L * 2);
-                            Assert.assertEquals(inEvents[i].getData()[3], true);
-                            Assert.assertEquals(inEvents[i].getData()[4], 522.7586f * 2);
-                            Assert.assertEquals(inEvents[i].getData()[5], 34.5668 * 2);
+                        case 0:
+                            Assert.assertEquals((String) inEvents[i].getData()[0], "Benjamin Watson");
                             break;
-                        }
-/*
-                        case 1: {
-                            Assert.assertEquals(inEvents[i].getData()[0], "Received");
-                            Assert.assertEquals(inEvents[i].getData()[1], 524 * 2);
-                            Assert.assertEquals(inEvents[i].getData()[2], 53335L * 2);
-                            Assert.assertEquals(inEvents[i].getData()[3], false);
-                            Assert.assertEquals(inEvents[i].getData()[4], 2000.99f * 2);
-                            Assert.assertEquals(inEvents[i].getData()[5], 2365.456 * 2);
-                            break;
-                        }*/
-
                         default:
                             Assert.fail();
                     }
@@ -148,12 +130,13 @@ public class GrpcCallSinkTestCase {
         InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
         try {
             siddhiAppRuntime.start();
-            fooStream.send(new Object[]{"Data 01", 200, 10000L, false, 522.7586f, 34.5668});
-//            fooStream.send(new Object[]{"Data 02", 524, 53335L, true, 2000.99f, 2365.456});
+            fooStream.send(new Object[]{"Request 1", "'Name:John','Age:23','Content-Type:text'"});
+//            Thread.sleep(5000);
+            fooStream.send(new Object[]{"Request 2", "'Name:Nash','Age:54','Content-Type:json'"});
             Thread.sleep(1000);
             siddhiAppRuntime.shutdown();
         } finally {
-//            server.stop();
+            server.stop();
         }
     }
 }

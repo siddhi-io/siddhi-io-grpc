@@ -17,6 +17,8 @@
  */
 package io.siddhi.extension.io.grpc.source;
 
+import com.google.protobuf.Any;
+import com.google.protobuf.ByteString;
 import com.google.protobuf.Empty;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
@@ -25,8 +27,13 @@ import io.siddhi.annotation.Extension;
 import io.siddhi.annotation.Parameter;
 import io.siddhi.annotation.util.DataType;
 import io.siddhi.core.util.transport.OptionHolder;
+import io.siddhi.extension.io.grpc.util.GenericServiceClass;
+import org.omg.CORBA.Request;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 /**
  * This handles receiving requests from grpc clients and populating the stream
@@ -42,7 +49,7 @@ import org.wso2.grpc.EventServiceGrpc;
                 @Parameter(name = "url",
                         description = "The url which can be used by a client to access the grpc server in this " +
                                 "extension. This url should consist the host address, port, service name, method " +
-                                "name in the following format. grpc://hostAddress:port/serviceName/methodName" ,
+                                "name in the following format. grpc://hostAddress:port/serviceName/methodName",
                         type = {DataType.STRING}),
         },
         examples = {
@@ -71,6 +78,37 @@ public class GrpcSource extends AbstractGrpcSource {
             }).build();
         } else {
             //todo: generic server logic here
+
+
+            GenericServiceClass.setServiceName(this.serviceName);
+
+            synchronized (this) { //in case of 2 server creates at the same time
+                GenericServiceClass.setEmptyResponseMethodName(this.methodName); //doesn't affect if 'methodname' changed after creating the server
+                GenericServiceClass.AnyServiceImplBase service = new GenericServiceClass.AnyServiceImplBase() {
+                    @Override
+                    public void handleEmptyResponse(Any request, StreamObserver<Empty> responseObserver) {
+                        Object requestClass = null;
+                        try {
+                            Class className = Class.forName("package01.test.Request");//todo get the class name from url
+
+
+                            Method parseFrom = className.getDeclaredMethod("parseFrom", ByteString.class);
+                            requestClass = parseFrom.invoke(Request.class,request.toByteString());
+                        } catch (ClassNotFoundException e) {
+                            e.printStackTrace();
+                        } catch (NoSuchMethodException e) {
+                            e.printStackTrace();
+                        } catch (IllegalAccessException e) {
+                            e.printStackTrace();
+                        } catch (InvocationTargetException e) {
+                            e.printStackTrace();
+                        }
+
+                        sourceEventListener.onEvent(requestClass,new String[]{"1"});
+                    }
+                };
+                this.server = ServerBuilder.forPort(port).addService(service).build();
+            }
         }
     }
 

@@ -50,7 +50,7 @@ public abstract class AbstractGrpcSource extends Source {
     protected SourceEventListener sourceEventListener;
     private String url;
     protected Server server;
-    private String serviceName;
+    protected String serviceName; //change private to protected
 //    private String methodName;
     protected boolean isDefaultMode;
     private int port;
@@ -60,7 +60,7 @@ public abstract class AbstractGrpcSource extends Source {
 
 
     //-----------------------------------
-
+    protected String methodName;
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
@@ -104,10 +104,11 @@ public abstract class AbstractGrpcSource extends Source {
         if (serviceName.equals(GrpcConstants.DEFAULT_SERVICE_NAME)
                 && urlParts.size() == GrpcConstants.NUM_URL_PARTS_FOR_DEFAULT_MODE_SOURCE) {
                 this.isDefaultMode = true;
-                initializeGrpcServer(port);
+                initializeGrpcServer(port);//todo  can move out of the if
         } else {
             //todo: handle generic grpc service
-
+            this.methodName = urlParts.get(GrpcConstants.URL_METHOD_NAME_POSITION);
+            initializeGrpcServer(port);
 
 
         }
