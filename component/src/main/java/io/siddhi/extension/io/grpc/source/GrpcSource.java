@@ -18,9 +18,7 @@
 package io.siddhi.extension.io.grpc.source;
 
 import com.google.protobuf.Empty;
-import io.grpc.ServerBuilder;
 import io.grpc.ServerInterceptors;
-import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 import io.grpc.stub.StreamObserver;
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;

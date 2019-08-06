@@ -36,6 +36,7 @@ import org.wso2.grpc.EventServiceGrpc;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This extension handles receiving requests from grpc clients/stubs and sending back responses
@@ -74,8 +75,10 @@ import java.util.concurrent.ConcurrentHashMap;
 public class GrpcServiceSource extends AbstractGrpcSource {
     private static final Logger logger = Logger.getLogger(GrpcServiceSource.class.getName());
     private Map<String, StreamObserver<Event>> streamObserverMap = new ConcurrentHashMap<>(); //todo send failure after timeout
+    private Map<String, Long> timeStampOfMessageIds = new ConcurrentHashMap<>();
     private String sourceId;
     private String headerString;
+    private long serviceTimeout;
 
     @Override
     public void initializeGrpcServer(int port) {
@@ -86,6 +89,7 @@ public class GrpcServiceSource extends AbstractGrpcSource {
                                     StreamObserver<Event> responseObserver) {
                     String messageId = UUID.randomUUID().toString();
                     streamObserverMap.put(messageId, responseObserver);
+                    timeStampOfMessageIds.put(messageId, siddhiAppContext.getTimestampGenerator().currentTime());
                     if (headerString != null) {
                         try {
                             sourceEventListener.onEvent(request.getPayload(), extractHeaders(headerString + ", '" +
@@ -103,10 +107,29 @@ public class GrpcServiceSource extends AbstractGrpcSource {
         }
     }
 
+    class ServiceSourceTimeoutChecker implements Runnable {
+        @Override
+        public void run() {
+            for (String messageId: timeStampOfMessageIds.keySet()) {
+                if (timeStampOfMessageIds.get(messageId) < siddhiAppContext.getTimestampGenerator().currentTime() - serviceTimeout) {
+                    streamObserverMap.get(messageId).onError(new io.grpc.StatusRuntimeException(Status.DEADLINE_EXCEEDED));
+                }
+            }
+        }
+    }
+
     @Override
     public void initSource(OptionHolder optionHolder) {
         this.sourceId = optionHolder.validateAndGetOption(GrpcConstants.SOURCE_ID).getValue();
+        this.serviceTimeout = Long.parseLong(optionHolder.validateAndGetOption(GrpcConstants.SERVICE_TIMEOUT).getValue());
+        long timeoutCheckInterval;
+        if (optionHolder.isOptionExists(GrpcConstants.TIMEOUT_CHECK_INTERVAL)) {
+            timeoutCheckInterval = Long.parseLong(optionHolder.validateAndGetOption(GrpcConstants.TIMEOUT_CHECK_INTERVAL).getValue());
+        } else {
+            timeoutCheckInterval = serviceTimeout;
+        }
         GrpcSourceRegistry.getInstance().putGrpcServiceSource(sourceId, this);
+        siddhiAppContext.getScheduledExecutorService().scheduleAtFixedRate(new ServiceSourceTimeoutChecker(), 0, timeoutCheckInterval, TimeUnit.MILLISECONDS);
     }
 
     @Override
