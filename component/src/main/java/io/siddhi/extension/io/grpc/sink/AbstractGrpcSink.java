@@ -50,7 +50,7 @@ public abstract class AbstractGrpcSink extends Sink {
     protected SiddhiAppContext siddhiAppContext;
     protected ManagedChannel channel;
     protected String methodName;
-    private String sequenceName;  //todo: what to do with seq name
+    protected String sequenceName;  //todo: what to do with seq name
     protected boolean isDefaultMode = false;
     protected String url;
     protected String streamID;

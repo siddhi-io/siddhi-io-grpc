@@ -43,7 +43,6 @@ public class GrpcCallSinkTestCase {
         SiddhiManager siddhiManager = new SiddhiManager();
 
         server.start();
-        String port = String.valueOf(server.getPort());
         String inStreamDefinition = ""
                 + "@sink(type='grpc-call', " +
                 "url = 'grpc://localhost:8888/org.wso2.grpc.EventService/process/mySeq', " +
@@ -67,7 +66,7 @@ public class GrpcCallSinkTestCase {
                     eventCount.incrementAndGet();
                     switch (i) {
                         case 0:
-                            Assert.assertEquals((String) inEvents[i].getData()[0], "Benjamin Watson");
+                            Assert.assertEquals((String) inEvents[i].getData()[0], "Hello from Server!");
                             break;
                         default:
                             Assert.fail();
@@ -93,7 +92,6 @@ public class GrpcCallSinkTestCase {
         SiddhiManager siddhiManager = new SiddhiManager();
 
         server.start();
-        String port = String.valueOf(server.getPort());
         String inStreamDefinition = ""
                 + "@sink(type='grpc-call', " +
                 "url = 'grpc://localhost:8888/org.wso2.grpc.EventService/process/mySeq', " +
@@ -119,7 +117,7 @@ public class GrpcCallSinkTestCase {
                     eventCount.incrementAndGet();
                     switch (i) {
                         case 0:
-                            Assert.assertEquals((String) inEvents[i].getData()[0], "Benjamin Watson");
+                            Assert.assertEquals((String) inEvents[i].getData()[0], "Hello from Server!");
                             break;
                         default:
                             Assert.fail();

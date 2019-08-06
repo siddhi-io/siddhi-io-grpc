@@ -46,7 +46,7 @@ import org.wso2.grpc.EventServiceGrpc.EventServiceFutureStub;
                                 "If header parameter is not provided just the payload is sent" ,
                         type = {DataType.STRING},
                         optional = true,
-                        defaultValue = ""),
+                        defaultValue = "N/A"),
                 @Parameter(name = "idle.timeout",
                         description = "Set the duration in seconds without ongoing RPCs before going to idle mode." ,
                         type = {DataType.LONG},
@@ -164,14 +164,21 @@ public class GrpcCallSink extends AbstractGrpcSink {
                 throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": Payload should be of type String " +
                         "for default EventService but found " + payload.getClass().getName());
             }
-            Event.Builder requestBuilder = Event.newBuilder();
-            requestBuilder.setPayload((String) payload);
-            Event sequenceCallRequest = requestBuilder.build();
+            Event sequenceCallRequest = Event.newBuilder().setPayload((String) payload).build();
             EventServiceFutureStub currentFutureStub = futureStub;
 
-            if (headersOption != null) {
+            if (sequenceName != null || headersOption != null) {
                 Metadata header = new Metadata();
-                String headers = headersOption.getValue(dynamicOptions);
+                String headers = "";
+                if (sequenceName != null) {
+                    headers += "'sequence:" + sequenceName + "'";
+                    if (headersOption != null) {
+                        headers += ",";
+                    }
+                }
+                if (headersOption != null) {
+                    headers +=  headersOption.getValue(dynamicOptions);
+                }
                 Metadata.Key<String> key =
                         Metadata.Key.of(GrpcConstants.HEADERS, Metadata.ASCII_STRING_MARSHALLER);
                 header.put(key, headers);

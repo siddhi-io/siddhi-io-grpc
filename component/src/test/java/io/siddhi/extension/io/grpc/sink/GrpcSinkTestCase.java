@@ -256,4 +256,43 @@ public class GrpcSinkTestCase {
         }
         Assert.assertTrue(logMessages.contains("Server consume hit with Request 1"));
     }
+
+    @Test
+    public void testWithHeaderAndSequenceName() throws Exception {
+        log.info("Test case to call consume with headers");
+        final TestAppender appender = new TestAppender();
+        final Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(Level.DEBUG);
+        rootLogger.addAppender(appender);
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String inStreamDefinition = ""
+                + "@sink(type='grpc', " +
+                "url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume/mySeq', " +
+                "headers='{{headers}}', " +
+                "@map(type='json', @payload('{{message}}'))) " +
+                "define stream FooStream (message String, headers String);";
+
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
+        InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
+
+        siddhiAppRuntime.start();
+        fooStream.send(new Object[]{"Request 1", "'Name:John','Age:23','Content-Type:text'"});
+        fooStream.send(new Object[]{"Request 2", "'Name:Nash','Age:54','Content-Type:json'"});
+        Thread.sleep(1000);
+        siddhiAppRuntime.shutdown();
+
+        final List<LoggingEvent> log = appender.getLog();
+        List<String> logMessages = new ArrayList<>();
+        for (LoggingEvent logEvent : log) {
+            String message = String.valueOf(logEvent.getMessage());
+            logMessages.add(message);
+        }
+        Assert.assertTrue(logMessages.contains("Server consume hit with [Request 1]"));
+        Assert.assertTrue(logMessages.contains("Server consume hit with [Request 2]"));
+        Assert.assertTrue(logMessages.contains("Header received: 'sequence:mySeq','Name:John','Age:23'," +
+                "'Content-Type:text'"));
+        Assert.assertTrue(logMessages.contains("Header received: 'sequence:mySeq','Name:Nash','Age:54'," +
+                "'Content-Type:json'"));
+    }
 }
