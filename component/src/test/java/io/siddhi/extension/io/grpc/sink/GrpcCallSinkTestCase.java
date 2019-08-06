@@ -36,6 +36,7 @@ public class GrpcCallSinkTestCase {
     private TestServer server = new TestServer();
     private AtomicInteger eventCount = new AtomicInteger(0);
 
+
     @Test
     public void test1() throws Exception {
         logger.info("Test case to call process sending 2 requests");
@@ -67,7 +68,7 @@ public class GrpcCallSinkTestCase {
                     eventCount.incrementAndGet();
                     switch (i) {
                         case 0:
-                            Assert.assertEquals((String) inEvents[i].getData()[0], "server data");
+                            Assert.assertEquals((String) inEvents[i].getData()[0], "Benjamin Watson");
                             break;
                         default:
                             Assert.fail();
@@ -85,6 +86,7 @@ public class GrpcCallSinkTestCase {
             server.stop();
         }
     }
+
 
     @Test
     public void test2() throws Exception {

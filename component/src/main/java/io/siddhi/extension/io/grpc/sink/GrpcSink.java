@@ -22,6 +22,11 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.Empty;
+import io.grpc.Channel;
+import io.grpc.ManagedChannelBuilder;
+import io.grpc.Metadata;
+import io.grpc.stub.MetadataUtils;
+import io.grpc.stub.StreamObserver;
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
 import io.siddhi.annotation.Parameter;
@@ -30,10 +35,14 @@ import io.siddhi.core.exception.ConnectionUnavailableException;
 import io.siddhi.core.exception.SiddhiAppRuntimeException;
 import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.transport.DynamicOptions;
+import io.siddhi.core.util.transport.OptionHolder;
+import io.siddhi.extension.io.grpc.util.GrpcConstants;
 import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
+import org.wso2.grpc.EventServiceGrpc;
 
 import javax.annotation.Nullable;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
@@ -52,13 +61,13 @@ import java.lang.reflect.Method;
                 @Parameter(name = "url",
                         description = "The url to which the outgoing events should be published via this extension. " +
                                 "This url should consist the host address, port, service name, method name in the " +
-                                "following format. grpc://hostAddress:port/serviceName/methodName/sequenceName" ,
+                                "following format. grpc://hostAddress:port/serviceName/methodName/sequenceName",
                         type = {DataType.STRING}),
                 @Parameter(name = "sink.id",
                         description = "a unique ID that should be set for each gRPC sink. There is a 1:1 mapping " +
                                 "between gRPC sinks and sources. Each sink has one particular source listening to " +
                                 "the responses to requests published from that sink. So the same sink.id should be " +
-                                "given when writing the source also." ,
+                                "given when writing the source also.",
                         type = {DataType.INT}),
         },
         examples = {
@@ -76,53 +85,92 @@ import java.lang.reflect.Method;
         }
 )
 
-public class GrpcSink extends GrpcSinkSuper {
+public class GrpcSink extends AbstractGrpcSink {
     private static final Logger logger = Logger.getLogger(GrpcSink.class.getName());
+    EventServiceGrpc.EventServiceStub asyncStub;
+
+
+    @Override
+    public void initSink(OptionHolder optionHolder) {
+
+
+    }
 
     @Override
     public void publish(Object payload, DynamicOptions dynamicOptions, State state)
             throws ConnectionUnavailableException {
-        if (isMIConnect) {
+        StreamObserver<Empty> responseObserver = new StreamObserver<Empty>() {
+            @Override
+            public void onNext(Empty event) {
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug(siddhiAppContext.getName() + ": " + t.getMessage());
+                }
+            }
+
+            @Override
+            public void onCompleted() {
+                System.out.println("Empty Done.....");
+            }
+        };
+        if (isDefaultMode) {
             Event.Builder requestBuilder = Event.newBuilder();
             requestBuilder.setPayload((String) payload);
             Event sequenceCallRequest = requestBuilder.build();
-            ListenableFuture<Empty> futureResponse =
-                    futureStub.consume(sequenceCallRequest);
-            Futures.addCallback(futureResponse, new FutureCallback<Empty>() {
-                @Override
-                public void onSuccess(Empty result) {
+            EventServiceGrpc.EventServiceStub currentAsyncStub = asyncStub;
 
-                }
+            if (headersOption != null) {
+                Metadata header = new Metadata();
+                String headers = headersOption.getValue(dynamicOptions);
+                Metadata.Key<String> key =
+                        Metadata.Key.of(GrpcConstants.HEADERS, Metadata.ASCII_STRING_MARSHALLER);
+                header.put(key, headers);
+                currentAsyncStub = MetadataUtils.attachHeaders(asyncStub, header);// TODO: 8/5/19 can we put this outside the IF condition???
+            }
+
+            /*StreamObserver<Empty> responseObserver = new StreamObserver<Empty>() {
+                @Override
+                public void onNext(Empty event) {}
 
                 @Override
-                public void onFailure(Throwable t) {
+                public void onError(Throwable t) {
                     if (logger.isDebugEnabled()) {
                         logger.debug(siddhiAppContext.getName() + ": " + t.getMessage());
                     }
-                    throw new SiddhiAppRuntimeException(t.getMessage());
                 }
-            }, MoreExecutors.directExecutor());
+
+                @Override
+                public void onCompleted() {}
+            };*/
+            currentAsyncStub.consume(sequenceCallRequest, responseObserver);
         } else {
             //todo: handle publishing to generic service
             try {
 
-                Method m = super.stubClass.getDeclaredMethod(super.methodName,requestClass);
 
-                ListenableFuture<Empty> genericResponse = (ListenableFuture<Empty>) m.invoke(super.stubObject,payload);
-                Futures.addCallback(genericResponse, new FutureCallback<Empty>() {
-                    @Override
-                    public void onSuccess(@Nullable Empty o) {
+                Class[] parameter = new Class[]{requestClass, StreamObserver.class};
+                Object[] params = new Object[]{payload, responseObserver};
+                Method m = super.stubClass.getDeclaredMethod(super.methodName, parameter);
 
-                    }
-
-                    @Override
-                    public void onFailure(Throwable t) {
-                        if (logger.isDebugEnabled()) {
-                            logger.debug(siddhiAppContext.getName() + ": " + t.getMessage());
-                        }
-                        throw new SiddhiAppRuntimeException(t.getMessage());
-                    }
-                },MoreExecutors.directExecutor());
+                m.invoke(stubObject, params);
+//                ListenableFuture<Empty> genericResponse = (ListenableFuture<Empty>) m.invoke(super.stubObject,payload);
+//                Futures.addCallback(genericResponse, new FutureCallback<Empty>() {
+//                    @Override
+//                    public void onSuccess(@Nullable Empty o) {
+//
+//                    }
+//
+//                    @Override
+//                    public void onFailure(Throwable t) {
+//                        if (logger.isDebugEnabled()) {
+//                            logger.debug(siddhiAppContext.getName() + ": " + t.getMessage());
+//                        }
+//                        throw new SiddhiAppRuntimeException(t.getMessage());
+//                    }
+//                },MoreExecutors.directExecutor());
 
 
             } catch (NoSuchMethodException e) {
@@ -135,4 +183,46 @@ public class GrpcSink extends GrpcSinkSuper {
 
         }
     }
+
+    /**
+     * This method will be called before the processing method.
+     * Intention to establish connection to publish event.
+     *
+     * @throws ConnectionUnavailableException if end point is unavailable the ConnectionUnavailableException thrown
+     *                                        such that the  system will take care retrying for connection
+     */
+    @Override
+    public void connect() throws ConnectionUnavailableException {
+        this.channel = ManagedChannelBuilder.forTarget(address).usePlaintext()
+                .build();
+        if (isDefaultMode) {
+            this.asyncStub = EventServiceGrpc.newStub(channel);
+            if (!channel.isShutdown()) {
+                logger.info(streamID + " has successfully connected to " + url);
+            }
+        } else {
+
+            String futureStubName = this.packageName + this.serviceName + "Grpc$" + this.serviceName + "Stub";
+
+            try {
+                stubClass = Class.forName(futureStubName);
+                Constructor constructor = stubClass.getDeclaredConstructor(Channel.class);
+                constructor.setAccessible(true);
+                this.stubObject = constructor.newInstance(this.channel);
+
+
+            } catch (ClassNotFoundException e) {
+
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
 }

@@ -56,6 +56,12 @@ public abstract class AbstractGrpcSource extends Source {
     private int port;
     protected Option headersOption;
 
+
+
+
+    //-----------------------------------
+
+
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
         return null;
@@ -101,6 +107,9 @@ public abstract class AbstractGrpcSource extends Source {
                 initializeGrpcServer(port);
         } else {
             //todo: handle generic grpc service
+
+
+
         }
         return null;
     }

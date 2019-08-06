@@ -40,8 +40,9 @@ public class GrpcSinkTestCase {
 
         server.start();
         String inStreamDefinition = ""
-                + "@sink(type='grpc', url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume/mySeq', @map(type='json')) "
-                + "define stream FooStream (message String);";
+                + "@sink(type='grpc', url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume/mySeq', " +
+                "@map(type='json')) " +
+                "define stream FooStream (message String);";
 
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
         InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
@@ -54,6 +55,7 @@ public class GrpcSinkTestCase {
             server.stop();
         }
     }
+
     @Test
     public void test2() throws Exception {
         logger.info("Test case 2 to call process");

@@ -53,7 +53,7 @@ public abstract class AbstractGrpcSink extends Sink {
     private static final Logger logger = Logger.getLogger(AbstractGrpcSink.class.getName());
     protected SiddhiAppContext siddhiAppContext;
     protected ManagedChannel channel;
-    private String serviceName;
+    protected String serviceName; //todo change private to protected, it's needed in the GrpcSinkClass
     protected String methodName;
     private String sequenceName;
     protected boolean isDefaultMode = false;
@@ -68,7 +68,7 @@ public abstract class AbstractGrpcSink extends Sink {
 
     //-------------------------------
     protected String packageName;
-    protected Class stubClass;
+    protected Class stubClass; // TODO: 8/5/19 can't we move this insode to the call response class
     protected Object stubObject;
     protected Class requestClass;
 
@@ -144,13 +144,13 @@ public abstract class AbstractGrpcSink extends Sink {
         } else {
             //todo: handle generic grpc service
             this.packageName = urlParts.get(GrpcConstants.URL_SERVICE_NAME_POSITION).replace(this.serviceName, "");
-            String futureStubName = this.packageName + this.serviceName + "Grpc$" + this.serviceName + "FutureStub";
+//            String futureStubName = this.packageName + this.serviceName + "Grpc$" + this.serviceName + "Stub";
 
             try {
-                stubClass = Class.forName(futureStubName);
-                Constructor constructor = stubClass.getDeclaredConstructor(Channel.class);
-                constructor.setAccessible(true);
-                this.stubObject = constructor.newInstance(this.channel);
+//                stubClass = Class.forName(futureStubName);
+//                Constructor constructor = stubClass.getDeclaredConstructor(Channel.class);
+//                constructor.setAccessible(true);
+//                this.stubObject = constructor.newInstance(this.channel);
 
 
                 String stubName = serviceName + "BlockingStub";
@@ -165,13 +165,13 @@ public abstract class AbstractGrpcSink extends Sink {
 
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
-            } catch (NoSuchMethodException e) {
+            } /*catch (NoSuchMethodException e) {
                 System.out.println("Constructor");
                 e.printStackTrace();
             } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
                 System.out.println("Instantiate");
                 e.printStackTrace();
-            }
+            }*/
 
         }
         return null;
@@ -187,11 +187,37 @@ public abstract class AbstractGrpcSink extends Sink {
      */
     @Override
     public void connect() throws ConnectionUnavailableException {
-        this.channel = ManagedChannelBuilder.forTarget(address).usePlaintext()
-                .build();
-        this.futureStub = EventServiceGrpc.newFutureStub(channel);
-        if (!channel.isShutdown()) {
-            logger.info(streamID + " has successfully connected to " + url);
+        this.channel = ManagedChannelBuilder.forTarget(address).usePlaintext().build();
+        if(isDefaultMode) {
+
+            this.futureStub = EventServiceGrpc.newFutureStub(channel);
+            if (!channel.isShutdown()) {
+                logger.info(streamID + " has successfully connected to " + url);
+            }
+        }
+        else
+        {
+            String futureStubName = this.packageName + this.serviceName + "Grpc$" + this.serviceName + "FutureStub";
+
+            try {
+                stubClass = Class.forName(futureStubName);
+                Constructor constructor = stubClass.getDeclaredConstructor(Channel.class);
+                constructor.setAccessible(true);
+                this.stubObject = constructor.newInstance(this.channel);
+
+
+            } catch (ClassNotFoundException e) {
+
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+
         }
     }
 
