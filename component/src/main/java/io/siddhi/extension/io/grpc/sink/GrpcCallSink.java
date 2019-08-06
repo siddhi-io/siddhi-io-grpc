@@ -69,6 +69,10 @@ public class GrpcCallSink extends AbstractGrpcSink {
 
     @Override
     public void initSink(OptionHolder optionHolder) {
+        managedChannelBuilder.maxInboundMessageSize(Integer.parseInt(optionHolder.getOrCreateOption(
+                GrpcConstants.MAX_INBOUND_MESSAGE_SIZE, GrpcConstants.MAX_INBOUND_MESSAGE_SIZE_DEFAULT).getValue()));
+        managedChannelBuilder.maxInboundMetadataSize(Integer.parseInt(optionHolder.getOrCreateOption(
+                GrpcConstants.MAX_INBOUND_METADATA_SIZE, GrpcConstants.MAX_INBOUND_METADATA_SIZE_DEFAULT).getValue()));
         if (optionHolder.isOptionExists(GrpcConstants.SINK_ID)) {
             this.sinkID = optionHolder.validateAndGetOption(GrpcConstants.SINK_ID).getValue();
         } else {

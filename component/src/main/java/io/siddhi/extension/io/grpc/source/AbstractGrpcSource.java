@@ -18,6 +18,7 @@
 package io.siddhi.extension.io.grpc.source;
 
 import io.grpc.Server;
+import io.grpc.ServerBuilder;
 import io.siddhi.core.config.SiddhiAppContext;
 import io.siddhi.core.exception.ConnectionUnavailableException;
 import io.siddhi.core.exception.SiddhiAppRuntimeException;
@@ -58,6 +59,7 @@ public abstract class AbstractGrpcSource extends Source {
     protected Option headersOption;
     protected String[] requestedTransportPropertyNames;
     protected SourceServerInterceptor serverInterceptor;
+    protected ServerBuilder serverBuilder;
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
@@ -99,6 +101,14 @@ public abstract class AbstractGrpcSource extends Source {
 
         initSource(optionHolder);
         this.serverInterceptor = new SourceServerInterceptor(this);
+
+        //ServerBuilder parameters
+        serverBuilder = ServerBuilder.forPort(port);
+        serverBuilder.maxInboundMessageSize(Integer.parseInt(optionHolder.getOrCreateOption(
+                GrpcConstants.MAX_INBOUND_MESSAGE_SIZE, GrpcConstants.MAX_INBOUND_MESSAGE_SIZE_DEFAULT).getValue()));
+        serverBuilder.maxInboundMetadataSize(Integer.parseInt(optionHolder.getOrCreateOption(
+                GrpcConstants.MAX_INBOUND_METADATA_SIZE, GrpcConstants.MAX_INBOUND_METADATA_SIZE_DEFAULT).getValue()));
+        serverBuilder.useTransportSecurity()
 
         if (serviceName.equals(GrpcConstants.DEFAULT_SERVICE_NAME)
                 && urlParts.size() == GrpcConstants.NUM_URL_PARTS_FOR_DEFAULT_MODE_SOURCE) {

@@ -67,8 +67,6 @@ public class GrpcSource extends AbstractGrpcSource {
     @Override
     public void initializeGrpcServer(int port) {
         if (isDefaultMode) {
-            NettyServerBuilder serverBuilder = (NettyServerBuilder) ServerBuilder.forPort(port);
-//            serverBuilder.
             this.server = serverBuilder.addService(ServerInterceptors.intercept(new EventServiceGrpc.EventServiceImplBase() {
                 @Override
                 public void consume(Event request,

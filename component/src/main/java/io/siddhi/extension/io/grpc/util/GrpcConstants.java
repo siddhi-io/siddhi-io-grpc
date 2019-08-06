@@ -67,4 +67,6 @@ public class GrpcConstants {
     public static final String PER_RPC_BUFFER_SIZE_DEFAULT = "1048576";
     public static final String ENABLE_RETRY = "enable.retry";
     public static final String ENABLE_RETRY_DEFAULT = "false";
+    public static final String CHANNEL_TERMINATION_WAITING_TIME = "channel.termination.waiting.time";
+    public static final String CHANNEL_TERMINATION_WAITING_TIME_DEFAULT = "5";
 }

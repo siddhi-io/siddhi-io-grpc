@@ -54,12 +54,12 @@ public abstract class AbstractGrpcSink extends Sink {
     private String sequenceName;
     protected boolean isDefaultMode = false;
     protected String url;
-    protected String streamID; //todo: no need. check if we need this for error throwing
+    protected String streamID;
     protected String address;
     protected EventServiceGrpc.EventServiceFutureStub futureStub;
     protected Option headersOption;
     protected ManagedChannelBuilder managedChannelBuilder;
-//    private long idleTimeout;
+    private long channelTerminationWaitingTime;
 
     /**
      * Returns the list of classes which this sink can consume.
@@ -121,16 +121,15 @@ public abstract class AbstractGrpcSink extends Sink {
         this.serviceName = fullyQualifiedServiceNameParts[fullyQualifiedServiceNameParts.length - 1];
         this.methodName = urlParts.get(GrpcConstants.URL_METHOD_NAME_POSITION);
         this.address = urlParts.get(GrpcConstants.URL_HOST_AND_PORT_POSITION);
+        this.channelTerminationWaitingTime = Integer.parseInt(optionHolder.getOrCreateOption(
+                GrpcConstants.CHANNEL_TERMINATION_WAITING_TIME, GrpcConstants.CHANNEL_TERMINATION_WAITING_TIME_DEFAULT)
+                .getValue());
         initSink(optionHolder);
 
         //ManagedChannelBuilder Properties. i.e gRPC connection parameters
         this.managedChannelBuilder = ManagedChannelBuilder.forTarget(address).usePlaintext();
         managedChannelBuilder.idleTimeout(Long.parseLong(optionHolder.getOrCreateOption(GrpcConstants.IDLE_TIMEOUT,
                 GrpcConstants.IDLE_TIMEOUT_DEFAULT).getValue()), TimeUnit.SECONDS);
-        managedChannelBuilder.maxInboundMessageSize(Integer.parseInt(optionHolder.getOrCreateOption(  //todo:move to grpccallsink
-                GrpcConstants.MAX_INBOUND_MESSAGE_SIZE, GrpcConstants.MAX_INBOUND_MESSAGE_SIZE_DEFAULT).getValue()));
-        managedChannelBuilder.maxInboundMetadataSize(Integer.parseInt(optionHolder.getOrCreateOption(  //todo:move to grpccallsink
-                GrpcConstants.MAX_INBOUND_METADATA_SIZE, GrpcConstants.MAX_INBOUND_METADATA_SIZE_DEFAULT).getValue()));
         managedChannelBuilder.keepAliveTime(Long.parseLong(optionHolder.getOrCreateOption(GrpcConstants.KEEP_ALIVE_TIME,
                 GrpcConstants.KEEP_ALIVE_TIME_DEFAULT).getValue()), TimeUnit.SECONDS);
         managedChannelBuilder.keepAliveTimeout(Long.parseLong(optionHolder.getOrCreateOption(
@@ -188,7 +187,7 @@ public abstract class AbstractGrpcSink extends Sink {
     @Override
     public void disconnect() {
         try {
-            channel.shutdown().awaitTermination(5, TimeUnit.SECONDS); //todo: check for optimal time. check if we want user to configure this
+            channel.shutdown().awaitTermination(channelTerminationWaitingTime, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": Error in shutting down the channel. "
                     + e.getMessage());
