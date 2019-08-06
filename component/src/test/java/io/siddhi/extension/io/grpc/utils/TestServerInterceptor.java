@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.siddhi.extension.io.grpc;
+package io.siddhi.extension.io.grpc.utils;
 
 import io.grpc.Context;
 import io.grpc.Contexts;
@@ -22,20 +22,15 @@ import io.grpc.Metadata;
 import io.grpc.ServerCall;
 import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
-
-import java.util.Set;
+import org.apache.log4j.Logger;
 
 import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
 
 /**
- * Server interceptor to receive headers
+ * Server interceptor to receive headers in Test Server
  */
 public class TestServerInterceptor implements ServerInterceptor {
-  private static final ServerCall.Listener NOOP_LISTENER = new ServerCall.Listener() {
-  };
-
-  public TestServerInterceptor() {
-  }
+  private static final Logger logger = Logger.getLogger(TestServer.class.getName());
 
   @Override
   public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> serverCall,
@@ -44,11 +39,9 @@ public class TestServerInterceptor implements ServerInterceptor {
     Metadata.Key<String> headerKey = Metadata.Key.of("headers", ASCII_STRING_MARSHALLER);
     String headers = metadata.get(headerKey);
     metadata.removeAll(headerKey);
-    Set<String> keys = metadata.keys();
-    System.out.println("Header received: " + headers);
-    Context ctx;
-    ctx = Context.ROOT;
-
-    return Contexts.interceptCall(ctx, serverCall, metadata, serverCallHandler);
+    if (logger.isDebugEnabled() && headers != null) {
+      logger.debug("Header received: " + headers);
+    }
+    return Contexts.interceptCall(Context.ROOT, serverCall, metadata, serverCallHandler);
   }
 }

@@ -23,6 +23,7 @@ import io.grpc.ServerCall;
 import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
 import io.siddhi.extension.io.grpc.source.AbstractGrpcSource;
+import org.apache.log4j.Logger;
 
 import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
 
@@ -30,9 +31,8 @@ import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
  * Server interceptor to receive headers
  */
 public class SourceServerInterceptor implements ServerInterceptor {
+  private static final Logger logger = Logger.getLogger(SourceServerInterceptor.class.getName());
   private AbstractGrpcSource associatedGrpcSource;
-//  private static final ServerCall.Listener NOOP_LISTENER = new ServerCall.Listener() {
-//  };
 
   public SourceServerInterceptor(AbstractGrpcSource associatedGrpcSource) {
     this.associatedGrpcSource = associatedGrpcSource;
@@ -44,7 +44,9 @@ public class SourceServerInterceptor implements ServerInterceptor {
                                                                ServerCallHandler<ReqT, RespT> serverCallHandler) {
     Metadata.Key<String> headerKey = Metadata.Key.of(GrpcConstants.HEADERS, ASCII_STRING_MARSHALLER);
     associatedGrpcSource.populateHeaderString(metadata.get(headerKey));
-//    System.out.println("Header received: " + headers);
+    if (logger.isDebugEnabled()) {
+      logger.debug("Header received: " + metadata.get(headerKey));
+    }
     return Contexts.interceptCall(Context.ROOT, serverCall, metadata, serverCallHandler);
   }
 }

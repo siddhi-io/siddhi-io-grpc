@@ -1,4 +1,4 @@
-package io.siddhi.extension.io.grpc;
+package io.siddhi.extension.io.grpc.utils;
 
 import com.google.protobuf.Empty;
 import io.grpc.Server;
@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 public class TestServer {
     private static final Logger logger = Logger.getLogger(TestServer.class.getName());
     private Server server;
-    TestServerInterceptor testInterceptor = new TestServerInterceptor();
+    private TestServerInterceptor testInterceptor = new TestServerInterceptor();
 
     public void start() throws IOException {
         if (server != null) {
@@ -29,10 +29,10 @@ public class TestServer {
             public void process(Event request,
                                 StreamObserver<Event> responseObserver) {
                 if (logger.isDebugEnabled()) {
-                    logger.debug("Server hit");
+                    logger.debug("Server process hit with " + request.getPayload());
                 }
                 Event.Builder responseBuilder = Event.newBuilder();
-                String json = "{ \"message\": \"Benjamin Watson\"}";
+                String json = "{ \"message\": \"Hello from Server!\"}";
                 responseBuilder.setPayload(json);
                 Event response = responseBuilder.build();
                 responseObserver.onNext(response);
@@ -43,9 +43,8 @@ public class TestServer {
             public void consume(Event request,
                                 StreamObserver<Empty> responseObserver) {
                 if (logger.isDebugEnabled()) {
-                    logger.debug("Server hit");
+                    logger.debug("Server consume hit with " + request.getPayload());
                 }
-                System.out.println("Server consume hit " + request.toString());
                 responseObserver.onNext(Empty.getDefaultInstance());
                 responseObserver.onCompleted();
             }

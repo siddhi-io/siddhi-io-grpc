@@ -100,11 +100,9 @@ public class GrpcCallSink extends AbstractGrpcSink {
             if (headersOption != null) {
                 Metadata header = new Metadata();
                 String headers = headersOption.getValue(dynamicOptions);
-
                 Metadata.Key<String> key =
                         Metadata.Key.of(GrpcConstants.HEADERS, Metadata.ASCII_STRING_MARSHALLER);
                 header.put(key, headers);
-
                 currentFutureStub = MetadataUtils.attachHeaders(futureStub, header);
             }
             ListenableFuture<Event> futureResponse =

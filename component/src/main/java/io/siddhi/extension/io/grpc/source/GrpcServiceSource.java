@@ -73,7 +73,7 @@ import java.util.concurrent.ConcurrentHashMap;
 )
 public class GrpcServiceSource extends AbstractGrpcSource {
     private static final Logger logger = Logger.getLogger(GrpcServiceSource.class.getName());
-    private Map<String, StreamObserver<Event>> streamObserverMap = new ConcurrentHashMap<>();
+    private Map<String, StreamObserver<Event>> streamObserverMap = new ConcurrentHashMap<>(); //todo send failure after timeout
     private String sourceId;
     private String headerString;
 
