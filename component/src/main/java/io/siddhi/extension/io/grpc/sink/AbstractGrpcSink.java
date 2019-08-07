@@ -38,11 +38,11 @@ import org.wso2.grpc.EventServiceGrpc;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.concurrent.TimeUnit;
+
+import static io.siddhi.extension.io.grpc.util.GrpcUtils.*;
 
 /**
  * {@code AbstractGrpcSink} is a super class extended by GrpcCallSink, and GrpcSink.
@@ -62,13 +62,15 @@ public abstract class AbstractGrpcSink extends Sink {
     protected String address;
     protected EventServiceGrpc.EventServiceFutureStub futureStub;
     protected Option headersOption;
+    protected ManagedChannelBuilder managedChannelBuilder;
+    private long channelTerminationWaitingTime;
 
 
 
 
     //-------------------------------
     protected String packageName;
-    protected Class stubClass; // TODO: 8/5/19 can't we move this insode to the call response class
+    protected Class stubClass; // TODO: 8/5/19 can't  move this inside to the call response class???
     protected Object stubObject;
     protected Class requestClass;
 
@@ -120,30 +122,59 @@ public abstract class AbstractGrpcSink extends Sink {
         if (optionHolder.isOptionExists(GrpcConstants.HEADERS)) {
             this.headersOption = optionHolder.validateAndGetOption(GrpcConstants.HEADERS);
         }
-
-        List<String> urlParts = new ArrayList<>(Arrays.asList(url.split(GrpcConstants.PORT_SERVICE_SEPARATOR)));
-        urlParts.removeAll(Collections.singletonList(GrpcConstants.EMPTY_STRING)); //todo: use java url validator. dont split by urself
-        if (!urlParts.get(GrpcConstants.URL_PROTOCOL_POSITION)
-                .equalsIgnoreCase(GrpcConstants.GRPC_PROTOCOL_NAME + ":")) {
-            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": " + streamID +
-                    "The url must begin with \"" + GrpcConstants.GRPC_PROTOCOL_NAME + "\" for all grpc sinks");
+        if (!url.substring(0,4).equalsIgnoreCase(GrpcConstants.GRPC_PROTOCOL_NAME)) {
+            throw new SiddhiAppValidationException(streamID + "The url must begin with \"" +
+                    GrpcConstants.GRPC_PROTOCOL_NAME + "\" for all grpc sinks");
         }
-        String[] fullyQualifiedServiceNameParts = urlParts.get(GrpcConstants.URL_SERVICE_NAME_POSITION).split("\\.");
-        this.serviceName = fullyQualifiedServiceNameParts[fullyQualifiedServiceNameParts.length - 1];
-        this.methodName = urlParts.get(GrpcConstants.URL_METHOD_NAME_POSITION);
-        this.address = urlParts.get(GrpcConstants.URL_HOST_AND_PORT_POSITION);
+        URL aURL;
+        try {
+            aURL = new URL("http" + url.substring(4));
+        } catch (MalformedURLException e) {
+            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": MalformedURLException. "
+                    + e.getMessage());
+        }
+        this.serviceName = getServiceName(aURL.getPath());
+        this.methodName = getMethodName(aURL.getPath());
+        this.address = aURL.getAuthority();
+        this.channelTerminationWaitingTime = Integer.parseInt(optionHolder.getOrCreateOption(
+                GrpcConstants.CHANNEL_TERMINATION_WAITING_TIME, GrpcConstants.CHANNEL_TERMINATION_WAITING_TIME_DEFAULT)
+                .getValue());
+
+        //ManagedChannelBuilder Properties. i.e gRPC connection parameters
+        this.managedChannelBuilder = ManagedChannelBuilder.forTarget(address).usePlaintext();
+        managedChannelBuilder.idleTimeout(Long.parseLong(optionHolder.getOrCreateOption(GrpcConstants.IDLE_TIMEOUT,
+                GrpcConstants.IDLE_TIMEOUT_DEFAULT).getValue()), TimeUnit.SECONDS);
+        managedChannelBuilder.keepAliveTime(Long.parseLong(optionHolder.getOrCreateOption(GrpcConstants.KEEP_ALIVE_TIME,
+                GrpcConstants.KEEP_ALIVE_TIME_DEFAULT).getValue()), TimeUnit.SECONDS);
+        managedChannelBuilder.keepAliveTimeout(Long.parseLong(optionHolder.getOrCreateOption(
+                GrpcConstants.KEEP_ALIVE_TIMEOUT, GrpcConstants.KEEP_ALIVE_TIMEOUT_DEFAULT).getValue()),
+                TimeUnit.SECONDS);
+        managedChannelBuilder.keepAliveWithoutCalls(Boolean.parseBoolean(optionHolder.getOrCreateOption(
+                GrpcConstants.KEEP_ALIVE_WITHOUT_CALLS, GrpcConstants.KEEP_ALIVE_WITHOUT_CALLS_DEFAULT).getValue()));
+        managedChannelBuilder.maxRetryAttempts(Integer.parseInt(optionHolder.getOrCreateOption(
+                GrpcConstants.MAX_RETRY_ATTEMPTS, GrpcConstants.MAX_RETRY_ATTEMPTS_DEFAULT).getValue()));
+        managedChannelBuilder.maxHedgedAttempts(Integer.parseInt(optionHolder.getOrCreateOption(
+                GrpcConstants.MAX_HEDGED_ATTEMPTS, GrpcConstants.MAX_HEDGED_ATTEMPTS_DEFAULT).getValue()));
+        if (Boolean.parseBoolean(optionHolder.getOrCreateOption(GrpcConstants.ENABLE_RETRY,
+                GrpcConstants.ENABLE_RETRY_DEFAULT).getValue())) {
+            managedChannelBuilder.enableRetry();
+            managedChannelBuilder.retryBufferSize(Long.parseLong(optionHolder.getOrCreateOption(
+                    GrpcConstants.RETRY_BUFFER_SIZE, GrpcConstants.RETRY_BUFFER_SIZE_DEFAULT).getValue()));
+            managedChannelBuilder.perRpcBufferLimit(Long.parseLong(optionHolder.getOrCreateOption(
+                    GrpcConstants.PER_RPC_BUFFER_SIZE, GrpcConstants.PER_RPC_BUFFER_SIZE_DEFAULT).getValue()));
+        }
         initSink(optionHolder);
 
         if (serviceName.equals(GrpcConstants.DEFAULT_SERVICE_NAME)
                 && (methodName.equals(GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE)
                 || methodName.equals(GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE))) {
             this.isDefaultMode = true;
-            if (urlParts.size() == GrpcConstants.NUM_URL_PARTS_FOR_MI_MODE_SINK) {
-                this.sequenceName = urlParts.get(GrpcConstants.URL_SEQUENCE_NAME_POSITION);
+            if (isSequenceNamePresent(aURL.getPath())) {
+                this.sequenceName = getSequenceName(aURL.getPath());
             }
         } else {
             //todo: handle generic grpc service
-            this.packageName = urlParts.get(GrpcConstants.URL_SERVICE_NAME_POSITION).replace(this.serviceName, "");
+            this.packageName = getPackageName(aURL.getPath());
 //            String futureStubName = this.packageName + this.serviceName + "Grpc$" + this.serviceName + "Stub";
 
             try {
@@ -153,7 +184,7 @@ public abstract class AbstractGrpcSink extends Sink {
 //                this.stubObject = constructor.newInstance(this.channel);
 
 
-                String stubName = serviceName + "BlockingStub";
+                String stubName = serviceName + "BlockingStub"; // TODO: 8/6/19 add as a constant
                 Method[] methods = Class.forName(this.packageName + this.serviceName + "Grpc" + "$" + stubName).getMethods();
                 for (Method m : methods) {
                     if (m.getName().equals(methodName)) {
@@ -165,13 +196,7 @@ public abstract class AbstractGrpcSink extends Sink {
 
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
-            } /*catch (NoSuchMethodException e) {
-                System.out.println("Constructor");
-                e.printStackTrace();
-            } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
-                System.out.println("Instantiate");
-                e.printStackTrace();
-            }*/
+            }
 
         }
         return null;

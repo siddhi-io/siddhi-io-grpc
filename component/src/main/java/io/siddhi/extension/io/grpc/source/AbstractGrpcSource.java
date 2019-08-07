@@ -18,6 +18,7 @@
 package io.siddhi.extension.io.grpc.source;
 
 import io.grpc.Server;
+import io.grpc.ServerBuilder;
 import io.siddhi.core.config.SiddhiAppContext;
 import io.siddhi.core.exception.ConnectionUnavailableException;
 import io.siddhi.core.exception.SiddhiAppRuntimeException;
@@ -30,15 +31,21 @@ import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.core.util.transport.Option;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
+import io.siddhi.extension.io.grpc.util.SourceServerInterceptor;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import static io.siddhi.extension.io.grpc.util.GrpcUtils.getMethodName;
+import static io.siddhi.extension.io.grpc.util.GrpcUtils.getServiceName;
 
 /**
  * This is an abstract class extended by GrpcSource and GrpcServiceSource. This provides most of initialization
@@ -50,17 +57,18 @@ public abstract class AbstractGrpcSource extends Source {
     protected SourceEventListener sourceEventListener;
     private String url;
     protected Server server;
-    protected String serviceName; //change private to protected
-//    private String methodName;
+    protected String serviceName;//private --> protected
+    protected String methodName; //private --> protected
     protected boolean isDefaultMode;
     private int port;
     protected Option headersOption;
-
-
+    protected String[] requestedTransportPropertyNames;
+    protected SourceServerInterceptor serverInterceptor;
+    protected ServerBuilder serverBuilder;
 
 
     //-----------------------------------
-    protected String methodName;
+//    protected String methodName;
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
@@ -70,6 +78,7 @@ public abstract class AbstractGrpcSource extends Source {
     /**
      * The initialization method for {@link Source}, will be called before other methods. It used to validate
      * all configurations and to get initial values.
+     *
      * @param sourceEventListener After receiving events, the source should trigger onEvent() of this listener.
      *                            Listener will then pass on the events to the appropriate mappers for processing .
      * @param optionHolder        Option holder containing static configuration related to the {@link Source}
@@ -82,32 +91,41 @@ public abstract class AbstractGrpcSource extends Source {
                              SiddhiAppContext siddhiAppContext) {
         this.siddhiAppContext = siddhiAppContext;
         this.sourceEventListener = sourceEventListener;
+        this.requestedTransportPropertyNames = requestedTransportPropertyNames;
         this.url = optionHolder.validateAndGetOption(GrpcConstants.PUBLISHER_URL).getValue();
-        if (optionHolder.isOptionExists(GrpcConstants.HEADERS)) { //todo: what to do with headers?
+        if (optionHolder.isOptionExists(GrpcConstants.HEADERS)) {
             this.headersOption = optionHolder.validateAndGetOption(GrpcConstants.HEADERS);
         }
-        List<String> urlParts = new ArrayList<>(Arrays.asList(url.split(GrpcConstants.PORT_SERVICE_SEPARATOR)));
-        urlParts.removeAll(Collections.singletonList(GrpcConstants.EMPTY_STRING));
-
-        if (!urlParts.get(GrpcConstants.URL_PROTOCOL_POSITION)
-                .equalsIgnoreCase(GrpcConstants.GRPC_PROTOCOL_NAME + ":")) {
-            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": The url must begin with \"" +
-                    GrpcConstants.GRPC_PROTOCOL_NAME + "\" for all grpc source");
+        if (!url.substring(0, 4).equalsIgnoreCase(GrpcConstants.GRPC_PROTOCOL_NAME)) {
+            throw new SiddhiAppValidationException(siddhiAppContext.getName() + "The url must begin with \""
+                    + GrpcConstants.GRPC_PROTOCOL_NAME + "\" for all grpc sinks");
         }
-        String[] fullyQualifiedServiceNameParts = urlParts.get(GrpcConstants.URL_SERVICE_NAME_POSITION).split("\\.");
-        this.serviceName = fullyQualifiedServiceNameParts[fullyQualifiedServiceNameParts.length - 1];
-//        this.methodName = urlParts.get(GrpcConstants.URL_METHOD_NAME_POSITION);
-        this.port = Integer.parseInt(urlParts.get(GrpcConstants.URL_HOST_AND_PORT_POSITION).split(":")[1]);
-
+        URL aURL;
+        try {
+            aURL = new URL("http" + url.substring(4));
+        } catch (MalformedURLException e) {
+            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": MalformedURLException. "
+                    + e.getMessage());
+        }
+        this.serviceName = getServiceName(aURL.getPath());
+        this.methodName = getMethodName(aURL.getPath());
+        this.port = aURL.getPort();
         initSource(optionHolder);
+        this.serverInterceptor = new SourceServerInterceptor(this);
 
-        if (serviceName.equals(GrpcConstants.DEFAULT_SERVICE_NAME)
-                && urlParts.size() == GrpcConstants.NUM_URL_PARTS_FOR_DEFAULT_MODE_SOURCE) {
-                this.isDefaultMode = true;
-                initializeGrpcServer(port);//todo  can move out of the if
+        //ServerBuilder parameters
+        serverBuilder = ServerBuilder.forPort(port);
+        serverBuilder.maxInboundMessageSize(Integer.parseInt(optionHolder.getOrCreateOption(
+                GrpcConstants.MAX_INBOUND_MESSAGE_SIZE, GrpcConstants.MAX_INBOUND_MESSAGE_SIZE_DEFAULT).getValue()));
+        serverBuilder.maxInboundMetadataSize(Integer.parseInt(optionHolder.getOrCreateOption(
+                GrpcConstants.MAX_INBOUND_METADATA_SIZE, GrpcConstants.MAX_INBOUND_METADATA_SIZE_DEFAULT).getValue()));
+
+        if (serviceName.equals(GrpcConstants.DEFAULT_SERVICE_NAME)) {
+            this.isDefaultMode = true;
+            initializeGrpcServer(port);//todo  can move out of the if
         } else {
             //todo: handle generic grpc service
-            this.methodName = urlParts.get(GrpcConstants.URL_METHOD_NAME_POSITION);
+//            this.methodName = urlParts.get(GrpcConstants.URL_METHOD_NAME_POSITION);
             initializeGrpcServer(port);
 
 
@@ -118,6 +136,8 @@ public abstract class AbstractGrpcSource extends Source {
     public abstract void initializeGrpcServer(int port);
 
     public abstract void initSource(OptionHolder optionHolder);
+
+    public abstract void populateHeaderString(String headerString);
 
     /**
      * Returns the list of classes which this source can output.
@@ -170,6 +190,28 @@ public abstract class AbstractGrpcSource extends Source {
         } catch (InterruptedException e) {
             throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": " + e.getMessage());
         }
+    }
+
+    protected String[] extractHeaders(String headerString) {
+        String[] headersArray = new String[requestedTransportPropertyNames.length];
+        String[] headerParts = headerString.split(",");
+        for (String headerPart : headerParts) {
+            String cleanA = headerPart.replaceAll("'", "");
+            cleanA = cleanA.replaceAll(" ", "");
+            String[] keyValue = cleanA.split(":");
+            for (int i = 0; i < requestedTransportPropertyNames.length; i++) {
+                if (keyValue[0].equalsIgnoreCase(requestedTransportPropertyNames[i])) {
+                    headersArray[i] = keyValue[1];
+                }
+            }
+        }
+        for (int i = 0; i < requestedTransportPropertyNames.length; i++) {
+            if (headersArray[i] == null || headersArray[i].equalsIgnoreCase("")) {
+                throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ":  Missing header " +
+                        requestedTransportPropertyNames[i]);
+            }
+        }
+        return headersArray;
     }
 
     /**

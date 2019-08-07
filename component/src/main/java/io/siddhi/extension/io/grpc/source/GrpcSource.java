@@ -21,13 +21,17 @@ import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Empty;
 import io.grpc.ServerBuilder;
+import io.grpc.ServerInterceptors;
+import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 import io.grpc.stub.StreamObserver;
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
 import io.siddhi.annotation.Parameter;
 import io.siddhi.annotation.util.DataType;
+import io.siddhi.core.exception.SiddhiAppRuntimeException;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.GenericServiceClass;
+import org.apache.log4j.Logger;
 import org.omg.CORBA.Request;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
@@ -49,7 +53,7 @@ import java.lang.reflect.Method;
                 @Parameter(name = "url",
                         description = "The url which can be used by a client to access the grpc server in this " +
                                 "extension. This url should consist the host address, port, service name, method " +
-                                "name in the following format. grpc://hostAddress:port/serviceName/methodName",
+                                "name in the following format. grpc://hostAddress:port/serviceName/methodName" ,
                         type = {DataType.STRING}),
         },
         examples = {
@@ -64,22 +68,32 @@ import java.lang.reflect.Method;
         }
 )
 public class GrpcSource extends AbstractGrpcSource {
+    private static final Logger logger = Logger.getLogger(GrpcSource.class.getName());
+    private String headerString;
+
     @Override
     public void initializeGrpcServer(int port) {
         if (isDefaultMode) {
-            this.server = ServerBuilder.forPort(port).addService(new EventServiceGrpc.EventServiceImplBase() {
+            this.server = serverBuilder.addService(ServerInterceptors.intercept(new EventServiceGrpc.EventServiceImplBase() {
                 @Override
                 public void consume(Event request,
                                     StreamObserver<Empty> responseObserver) {
-                    sourceEventListener.onEvent(request.getPayload(), new String[]{"1"});
+                    if (headerString != null) {
+                        try {
+                            sourceEventListener.onEvent(request.getPayload(), extractHeaders(headerString));
+                        } catch (SiddhiAppRuntimeException e) {
+                            logger.error(siddhiAppContext.getName() + ": Dropping request. " + e.getMessage());
+                        }
+
+                    } else {
+                        sourceEventListener.onEvent(request.getPayload(), null);
+                    }
                     responseObserver.onNext(Empty.getDefaultInstance());
                     responseObserver.onCompleted();
                 }
-            }).build();
+            }, serverInterceptor)).build();
         } else {
             //todo: generic server logic here
-
-
             GenericServiceClass.setServiceName(this.serviceName);
 
             synchronized (this) { //in case of 2 server creates at the same time
@@ -113,7 +127,10 @@ public class GrpcSource extends AbstractGrpcSource {
     }
 
     @Override
-    public void initSource(OptionHolder optionHolder) {
+    public void initSource(OptionHolder optionHolder) {}
 
+    @Override
+    public void populateHeaderString(String headerString) {
+        this.headerString = headerString;
     }
 }

@@ -47,4 +47,12 @@ public class GrpcUtils {
         urlParts.removeAll(Collections.singletonList(GrpcConstants.EMPTY_STRING));
         return urlParts.size() == 3;
     }
+
+
+    public static String getPackageName(String path)
+    {
+        List<String> urlParts = new ArrayList<>(Arrays.asList(path.split(GrpcConstants.PORT_SERVICE_SEPARATOR)));
+        urlParts.removeAll(Collections.singletonList(GrpcConstants.EMPTY_STRING));
+        return urlParts.get(GrpcConstants.PATH_SERVICE_NAME_POSITION).replace(getServiceName(path), "");
+    }
 }

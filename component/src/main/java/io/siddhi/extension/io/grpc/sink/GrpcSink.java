@@ -90,6 +90,12 @@ public class GrpcSink extends AbstractGrpcSink {
     EventServiceGrpc.EventServiceStub asyncStub;
 
 
+    private Object asyncStubObject;
+    private Class asyncStubClass;
+
+
+
+
     @Override
     public void initSink(OptionHolder optionHolder) {
 
@@ -120,7 +126,7 @@ public class GrpcSink extends AbstractGrpcSink {
             Event.Builder requestBuilder = Event.newBuilder();
             requestBuilder.setPayload((String) payload);
             Event sequenceCallRequest = requestBuilder.build();
-            EventServiceGrpc.EventServiceStub currentAsyncStub = asyncStub;
+            EventServiceGrpc.EventServiceStub currentAsyncStub = asyncStub;//todo why assing here, why can not directly use it
 
             if (headersOption != null) {
                 Metadata header = new Metadata();
@@ -153,24 +159,9 @@ public class GrpcSink extends AbstractGrpcSink {
 
                 Class[] parameter = new Class[]{requestClass, StreamObserver.class};
                 Object[] params = new Object[]{payload, responseObserver};
-                Method m = super.stubClass.getDeclaredMethod(super.methodName, parameter);
+                Method m = this.asyncStubClass.getDeclaredMethod(super.methodName, parameter);
 
-                m.invoke(stubObject, params);
-//                ListenableFuture<Empty> genericResponse = (ListenableFuture<Empty>) m.invoke(super.stubObject,payload);
-//                Futures.addCallback(genericResponse, new FutureCallback<Empty>() {
-//                    @Override
-//                    public void onSuccess(@Nullable Empty o) {
-//
-//                    }
-//
-//                    @Override
-//                    public void onFailure(Throwable t) {
-//                        if (logger.isDebugEnabled()) {
-//                            logger.debug(siddhiAppContext.getName() + ": " + t.getMessage());
-//                        }
-//                        throw new SiddhiAppRuntimeException(t.getMessage());
-//                    }
-//                },MoreExecutors.directExecutor());
+                m.invoke(asyncStubObject, params);
 
 
             } catch (NoSuchMethodException e) {
@@ -202,13 +193,13 @@ public class GrpcSink extends AbstractGrpcSink {
             }
         } else {
 
-            String futureStubName = this.packageName + this.serviceName + "Grpc$" + this.serviceName + "Stub";
+            String stubName = this.packageName + this.serviceName + "Grpc$" + this.serviceName + "Stub";
 
             try {
-                stubClass = Class.forName(futureStubName);
-                Constructor constructor = stubClass.getDeclaredConstructor(Channel.class);
+                asyncStubClass = Class.forName(stubName);
+                Constructor constructor = asyncStubClass.getDeclaredConstructor(Channel.class);
                 constructor.setAccessible(true);
-                this.stubObject = constructor.newInstance(this.channel);
+                this.asyncStubObject = constructor.newInstance(this.channel);
 
 
             } catch (ClassNotFoundException e) {

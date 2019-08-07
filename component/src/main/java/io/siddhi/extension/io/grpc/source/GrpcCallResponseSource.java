@@ -97,9 +97,8 @@ public class GrpcCallResponseSource extends Source {
     public void onResponse(Event response) {
         sourceEventListener.onEvent(response.getPayload(), new String[]{"1"});
     }
-    public void onResponse(Object response)
-    {
-        sourceEventListener.onEvent(response,new String[]{"1"});
+    public void onResponse(Object response) {
+        sourceEventListener.onEvent(response, new String[]{"1"});
     }
 
     /**
