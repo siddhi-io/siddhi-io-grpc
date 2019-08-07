@@ -28,6 +28,9 @@ public class GrpcConstants {
     public static final String DEFAULT_METHOD_NAME_WITH_RESPONSE = "process";
     public static final String DEFAULT_METHOD_NAME_WITHOUT_RESPONSE = "consume";
     public static final String EMPTY_STRING = "";
+    public static final String STRING_SPACE = " ";
+    public static final String STRING_COMMA = ",";
+    public static final String STRING_INVERTED_COMMA = "'";
     public static final String GRPC_PROTOCOL_NAME = "grpc";
     public static final String DUMMY_PROTOCOL_NAME = "http";
     public static final String DEFAULT_SERVICE_NAME = "EventService";
@@ -73,5 +76,6 @@ public class GrpcConstants {
     public static final String CHANNEL_TERMINATION_WAITING_TIME_DEFAULT = "5";
 
     public static final String SERVICE_TIMEOUT = "service.timeout";
+    public static final String SERVICE_TIMEOUT_DEFAULT = "10000";
     public static final String TIMEOUT_CHECK_INTERVAL = "timeout.check.interval";
 }

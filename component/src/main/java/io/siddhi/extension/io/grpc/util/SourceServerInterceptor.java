@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package io.siddhi.extension.io.grpc.util;
 
 import io.grpc.Context;

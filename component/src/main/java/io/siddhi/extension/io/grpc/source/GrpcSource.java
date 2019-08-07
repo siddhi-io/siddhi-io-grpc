@@ -46,6 +46,22 @@ import org.wso2.grpc.EventServiceGrpc;
                                 "extension. This url should consist the host address, port, service name, method " +
                                 "name in the following format. grpc://hostAddress:port/serviceName/methodName" ,
                         type = {DataType.STRING}),
+                @Parameter(name = "headers",
+                        description = "GRPC Request headers in format `\"'<key>:<value>','<key>:<value>'\"`. " +
+                                "If header parameter is not provided just the payload is sent" ,
+                        type = {DataType.STRING},
+                        optional = true,
+                        defaultValue = "N/A"),
+                @Parameter(name = "max.inbound.message.size",
+                        description = "Sets the maximum message size in bytes allowed to be received on the server." ,
+                        type = {DataType.INT},
+                        optional = true,
+                        defaultValue = "4194304"),
+                @Parameter(name = "max.inbound.metadata.size",
+                        description = "Sets the maximum size of metadata in bytes allowed to be received." ,
+                        type = {DataType.INT},
+                        optional = true,
+                        defaultValue = "8192"),
         },
         examples = {
                 @Example(

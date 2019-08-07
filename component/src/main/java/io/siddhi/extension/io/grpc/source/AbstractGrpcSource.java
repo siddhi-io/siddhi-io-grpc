@@ -181,11 +181,11 @@ public abstract class AbstractGrpcSource extends Source {
 
     protected String[] extractHeaders(String headerString) {
         String[] headersArray = new String[requestedTransportPropertyNames.length];
-        String[] headerParts = headerString.split(",");
+        String[] headerParts = headerString.split(GrpcConstants.STRING_COMMA);
         for (String headerPart: headerParts) {
-            String cleanA = headerPart.replaceAll("'", "");
-            cleanA = cleanA.replaceAll(" ", "");
-            String[] keyValue = cleanA.split(":");
+            String cleanA = headerPart.replaceAll(GrpcConstants.STRING_INVERTED_COMMA, GrpcConstants.EMPTY_STRING);
+            cleanA = cleanA.replaceAll(GrpcConstants.STRING_SPACE, GrpcConstants.EMPTY_STRING);
+            String[] keyValue = cleanA.split(GrpcConstants.PORT_HOST_SEPARATOR);
             for (int i = 0; i < requestedTransportPropertyNames.length; i++) {
                 if (keyValue[0].equalsIgnoreCase(requestedTransportPropertyNames[i])) {
                     headersArray[i] = keyValue[1];
@@ -193,7 +193,7 @@ public abstract class AbstractGrpcSource extends Source {
             }
         }
         for (int i = 0; i < requestedTransportPropertyNames.length; i++) {
-            if (headersArray[i] == null || headersArray[i].equalsIgnoreCase("")) {
+            if (headersArray[i] == null || headersArray[i].equalsIgnoreCase(GrpcConstants.EMPTY_STRING)) {
                 throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ":  Missing header " +
                         requestedTransportPropertyNames[i]);
             }

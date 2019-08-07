@@ -56,6 +56,29 @@ import java.util.concurrent.TimeUnit;
                                 "extension. This url should consist the host address, port, service name, method " +
                                 "name in the following format. grpc://hostAddress:port/serviceName/methodName" ,
                         type = {DataType.STRING}),
+                @Parameter(name = "headers",
+                        description = "GRPC Request headers in format `\"'<key>:<value>','<key>:<value>'\"`. " +
+                                "If header parameter is not provided just the payload is sent" ,
+                        type = {DataType.STRING},
+                        optional = true,
+                        defaultValue = "N/A"),
+                @Parameter(name = "max.inbound.message.size",
+                        description = "Sets the maximum message size in bytes allowed to be received on the server." ,
+                        type = {DataType.INT},
+                        optional = true,
+                        defaultValue = "4194304"),
+                @Parameter(name = "max.inbound.metadata.size",
+                        description = "Sets the maximum size of metadata in bytes allowed to be received." ,
+                        type = {DataType.INT},
+                        optional = true,
+                        defaultValue = "8192"),
+                @Parameter(name = "service.timeout",
+                        description = "The period of time in milliseconds to wait for siddhi to respond to a " +
+                                "request received. After this time period of receiving a request it will be closed " +
+                                "with an error message." ,
+                        type = {DataType.INT},
+                        optional = true,
+                        defaultValue = "10000"),
         },
         examples = {
                 @Example(
@@ -74,8 +97,8 @@ import java.util.concurrent.TimeUnit;
 )
 public class GrpcServiceSource extends AbstractGrpcSource {
     private static final Logger logger = Logger.getLogger(GrpcServiceSource.class.getName());
-    private Map<String, StreamObserver<Event>> streamObserverMap = new ConcurrentHashMap<>(); //todo send failure after timeout
-    private Map<String, Long> timeStampOfMessageIds = new ConcurrentHashMap<>();
+    private Map<String, StreamObserver<Event>> streamObserverMap = new ConcurrentHashMap<>();
+    private Map<String, Long> timestampOfMessageIds = new ConcurrentHashMap<>();
     private String sourceId;
     private String headerString;
     private long serviceTimeout;
@@ -83,13 +106,14 @@ public class GrpcServiceSource extends AbstractGrpcSource {
     @Override
     public void initializeGrpcServer(int port) {
         if (isDefaultMode) {
-            this.server = ServerBuilder.forPort(port).addService(ServerInterceptors.intercept(new EventServiceGrpc.EventServiceImplBase() {
+            this.server = ServerBuilder.forPort(port).addService(ServerInterceptors.intercept(
+                    new EventServiceGrpc.EventServiceImplBase() {
                 @Override
                 public void process(Event request,
                                     StreamObserver<Event> responseObserver) {
                     String messageId = UUID.randomUUID().toString();
                     streamObserverMap.put(messageId, responseObserver);
-                    timeStampOfMessageIds.put(messageId, siddhiAppContext.getTimestampGenerator().currentTime());
+                    timestampOfMessageIds.put(messageId, siddhiAppContext.getTimestampGenerator().currentTime());
                     if (headerString != null) {
                         try {
                             sourceEventListener.onEvent(request.getPayload(), extractHeaders(headerString + ", '" +
@@ -110,9 +134,11 @@ public class GrpcServiceSource extends AbstractGrpcSource {
     class ServiceSourceTimeoutChecker implements Runnable {
         @Override
         public void run() {
-            for (String messageId: timeStampOfMessageIds.keySet()) {
-                if (timeStampOfMessageIds.get(messageId) < siddhiAppContext.getTimestampGenerator().currentTime() - serviceTimeout) {
-                    streamObserverMap.get(messageId).onError(new io.grpc.StatusRuntimeException(Status.DEADLINE_EXCEEDED));
+            for (String messageId: timestampOfMessageIds.keySet()) {
+                if (timestampOfMessageIds.get(messageId) < siddhiAppContext.getTimestampGenerator().currentTime() -
+                        serviceTimeout) {
+                    streamObserverMap.get(messageId).onError(new io.grpc.StatusRuntimeException(
+                            Status.DEADLINE_EXCEEDED));
                 }
             }
         }
@@ -121,15 +147,18 @@ public class GrpcServiceSource extends AbstractGrpcSource {
     @Override
     public void initSource(OptionHolder optionHolder) {
         this.sourceId = optionHolder.validateAndGetOption(GrpcConstants.SOURCE_ID).getValue();
-        this.serviceTimeout = Long.parseLong(optionHolder.validateAndGetOption(GrpcConstants.SERVICE_TIMEOUT).getValue());
+        this.serviceTimeout = Long.parseLong(optionHolder.getOrCreateOption(GrpcConstants.SERVICE_TIMEOUT,
+                GrpcConstants.SERVICE_TIMEOUT_DEFAULT).getValue());
         long timeoutCheckInterval;
         if (optionHolder.isOptionExists(GrpcConstants.TIMEOUT_CHECK_INTERVAL)) {
-            timeoutCheckInterval = Long.parseLong(optionHolder.validateAndGetOption(GrpcConstants.TIMEOUT_CHECK_INTERVAL).getValue());
+            timeoutCheckInterval = Long.parseLong(optionHolder.validateAndGetOption(
+                    GrpcConstants.TIMEOUT_CHECK_INTERVAL).getValue());
         } else {
             timeoutCheckInterval = serviceTimeout;
         }
         GrpcSourceRegistry.getInstance().putGrpcServiceSource(sourceId, this);
-        siddhiAppContext.getScheduledExecutorService().scheduleAtFixedRate(new ServiceSourceTimeoutChecker(), 0, timeoutCheckInterval, TimeUnit.MILLISECONDS);
+        siddhiAppContext.getScheduledExecutorService().scheduleAtFixedRate(new ServiceSourceTimeoutChecker(), 0,
+                timeoutCheckInterval, TimeUnit.MILLISECONDS);
     }
 
     @Override

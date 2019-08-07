@@ -20,7 +20,7 @@ syntax = "proto3";
 option java_multiple_files = true;
 option java_package = "org.wso2.grpc";
 
-package eventservice;
+package org.wso2.grpc.eventservice;
 
 import "google/protobuf/empty.proto";
 
