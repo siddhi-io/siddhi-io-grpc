@@ -95,7 +95,6 @@ public class GrpcServiceResponseSink extends Sink {
                         "source.id");
             }
         }
-
         this.messageIdOption = optionHolder.validateAndGetOption(GrpcConstants.MESSAGE_ID);
         return null;
     }

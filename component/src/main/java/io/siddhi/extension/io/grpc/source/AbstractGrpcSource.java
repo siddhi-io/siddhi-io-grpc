@@ -30,7 +30,6 @@ import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
 import io.siddhi.extension.io.grpc.util.SourceServerInterceptor;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
-import org.apache.log4j.Logger;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -42,7 +41,6 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getServiceName;
  * implementations common for both sources
  */
 public abstract class AbstractGrpcSource extends Source {
-    private static final Logger logger = Logger.getLogger(GrpcCallResponseSource.class.getName());
     protected SiddhiAppContext siddhiAppContext;
     protected SourceEventListener sourceEventListener;
     private String url;
