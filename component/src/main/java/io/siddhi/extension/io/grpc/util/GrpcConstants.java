@@ -74,6 +74,8 @@ public class GrpcConstants {
     public static final String ENABLE_RETRY_DEFAULT = "false";
     public static final String CHANNEL_TERMINATION_WAITING_TIME = "channel.termination.waiting.time";
     public static final String CHANNEL_TERMINATION_WAITING_TIME_DEFAULT = "5";
+    public static final String SERVER_SHUTDOWN_WAITING_TIME = "server.shutdown.waiting.time";
+    public static final String SERVER_SHUTDOWN_WAITING_TIME_DEFAULT = "5";
 
     public static final String SERVICE_TIMEOUT = "service.timeout";
     public static final String SERVICE_TIMEOUT_DEFAULT = "10000";

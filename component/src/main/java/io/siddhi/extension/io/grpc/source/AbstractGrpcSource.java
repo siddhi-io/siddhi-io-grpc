@@ -61,6 +61,7 @@ public abstract class AbstractGrpcSource extends Source {
     protected String[] requestedTransportPropertyNames;
     protected SourceServerInterceptor serverInterceptor;
     protected ServerBuilder serverBuilder;
+    private int serverShutdownWaitingTime;
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
@@ -83,6 +84,9 @@ public abstract class AbstractGrpcSource extends Source {
         this.siddhiAppContext = siddhiAppContext;
         this.sourceEventListener = sourceEventListener;
         this.requestedTransportPropertyNames = requestedTransportPropertyNames;
+        this.serverShutdownWaitingTime = Integer.parseInt(optionHolder.getOrCreateOption(
+                GrpcConstants.SERVER_SHUTDOWN_WAITING_TIME, GrpcConstants.SERVER_SHUTDOWN_WAITING_TIME_DEFAULT)
+                .getValue());
         this.url = optionHolder.validateAndGetOption(GrpcConstants.PUBLISHER_URL).getValue();
         if (optionHolder.isOptionExists(GrpcConstants.HEADERS)) {
             this.headersOption = optionHolder.validateAndGetOption(GrpcConstants.HEADERS);
@@ -93,7 +97,7 @@ public abstract class AbstractGrpcSource extends Source {
         }
         URL aURL;
         try {
-            aURL = new URL("http" + url.substring(4));
+            aURL = new URL(GrpcConstants.DUMMY_PROTOCOL_NAME + url.substring(4));
         } catch (MalformedURLException e) {
             throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": MalformedURLException. "
                     + e.getMessage());
@@ -163,14 +167,14 @@ public abstract class AbstractGrpcSource extends Source {
                 return;
             }
             serverPointer.shutdown();
-            if (serverPointer.awaitTermination(1, TimeUnit.SECONDS)) {
+            if (serverPointer.awaitTermination(serverShutdownWaitingTime, TimeUnit.SECONDS)) {
                 if (logger.isDebugEnabled()) {
                     logger.debug(siddhiAppContext.getName() + ": Server stopped");
                 }
                 return;
             }
             serverPointer.shutdownNow();
-            if (serverPointer.awaitTermination(1, TimeUnit.SECONDS)) {
+            if (serverPointer.awaitTermination(serverShutdownWaitingTime, TimeUnit.SECONDS)) {
                 return;
             }
             throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": Unable to shutdown server");

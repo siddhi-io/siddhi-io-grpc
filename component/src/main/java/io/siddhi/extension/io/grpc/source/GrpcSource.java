@@ -46,12 +46,6 @@ import org.wso2.grpc.EventServiceGrpc;
                                 "extension. This url should consist the host address, port, service name, method " +
                                 "name in the following format. grpc://hostAddress:port/serviceName/methodName" ,
                         type = {DataType.STRING}),
-                @Parameter(name = "headers",
-                        description = "GRPC Request headers in format `\"'<key>:<value>','<key>:<value>'\"`. " +
-                                "If header parameter is not provided just the payload is sent" ,
-                        type = {DataType.STRING},
-                        optional = true,
-                        defaultValue = "N/A"),
                 @Parameter(name = "max.inbound.message.size",
                         description = "Sets the maximum message size in bytes allowed to be received on the server." ,
                         type = {DataType.INT},
@@ -62,6 +56,12 @@ import org.wso2.grpc.EventServiceGrpc;
                         type = {DataType.INT},
                         optional = true,
                         defaultValue = "8192"),
+                @Parameter(name = "server.shutdown.waiting.time",
+                        description = "The time in seconds to wait for the server to shutdown, giving up " +
+                                "if the timeout is reached." ,
+                        type = {DataType.LONG},
+                        optional = true,
+                        defaultValue = "5"),
         },
         examples = {
                 @Example(
@@ -71,6 +71,15 @@ import org.wso2.grpc.EventServiceGrpc;
                         description = "Here the port is given as 8888. So a grpc server will be started on port 8888 " +
                                 "and the server will expose EventService. This is the default service packed with " +
                                 "the source. In EventService the consume method is"
+                ),
+                @Example(
+                        syntax = "@source(type='grpc', " +
+                                "url='grpc://locanhost:8888/org.wso2.grpc.EventService/consume', " +
+                                "@map(type='json', @attributes(name='trp:name', age='trp:age', message='message'))) " +
+                                "define stream BarStream (message String, name String, age int);",
+                        description = "Here we are getting headers sent with the request as transport properties and " +
+                                "injecting them into the stream. With each request a header will be sent in " +
+                                "MetaData in the following format: 'Name:John', 'Age:23'"
                 )
         }
 )
