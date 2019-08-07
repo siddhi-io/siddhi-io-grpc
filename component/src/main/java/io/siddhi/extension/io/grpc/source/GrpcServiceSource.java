@@ -43,6 +43,8 @@ import java.util.TimerTask;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static io.siddhi.extension.io.grpc.util.GrpcUtils.extractHeaders;
 
@@ -121,6 +123,7 @@ public class GrpcServiceSource extends AbstractGrpcSource {
     protected String[] requestedTransportPropertyNames;
     protected Server server;
     private Timer timer;
+    private ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
 
     @Override
     public void initializeGrpcServer(int port) {
@@ -131,8 +134,6 @@ public class GrpcServiceSource extends AbstractGrpcSource {
                 public void process(Event request,
                                     StreamObserver<Event> responseObserver) {
                     String messageId = UUID.randomUUID().toString();
-                    streamObserverMap.put(messageId, responseObserver);
-                    timer.schedule(new ServiceSourceTimeoutChecker(messageId, siddhiAppContext.getTimestampGenerator().currentTime()), serviceTimeout);
                     if (headerString != null) {
                         try {
                             sourceEventListener.onEvent(request.getPayload(), extractHeaders(headerString + ", '" +
@@ -145,6 +146,7 @@ public class GrpcServiceSource extends AbstractGrpcSource {
                         sourceEventListener.onEvent(request.getPayload(), new String[]{messageId});
                     }
                     streamObserverMap.put(messageId, responseObserver);
+                    timer.schedule(new ServiceSourceTimeoutChecker(messageId, siddhiAppContext.getTimestampGenerator().currentTime()), serviceTimeout);
                 }
             }, serverInterceptor)).build();
         }
@@ -162,11 +164,16 @@ public class GrpcServiceSource extends AbstractGrpcSource {
         @Override
         public void run() {
             if (receivedTime < siddhiAppContext.getTimestampGenerator().currentTime() - serviceTimeout) {
-                StreamObserver streamObserver = streamObserverMap.get(messageId);
-                if (streamObserver != null) {
-                    streamObserver.onError(new io.grpc.StatusRuntimeException(
-                            Status.DEADLINE_EXCEEDED));
-                    streamObserverMap.remove(messageId);
+                readWriteLock.writeLock().lock();
+                try {
+                    StreamObserver streamObserver = streamObserverMap.get(messageId);
+                    if (streamObserver != null) {
+                        streamObserver.onError(new io.grpc.StatusRuntimeException(
+                                Status.DEADLINE_EXCEEDED));
+                        streamObserverMap.remove(messageId);
+                    }
+                } finally {
+                    readWriteLock.writeLock().unlock();
                 }
             }
         }
@@ -231,14 +238,19 @@ public class GrpcServiceSource extends AbstractGrpcSource {
 
     public void handleCallback(String messageId, String responsePayload) {
         if (isDefaultMode) {
-            StreamObserver<Event> streamObserver = streamObserverMap.get(messageId);
-            if (streamObserver != null) {
-                Event.Builder responseBuilder = Event.newBuilder();
-                responseBuilder.setPayload(responsePayload);
-                Event response = responseBuilder.build();
-                streamObserverMap.remove(messageId);
-                streamObserver.onNext(response);
-                streamObserver.onCompleted();
+            readWriteLock.writeLock().lock();
+            try {
+                StreamObserver<Event> streamObserver = streamObserverMap.get(messageId);
+                if (streamObserver != null) {
+                    Event.Builder responseBuilder = Event.newBuilder();
+                    responseBuilder.setPayload(responsePayload);
+                    Event response = responseBuilder.build();
+                    streamObserverMap.remove(messageId);
+                    streamObserver.onNext(response);
+                    streamObserver.onCompleted();
+                }
+            } finally {
+                readWriteLock.writeLock().unlock();
             }
         }
     }
