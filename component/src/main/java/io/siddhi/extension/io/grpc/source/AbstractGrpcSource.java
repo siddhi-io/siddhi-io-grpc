@@ -17,30 +17,24 @@
  */
 package io.siddhi.extension.io.grpc.source;
 
-import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.siddhi.core.config.SiddhiAppContext;
 import io.siddhi.core.exception.ConnectionUnavailableException;
-import io.siddhi.core.exception.SiddhiAppRuntimeException;
 import io.siddhi.core.stream.ServiceDeploymentInfo;
 import io.siddhi.core.stream.input.source.Source;
 import io.siddhi.core.stream.input.source.SourceEventListener;
 import io.siddhi.core.util.config.ConfigReader;
 import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.snapshot.state.StateFactory;
-import io.siddhi.core.util.transport.Option;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
 import io.siddhi.extension.io.grpc.util.SourceServerInterceptor;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.log4j.Logger;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.concurrent.TimeUnit;
 
-import static io.siddhi.extension.io.grpc.util.GrpcUtils.getMethodName;
 import static io.siddhi.extension.io.grpc.util.GrpcUtils.getServiceName;
 
 /**
@@ -52,16 +46,12 @@ public abstract class AbstractGrpcSource extends Source {
     protected SiddhiAppContext siddhiAppContext;
     protected SourceEventListener sourceEventListener;
     private String url;
-    protected Server server;
     private String serviceName;
-    private String methodName;
     protected boolean isDefaultMode;
     private int port;
-    protected Option headersOption;
-    protected String[] requestedTransportPropertyNames;
     protected SourceServerInterceptor serverInterceptor;
     protected ServerBuilder serverBuilder;
-    private int serverShutdownWaitingTime;
+    protected int serverShutdownWaitingTime;
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
@@ -83,15 +73,11 @@ public abstract class AbstractGrpcSource extends Source {
                              SiddhiAppContext siddhiAppContext) {
         this.siddhiAppContext = siddhiAppContext;
         this.sourceEventListener = sourceEventListener;
-        this.requestedTransportPropertyNames = requestedTransportPropertyNames;
         this.serverShutdownWaitingTime = Integer.parseInt(optionHolder.getOrCreateOption(
                 GrpcConstants.SERVER_SHUTDOWN_WAITING_TIME, GrpcConstants.SERVER_SHUTDOWN_WAITING_TIME_DEFAULT)
                 .getValue());
         this.url = optionHolder.validateAndGetOption(GrpcConstants.PUBLISHER_URL).getValue();
-        if (optionHolder.isOptionExists(GrpcConstants.HEADERS)) {
-            this.headersOption = optionHolder.validateAndGetOption(GrpcConstants.HEADERS);
-        }
-        if (!url.substring(0,4).equalsIgnoreCase(GrpcConstants.GRPC_PROTOCOL_NAME)) {
+        if (!url.substring(0, 4).equalsIgnoreCase(GrpcConstants.GRPC_PROTOCOL_NAME)) {
             throw new SiddhiAppValidationException(siddhiAppContext.getName() + "The url must begin with \""
                     + GrpcConstants.GRPC_PROTOCOL_NAME + "\" for all grpc sinks");
         }
@@ -103,9 +89,8 @@ public abstract class AbstractGrpcSource extends Source {
                     + e.getMessage());
         }
         this.serviceName = getServiceName(aURL.getPath());
-        this.methodName = getMethodName(aURL.getPath());
         this.port = aURL.getPort();
-        initSource(optionHolder);
+        initSource(optionHolder, requestedTransportPropertyNames);
         this.serverInterceptor = new SourceServerInterceptor(this);
 
         //ServerBuilder parameters
@@ -126,7 +111,7 @@ public abstract class AbstractGrpcSource extends Source {
 
     public abstract void initializeGrpcServer(int port);
 
-    public abstract void initSource(OptionHolder optionHolder);
+    public abstract void initSource(OptionHolder optionHolder, String[] requestedTransportPropertyNames);
 
     public abstract void populateHeaderString(String headerString);
 
@@ -142,75 +127,20 @@ public abstract class AbstractGrpcSource extends Source {
     }
 
     @Override
-    public void connect(ConnectionCallback connectionCallback, State state) throws ConnectionUnavailableException {
-        try {
-            server.start();
-            if (logger.isDebugEnabled()) {
-                logger.debug(siddhiAppContext.getName() + ": Server started");
-            }
-        } catch (IOException e) {
-            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": " + e.getMessage());
-        }
-    }
+    public void connect(ConnectionCallback connectionCallback, State state) throws ConnectionUnavailableException {}
 
     /**
      * This method can be called when it is needed to disconnect from the end point.
      */
     @Override
-    public void disconnect() {
-        try {
-            Server serverPointer = server;
-            if (serverPointer == null) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug(siddhiAppContext.getName() + ": Illegal state. Server already stopped.");
-                }
-                return;
-            }
-            serverPointer.shutdown();
-            if (serverPointer.awaitTermination(serverShutdownWaitingTime, TimeUnit.SECONDS)) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug(siddhiAppContext.getName() + ": Server stopped");
-                }
-                return;
-            }
-            serverPointer.shutdownNow();
-            if (serverPointer.awaitTermination(serverShutdownWaitingTime, TimeUnit.SECONDS)) {
-                return;
-            }
-            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": Unable to shutdown server");
-        } catch (InterruptedException e) {
-            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": " + e.getMessage());
-        }
-    }
-
-    protected String[] extractHeaders(String headerString) {
-        String[] headersArray = new String[requestedTransportPropertyNames.length];
-        String[] headerParts = headerString.split(GrpcConstants.STRING_COMMA);
-        for (String headerPart: headerParts) {
-            String cleanA = headerPart.replaceAll(GrpcConstants.STRING_INVERTED_COMMA, GrpcConstants.EMPTY_STRING);
-            cleanA = cleanA.replaceAll(GrpcConstants.STRING_SPACE, GrpcConstants.EMPTY_STRING);
-            String[] keyValue = cleanA.split(GrpcConstants.PORT_HOST_SEPARATOR);
-            for (int i = 0; i < requestedTransportPropertyNames.length; i++) {
-                if (keyValue[0].equalsIgnoreCase(requestedTransportPropertyNames[i])) {
-                    headersArray[i] = keyValue[1];
-                }
-            }
-        }
-        for (int i = 0; i < requestedTransportPropertyNames.length; i++) {
-            if (headersArray[i] == null || headersArray[i].equalsIgnoreCase(GrpcConstants.EMPTY_STRING)) {
-                throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ":  Missing header " +
-                        requestedTransportPropertyNames[i]);
-            }
-        }
-        return headersArray;
-    }
+    public void disconnect() {}
 
     /**
      * Called at the end to clean all the resources consumed by the {@link Source}
      */
     @Override
     public void destroy() {
-        server = null;
+
     }
 
     /**

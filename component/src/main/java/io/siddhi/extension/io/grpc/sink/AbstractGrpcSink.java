@@ -21,7 +21,6 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.siddhi.core.config.SiddhiAppContext;
 import io.siddhi.core.exception.ConnectionUnavailableException;
-import io.siddhi.core.exception.SiddhiAppRuntimeException;
 import io.siddhi.core.stream.ServiceDeploymentInfo;
 import io.siddhi.core.stream.output.sink.Sink;
 import io.siddhi.core.util.config.ConfigReader;
@@ -38,7 +37,10 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.concurrent.TimeUnit;
 
-import static io.siddhi.extension.io.grpc.util.GrpcUtils.*;
+import static io.siddhi.extension.io.grpc.util.GrpcUtils.getMethodName;
+import static io.siddhi.extension.io.grpc.util.GrpcUtils.getSequenceName;
+import static io.siddhi.extension.io.grpc.util.GrpcUtils.getServiceName;
+import static io.siddhi.extension.io.grpc.util.GrpcUtils.isSequenceNamePresent;
 
 /**
  * {@code AbstractGrpcSink} is a super class extended by GrpcCallSink, and GrpcSink.
@@ -58,7 +60,7 @@ public abstract class AbstractGrpcSink extends Sink {
     protected EventServiceGrpc.EventServiceFutureStub futureStub;
     protected Option headersOption;
     protected ManagedChannelBuilder managedChannelBuilder;
-    private long channelTerminationWaitingTime;
+    protected long channelTerminationWaitingTime;
 
     /**
      * Returns the list of classes which this sink can consume.
@@ -108,7 +110,7 @@ public abstract class AbstractGrpcSink extends Sink {
         if (optionHolder.isOptionExists(GrpcConstants.HEADERS)) {
             this.headersOption = optionHolder.validateAndGetOption(GrpcConstants.HEADERS);
         }
-        if (!url.substring(0,4).equalsIgnoreCase(GrpcConstants.GRPC_PROTOCOL_NAME)) {
+        if (!url.substring(0, 4).equalsIgnoreCase(GrpcConstants.GRPC_PROTOCOL_NAME)) {
             throw new SiddhiAppValidationException(streamID + "The url must begin with \"" +
                     GrpcConstants.GRPC_PROTOCOL_NAME + "\" for all grpc sinks");
         }
@@ -173,27 +175,14 @@ public abstract class AbstractGrpcSink extends Sink {
      *                                        such that the  system will take care retrying for connection
      */
     @Override
-    public void connect() throws ConnectionUnavailableException {
-        this.channel = ManagedChannelBuilder.forTarget(address).usePlaintext().build();
-        this.futureStub = EventServiceGrpc.newFutureStub(channel);
-        if (!channel.isShutdown()) {
-            logger.info(streamID + " has successfully connected to " + url);
-        }
-    }
+    public void connect() throws ConnectionUnavailableException {}
 
     /**
      * Called after all publishing is done, or when {@link ConnectionUnavailableException} is thrown
      * Implementation of this method should contain the steps needed to disconnect from the sink.
      */
     @Override
-    public void disconnect() {
-        try {
-            channel.shutdown().awaitTermination(channelTerminationWaitingTime, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": Error in shutting down the channel. "
-                    + e.getMessage());
-        }
-    }
+    public void disconnect() {}
 
     /**
      * The method can be called when removing an event receiver.

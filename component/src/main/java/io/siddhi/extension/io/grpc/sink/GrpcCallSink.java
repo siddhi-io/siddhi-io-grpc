@@ -4,6 +4,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
+import io.grpc.ManagedChannelBuilder;
 import io.grpc.Metadata;
 import io.grpc.stub.MetadataUtils;
 import io.siddhi.annotation.Example;
@@ -20,7 +21,10 @@ import io.siddhi.extension.io.grpc.util.GrpcSourceRegistry;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
+import org.wso2.grpc.EventServiceGrpc;
 import org.wso2.grpc.EventServiceGrpc.EventServiceFutureStub;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * {@code GrpcCallSink} Handle the gRPC publishing tasks and injects response into grpc-call-response source.
@@ -201,6 +205,35 @@ public class GrpcCallSink extends AbstractGrpcSink {
             }, MoreExecutors.directExecutor());
         } else {
             //todo: handle publishing to generic service
+        }
+    }
+
+    /**
+     * This method will be called before the processing method.
+     * Intention to establish connection to publish event.
+     * @throws ConnectionUnavailableException if end point is unavailable the ConnectionUnavailableException thrown
+     *                                        such that the  system will take care retrying for connection
+     */
+    @Override
+    public void connect() throws ConnectionUnavailableException {
+        this.channel = ManagedChannelBuilder.forTarget(address).usePlaintext().build();
+        this.futureStub = EventServiceGrpc.newFutureStub(channel);
+        if (!channel.isShutdown()) {
+            logger.info(streamID + " has successfully connected to " + url);
+        }
+    }
+
+    /**
+     * Called after all publishing is done, or when {@link ConnectionUnavailableException} is thrown
+     * Implementation of this method should contain the steps needed to disconnect from the sink.
+     */
+    @Override
+    public void disconnect() {
+        try {
+            channel.shutdown().awaitTermination(channelTerminationWaitingTime, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": Error in shutting down the channel. "
+                    + e.getMessage());
         }
     }
 }

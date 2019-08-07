@@ -81,7 +81,7 @@ public class GrpcServiceResponseSink extends Sink {
         String streamID = siddhiAppContext.getName() + GrpcConstants.PORT_HOST_SEPARATOR
                 + outputStreamDefinition.getId();
         String url = optionHolder.validateAndGetOption(GrpcConstants.PUBLISHER_URL).getValue();
-        if (!url.substring(0,4).equalsIgnoreCase(GrpcConstants.GRPC_PROTOCOL_NAME)) {
+        if (!url.substring(0, 4).equalsIgnoreCase(GrpcConstants.GRPC_PROTOCOL_NAME)) {
             throw new SiddhiAppValidationException(streamID + "The url must begin with \"" +
                     GrpcConstants.GRPC_PROTOCOL_NAME + "\" for all grpc sinks");
         }

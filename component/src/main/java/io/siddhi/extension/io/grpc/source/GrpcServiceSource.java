@@ -17,6 +17,7 @@
  */
 package io.siddhi.extension.io.grpc.source;
 
+import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.ServerInterceptors;
 import io.grpc.Status;
@@ -25,7 +26,9 @@ import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
 import io.siddhi.annotation.Parameter;
 import io.siddhi.annotation.util.DataType;
+import io.siddhi.core.exception.ConnectionUnavailableException;
 import io.siddhi.core.exception.SiddhiAppRuntimeException;
+import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
 import io.siddhi.extension.io.grpc.util.GrpcSourceRegistry;
@@ -33,10 +36,13 @@ import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+
+import static io.siddhi.extension.io.grpc.util.GrpcUtils.extractHeaders;
 
 /**
  * This extension handles receiving requests from grpc clients/stubs and sending back responses
@@ -111,6 +117,8 @@ public class GrpcServiceSource extends AbstractGrpcSource {
     private String sourceId;
     private String headerString;
     private long serviceTimeout;
+    protected String[] requestedTransportPropertyNames;
+    protected Server server;
 
     @Override
     public void initializeGrpcServer(int port) {
@@ -126,7 +134,7 @@ public class GrpcServiceSource extends AbstractGrpcSource {
                     if (headerString != null) {
                         try {
                             sourceEventListener.onEvent(request.getPayload(), extractHeaders(headerString + ", '" +
-                                    GrpcConstants.MESSAGE_ID + ":" + messageId + "'"));
+                                    GrpcConstants.MESSAGE_ID + ":" + messageId + "'", requestedTransportPropertyNames));
                         } catch (SiddhiAppRuntimeException e) {
                             logger.error(siddhiAppContext.getName() + "Dropping request. " + e.getMessage());
                             responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
@@ -154,8 +162,9 @@ public class GrpcServiceSource extends AbstractGrpcSource {
     }
 
     @Override
-    public void initSource(OptionHolder optionHolder) {
+    public void initSource(OptionHolder optionHolder, String[] requestedTransportPropertyNames) {
         this.sourceId = optionHolder.validateAndGetOption(GrpcConstants.SOURCE_ID).getValue();
+        this.requestedTransportPropertyNames = requestedTransportPropertyNames.clone();
         this.serviceTimeout = Long.parseLong(optionHolder.getOrCreateOption(GrpcConstants.SERVICE_TIMEOUT,
                 GrpcConstants.SERVICE_TIMEOUT_DEFAULT).getValue());
         long timeoutCheckInterval;
@@ -168,6 +177,48 @@ public class GrpcServiceSource extends AbstractGrpcSource {
         GrpcSourceRegistry.getInstance().putGrpcServiceSource(sourceId, this);
         siddhiAppContext.getScheduledExecutorService().scheduleAtFixedRate(new ServiceSourceTimeoutChecker(), 0,
                 timeoutCheckInterval, TimeUnit.MILLISECONDS);
+    }
+
+    @Override
+    public void connect(ConnectionCallback connectionCallback, State state) throws ConnectionUnavailableException {
+        try {
+            server.start();
+            if (logger.isDebugEnabled()) {
+                logger.debug(siddhiAppContext.getName() + ": Server started");
+            }
+        } catch (IOException e) {
+            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": " + e.getMessage());
+        }
+    }
+
+    /**
+     * This method can be called when it is needed to disconnect from the end point.
+     */
+    @Override
+    public void disconnect() {
+        try {
+            Server serverPointer = server;
+            if (serverPointer == null) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug(siddhiAppContext.getName() + ": Illegal state. Server already stopped.");
+                }
+                return;
+            }
+            serverPointer.shutdown();
+            if (serverPointer.awaitTermination(serverShutdownWaitingTime, TimeUnit.SECONDS)) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug(siddhiAppContext.getName() + ": Server stopped");
+                }
+                return;
+            }
+            serverPointer.shutdownNow();
+            if (serverPointer.awaitTermination(serverShutdownWaitingTime, TimeUnit.SECONDS)) {
+                return;
+            }
+            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": Unable to shutdown server");
+        } catch (InterruptedException e) {
+            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": " + e.getMessage());
+        }
     }
 
     @Override

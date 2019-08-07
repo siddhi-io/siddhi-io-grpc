@@ -203,10 +203,4 @@ public class GrpcSourceTestCase {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
     }
-
-    @Test
-    public void test () {
-        long a = 1L << 24;
-        System.out.println(a);
-    }
 }

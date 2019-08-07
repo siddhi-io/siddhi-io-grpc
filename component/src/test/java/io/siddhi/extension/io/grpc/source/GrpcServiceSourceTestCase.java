@@ -109,7 +109,8 @@ public class GrpcServiceSourceTestCase {
 
         String stream1 = "@source(type='grpc-service', " +
                 "url='grpc://localhost:8888/org.wso2.grpc.EventService/process', source.id='1', " +
-                "@map(type='json', @attributes(messageId='trp:message.id', message='message', name='trp:name', age='trp:age'))) " +
+                "@map(type='json', @attributes(messageId='trp:message.id', message='message', name='trp:name', " +
+                "age='trp:age'))) " +
                 "define stream FooStream (messageId String, message String, name String, age int);";
 
         String stream2 = "@sink(type='grpc-service-response', " +
@@ -179,7 +180,8 @@ public class GrpcServiceSourceTestCase {
 
         String stream1 = "@source(type='grpc-service', " +
                 "url='grpc://localhost:8888/org.wso2.grpc.EventService/process', source.id='1', " +
-                "@map(type='json', @attributes(messageId='trp:message.id', message='message', name='trp:name', age='trp:age'))) " +
+                "@map(type='json', @attributes(messageId='trp:message.id', message='message', name='trp:name', " +
+                "age='trp:age'))) " +
                 "define stream FooStream (messageId String, message String, name String, age int);";
 
         String stream2 = "@sink(type='grpc-service-response', " +

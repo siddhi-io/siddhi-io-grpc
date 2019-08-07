@@ -26,6 +26,7 @@ import io.siddhi.annotation.Extension;
 import io.siddhi.annotation.Parameter;
 import io.siddhi.annotation.util.DataType;
 import io.siddhi.core.exception.ConnectionUnavailableException;
+import io.siddhi.core.exception.SiddhiAppRuntimeException;
 import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.transport.DynamicOptions;
 import io.siddhi.core.util.transport.OptionHolder;
@@ -34,6 +35,8 @@ import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
 import org.wso2.grpc.EventServiceGrpc.EventServiceStub;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * {@code GrpcSink} Handle the gRPC publishing tasks.
@@ -211,6 +214,20 @@ public class GrpcSink extends AbstractGrpcSink {
         this.asyncStub = EventServiceGrpc.newStub(channel);
         if (!channel.isShutdown()) {
             logger.info(streamID + " has successfully connected to " + url);
+        }
+    }
+
+    /**
+     * Called after all publishing is done, or when {@link ConnectionUnavailableException} is thrown
+     * Implementation of this method should contain the steps needed to disconnect from the sink.
+     */
+    @Override
+    public void disconnect() {
+        try {
+            channel.shutdown().awaitTermination(channelTerminationWaitingTime, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": Error in shutting down the channel. "
+                    + e.getMessage());
         }
     }
 }
