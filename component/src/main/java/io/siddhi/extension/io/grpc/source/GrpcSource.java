@@ -22,7 +22,6 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.Empty;
 import io.grpc.ServerBuilder;
 import io.grpc.ServerInterceptors;
-import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 import io.grpc.stub.StreamObserver;
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
@@ -32,7 +31,6 @@ import io.siddhi.core.exception.SiddhiAppRuntimeException;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.GenericServiceClass;
 import org.apache.log4j.Logger;
-import org.omg.CORBA.Request;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
 
@@ -101,16 +99,18 @@ public class GrpcSource extends AbstractGrpcSource {
                 GenericServiceClass.AnyServiceImplBase service = new GenericServiceClass.AnyServiceImplBase() {
                     @Override
                     public void handleEmptyResponse(Any request, StreamObserver<Empty> responseObserver) {
-                        Object requestClass = null;
+                        Object requestObject = null;
                         try {
-                            Class className = Class.forName("package01.test.Request");//todo get the class name from url
+//                            Class requestClass = Class.forName("package01.test.Request");//todo get the class name from url
 
 
-                            Method parseFrom = className.getDeclaredMethod("parseFrom", ByteString.class);
-                            requestClass = parseFrom.invoke(Request.class,request.toByteString());
-                        } catch (ClassNotFoundException e) {
+
+                            Method parseFrom = requestClass.getDeclaredMethod("parseFrom", ByteString.class);
+                            requestObject = parseFrom.invoke(requestClass,request.toByteString());
+//                            System.out.println(requestObject);
+                        } /*catch (ClassNotFoundException e) {
                             e.printStackTrace();
-                        } catch (NoSuchMethodException e) {
+                        }*/ catch (NoSuchMethodException e) {
                             e.printStackTrace();
                         } catch (IllegalAccessException e) {
                             e.printStackTrace();
@@ -118,7 +118,9 @@ public class GrpcSource extends AbstractGrpcSource {
                             e.printStackTrace();
                         }
 
-                        sourceEventListener.onEvent(requestClass,new String[]{"1"});
+                        sourceEventListener.onEvent(requestObject,new String[]{"1"});
+                        responseObserver.onNext(Empty.getDefaultInstance());
+                        responseObserver.onCompleted();
                     }
                 };
                 this.server = ServerBuilder.forPort(port).addService(service).build();

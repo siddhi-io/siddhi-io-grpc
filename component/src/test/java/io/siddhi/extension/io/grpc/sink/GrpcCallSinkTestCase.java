@@ -23,6 +23,7 @@ import io.siddhi.core.event.Event;
 import io.siddhi.core.query.output.callback.QueryCallback;
 import io.siddhi.core.stream.input.InputHandler;
 import io.siddhi.core.util.EventPrinter;
+import io.siddhi.extension.io.grpc.GenericTestServer;
 import io.siddhi.extension.io.grpc.TestServer;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -34,6 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class GrpcCallSinkTestCase {
     private static final Logger logger = Logger.getLogger(GrpcSinkTestCase.class.getName());
     private TestServer server = new TestServer();
+    private GenericTestServer server2 = new GenericTestServer();
     private AtomicInteger eventCount = new AtomicInteger(0);
 
     @Test
@@ -43,7 +45,7 @@ public class GrpcCallSinkTestCase {
         SiddhiManager siddhiManager = new SiddhiManager();
 
         server.start();
-        String port = String.valueOf(server.getPort());
+//        String port = String.valueOf(server.getPort());
         String inStreamDefinition = ""
                 + "@sink(type='grpc-call', " +
                 "url = 'grpc://localhost:8888/org.wso2.grpc.EventService/process/mySeq', " +
@@ -137,6 +139,60 @@ public class GrpcCallSinkTestCase {
             siddhiAppRuntime.shutdown();
         } finally {
             server.stop();
+        }
+    }
+
+
+
+    @Test
+    public void test3() throws Exception {
+        logger.info("Test case to call process sending 1 requests");
+        logger.setLevel(Level.DEBUG);
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        server2.start();
+//        String port = String.valueOf(server2.getPort());
+        String inStreamDefinition = ""
+                + "@sink(type='grpc-call', " +
+                "url = 'grpc://localhost:8888/package01.test.MyService/process', " +
+                "sink.id= '1', @map(type='protobuf')) "
+                + "define stream FooStream (stringValue string, intValue int,longValue long,booleanValue bool,floatValue float,doubleValue double);";
+
+        String stream2 = "@source(type='grpc-call-response', url = 'grpc://localhost:8888/package01.test.MyService/process', " +
+                "sequence='mySeq', sink.id= '1', @map(type='protobuf')) " +
+                "define stream BarStream (stringValue string, intValue int,longValue long,booleanValue bool,floatValue float,doubleValue double);";
+        String query = "@info(name = 'query') "
+                + "from BarStream "
+                + "select *  "
+                + "insert into outputStream;";
+
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition + stream2 +
+                query);
+        siddhiAppRuntime.addCallback("query", new QueryCallback() {
+            @Override
+            public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
+                EventPrinter.print(timeStamp, inEvents, removeEvents);
+                for (int i = 0; i < inEvents.length; i++) {
+                    eventCount.incrementAndGet();
+                    System.out.println(inEvents[i]);
+                    switch (i) {
+                        case 0:
+                            Assert.assertEquals((String) inEvents[i].getData()[0], "Test 01");
+                            break;
+                        default:
+                            Assert.fail();
+                    }
+                }
+            }
+        });
+        InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
+        try {
+            siddhiAppRuntime.start();
+            fooStream.send(new Object[]{"Test 01", 60, 10000L, true, 522.7586f, 34.5668});
+            Thread.sleep(1000);
+            siddhiAppRuntime.shutdown();
+        } finally {
+            server2.stop();
         }
     }
 }

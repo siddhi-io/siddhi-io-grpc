@@ -17,6 +17,9 @@
  */
 package io.siddhi.extension.io.grpc.source;
 
+import com.google.protobuf.Any;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.Empty;
 import io.grpc.ServerBuilder;
 import io.grpc.ServerInterceptors;
 import io.grpc.Status;
@@ -27,12 +30,16 @@ import io.siddhi.annotation.Parameter;
 import io.siddhi.annotation.util.DataType;
 import io.siddhi.core.exception.SiddhiAppRuntimeException;
 import io.siddhi.core.util.transport.OptionHolder;
+import io.siddhi.extension.io.grpc.util.GenericServiceClass;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
 import io.siddhi.extension.io.grpc.util.GrpcSourceRegistry;
 import org.apache.log4j.Logger;
+import org.omg.CORBA.Request;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -74,6 +81,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class GrpcServiceSource extends AbstractGrpcSource {
     private static final Logger logger = Logger.getLogger(GrpcServiceSource.class.getName());
     private Map<String, StreamObserver<Event>> streamObserverMap = new ConcurrentHashMap<>();
+    private Map<String, StreamObserver<Any>> genericStreamObserverMap = new ConcurrentHashMap<>();
     private String sourceId;
     private String headerString;
 
@@ -100,6 +108,55 @@ public class GrpcServiceSource extends AbstractGrpcSource {
                     streamObserverMap.put(messageId, responseObserver);
                 }
             }, serverInterceptor)).build();
+        }
+        else
+        {
+            GenericServiceClass.setServiceName(this.serviceName);
+            synchronized (this) { //in case of 2 server creates at the same time
+                GenericServiceClass.setEmptyResponseMethodName(this.methodName); //doesn't affect if 'methodname' changed after creating the server
+                GenericServiceClass.AnyServiceImplBase service = new GenericServiceClass.AnyServiceImplBase() {
+                    @Override
+                    public void handleNonEmptyResponse(Any request, StreamObserver<Any> responseObserver) {
+
+                        String messageId = UUID.randomUUID().toString();
+                        genericStreamObserverMap.put(messageId, responseObserver);
+                        if (headerString != null) {
+                            try {
+                                sourceEventListener.onEvent(request, extractHeaders(headerString + ", '" +
+                                        GrpcConstants.MESSAGE_ID + ":" + messageId + "'"));
+                            } catch (SiddhiAppRuntimeException e) {
+                                logger.error(siddhiAppContext.getName() + "Dropping request. " + e.getMessage());
+                                responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
+                            }
+                        } else {
+                            sourceEventListener.onEvent(request, new String[]{messageId});
+                        }
+                        genericStreamObserverMap.put(messageId, responseObserver);
+
+
+
+
+                        Object requestObject = null;
+                        try {
+                            Class className = Class.forName("package01.test.Request");//todo get the class name from url
+
+
+                            Method parseFrom = className.getDeclaredMethod("parseFrom", ByteString.class);
+                            requestObject = parseFrom.invoke(Request.class, request.toByteString());
+//                            System.out.println(requestObject);
+                        } catch (ClassNotFoundException e) {
+                            e.printStackTrace();
+                        } catch (NoSuchMethodException e) {
+                            e.printStackTrace();
+                        } catch (IllegalAccessException e) {
+                            e.printStackTrace();
+                        } catch (InvocationTargetException e) {
+                            e.printStackTrace();
+                        }
+
+                    }
+                };
+            }
         }
     }
 

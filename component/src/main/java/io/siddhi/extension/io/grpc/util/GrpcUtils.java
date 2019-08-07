@@ -17,6 +17,7 @@
  */
 package io.siddhi.extension.io.grpc.util;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -49,10 +50,28 @@ public class GrpcUtils {
     }
 
 
-    public static String getPackageName(String path)
-    {
+    public static String getPackageName(String path) {
         List<String> urlParts = new ArrayList<>(Arrays.asList(path.split(GrpcConstants.PORT_SERVICE_SEPARATOR)));
         urlParts.removeAll(Collections.singletonList(GrpcConstants.EMPTY_STRING));
         return urlParts.get(GrpcConstants.PATH_SERVICE_NAME_POSITION).replace(getServiceName(path), "");
     }
+
+    public static String getServiceFullName(String path) {
+        List<String> urlParts = new ArrayList<>(Arrays.asList(path.split(io.siddhi.extension.map.protobuf.utils.GrpcConstants.PORT_SERVICE_SEPARATOR)));
+        urlParts.removeAll(Collections.singletonList(io.siddhi.extension.map.protobuf.utils.GrpcConstants.EMPTY_STRING));
+        return urlParts.get(io.siddhi.extension.map.protobuf.utils.GrpcConstants.PATH_SERVICE_NAME_POSITION);
+
+    }
+
+    public static Class getRequestClass(String path) throws ClassNotFoundException {
+        String stubName = getServiceName(path) + "BlockingStub";
+        Method[] methods = Class.forName(getServiceFullName(path) + "Grpc" + "$" + stubName).getMethods();
+        for (Method m : methods) {
+            if (m.getName().equals(getMethodName(path))) {
+                return m.getParameterTypes()[0];
+            }
+        }
+        return null;
+    }
+
 }

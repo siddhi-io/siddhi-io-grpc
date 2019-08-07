@@ -17,10 +17,6 @@
  */
 package io.siddhi.extension.io.grpc.sink;
 
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.Empty;
 import io.grpc.Channel;
 import io.grpc.ManagedChannelBuilder;
@@ -32,7 +28,6 @@ import io.siddhi.annotation.Extension;
 import io.siddhi.annotation.Parameter;
 import io.siddhi.annotation.util.DataType;
 import io.siddhi.core.exception.ConnectionUnavailableException;
-import io.siddhi.core.exception.SiddhiAppRuntimeException;
 import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.transport.DynamicOptions;
 import io.siddhi.core.util.transport.OptionHolder;
@@ -41,7 +36,6 @@ import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
 
-import javax.annotation.Nullable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -94,8 +88,6 @@ public class GrpcSink extends AbstractGrpcSink {
     private Class asyncStubClass;
 
 
-
-
     @Override
     public void initSink(OptionHolder optionHolder) {
 
@@ -122,20 +114,26 @@ public class GrpcSink extends AbstractGrpcSink {
                 System.out.println("Empty Done.....");
             }
         };
+
+        String headers = "";
+        Metadata header = null;
+        if (headersOption != null) {
+            header = new Metadata();
+            headers = headersOption.getValue(dynamicOptions);
+            Metadata.Key<String> key =
+                    Metadata.Key.of(GrpcConstants.HEADERS, Metadata.ASCII_STRING_MARSHALLER);
+            header.put(key, headers);
+        }
+
         if (isDefaultMode) {
             Event.Builder requestBuilder = Event.newBuilder();
             requestBuilder.setPayload((String) payload);
             Event sequenceCallRequest = requestBuilder.build();
-            EventServiceGrpc.EventServiceStub currentAsyncStub = asyncStub;//todo why assing here, why can not directly use it
-
+            EventServiceGrpc.EventServiceStub currentAsyncStub = asyncStub;//todo why assigning here, why can not directly use it
             if (headersOption != null) {
-                Metadata header = new Metadata();
-                String headers = headersOption.getValue(dynamicOptions);
-                Metadata.Key<String> key =
-                        Metadata.Key.of(GrpcConstants.HEADERS, Metadata.ASCII_STRING_MARSHALLER);
-                header.put(key, headers);
-                currentAsyncStub = MetadataUtils.attachHeaders(asyncStub, header);// TODO: 8/5/19 can we put this outside the IF condition???
+                currentAsyncStub = MetadataUtils.attachHeaders(asyncStub, header);
             }
+
 
             /*StreamObserver<Empty> responseObserver = new StreamObserver<Empty>() {
                 @Override
@@ -157,6 +155,14 @@ public class GrpcSink extends AbstractGrpcSink {
             try {
 
 
+                if (headersOption != null) {
+                    Class[] headerMethodParameters = new Class[]{asyncStubClass.getSuperclass(), Metadata.class};
+                    Object[] headerMethodArguments = new Object[]{asyncStubObject, header};
+                    Method addHeaders = MetadataUtils.class.getDeclaredMethod("attachHeaders", headerMethodParameters);
+                    asyncStubObject = addHeaders.invoke(asyncStubObject, headerMethodArguments);
+                }
+
+
                 Class[] parameter = new Class[]{requestClass, StreamObserver.class};
                 Object[] params = new Object[]{payload, responseObserver};
                 Method m = this.asyncStubClass.getDeclaredMethod(super.methodName, parameter);
@@ -173,6 +179,7 @@ public class GrpcSink extends AbstractGrpcSink {
             }
 
         }
+
     }
 
     /**

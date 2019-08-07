@@ -38,14 +38,9 @@ import org.apache.log4j.Logger;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static io.siddhi.extension.io.grpc.util.GrpcUtils.getMethodName;
-import static io.siddhi.extension.io.grpc.util.GrpcUtils.getServiceName;
+import static io.siddhi.extension.io.grpc.util.GrpcUtils.*;
 
 /**
  * This is an abstract class extended by GrpcSource and GrpcServiceSource. This provides most of initialization
@@ -69,6 +64,7 @@ public abstract class AbstractGrpcSource extends Source {
 
     //-----------------------------------
 //    protected String methodName;
+    protected Class requestClass;
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
@@ -125,8 +121,12 @@ public abstract class AbstractGrpcSource extends Source {
             initializeGrpcServer(port);//todo  can move out of the if
         } else {
             //todo: handle generic grpc service
-//            this.methodName = urlParts.get(GrpcConstants.URL_METHOD_NAME_POSITION);
             initializeGrpcServer(port);
+            try {
+                requestClass = getRequestClass(aURL.getPath());
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
 
 
         }

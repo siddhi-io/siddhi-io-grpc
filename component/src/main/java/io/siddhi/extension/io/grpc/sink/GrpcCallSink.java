@@ -18,6 +18,7 @@ import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
 import io.siddhi.extension.io.grpc.util.GrpcSourceRegistry;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
+import io.siddhi.query.compiler.SiddhiQLParser;
 import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
@@ -122,6 +123,20 @@ public class GrpcCallSink extends AbstractGrpcSink {
         } else {
             //todo: handle publishing to generic service
             try {
+
+                if (headersOption != null) {
+                    Metadata header = new Metadata();
+                    String headers = headersOption.getValue(dynamicOptions);
+                    Metadata.Key<String> key =
+                            Metadata.Key.of(GrpcConstants.HEADERS, Metadata.ASCII_STRING_MARSHALLER);
+                    header.put(key, headers);
+                    Class[] headerMethodParameters = new Class[]{stubClass.getSuperclass(), Metadata.class};
+                    Object[] headerMethodArguments = new Object[]{stubObject, header};
+                    Method addHeaders = MetadataUtils.class.getDeclaredMethod("attachHeaders",headerMethodParameters);
+                    stubObject = addHeaders.invoke(stubObject,headerMethodArguments);
+                }
+
+
                 Method m = stubClass.getDeclaredMethod(methodName, requestClass);
                 ListenableFuture<Object> genericRes = (ListenableFuture<Object>) m.invoke(stubObject, payload);
 
@@ -141,6 +156,7 @@ public class GrpcCallSink extends AbstractGrpcSink {
 
                     @Override
                     public void onFailure(Throwable throwable) {
+                        throwable.printStackTrace();
                         System.out.println("Failure");
                     }
                 }, MoreExecutors.directExecutor());

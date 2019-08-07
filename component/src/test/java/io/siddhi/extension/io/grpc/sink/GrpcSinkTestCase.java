@@ -21,6 +21,7 @@ import io.siddhi.core.SiddhiAppRuntime;
 import io.siddhi.core.SiddhiManager;
 import io.siddhi.core.stream.input.InputHandler;
 import io.siddhi.extension.io.grpc.TestServer;
+import io.siddhi.extension.io.grpc.GenericTestServer;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.testng.annotations.Test;
@@ -30,6 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class GrpcSinkTestCase {
     private static final Logger logger = Logger.getLogger(GrpcSinkTestCase.class.getName());
     private TestServer server = new TestServer();
+    private GenericTestServer server2 = new GenericTestServer();
     private AtomicInteger eventCount = new AtomicInteger(0);
 
     @Test
@@ -81,6 +83,64 @@ public class GrpcSinkTestCase {
             siddhiAppRuntime.shutdown();
         } finally {
             server.stop();
+        }
+    }
+
+
+    //--------------------------------------------
+    @Test
+    public void test3() throws Exception {
+        logger.info("Test case to call send");
+        logger.setLevel(Level.DEBUG);
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        server2.start();
+        String inStreamDefinition = ""
+                + "@sink(type='grpc', url = 'grpc://localhost:8888/package01.test.MyService/send', " +
+                "@map(type='protobuf')) " +
+                "define stream FooStream (stringValue string, intValue int,longValue long,booleanValue bool,floatValue float,doubleValue double);";
+
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
+        InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
+        try {
+            siddhiAppRuntime.start();
+            fooStream.send(new Object[]{"Test 01", 60, 10000L, true, 522.7586f, 34.5668});
+            Thread.sleep(1000);
+            siddhiAppRuntime.shutdown();
+        } finally {
+            server2.stop();
+        }
+    }
+
+
+    @Test
+    public void testWithHeader2() throws Exception {
+        logger.info("Test case to call send");
+        logger.setLevel(Level.DEBUG);
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        server2.start();
+        String inStreamDefinition = ""
+                + "@sink(type='grpc', " +
+                "url = 'grpc://localhost:8888/package01.test.MyService/send', " +
+                "headers='{{headers}}', " +
+                "@map(type='protobuf', " +
+                "@payload(stringValue='a',longValue='b',intValue='c',booleanValue='d',floatValue = 'e', doubleValue = 'f'))) " +
+                "define stream FooStream (a string, b long, c int,d bool,e float,f double, headers String);";
+
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
+        InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
+        try {
+            siddhiAppRuntime.start();
+            fooStream.send(new Object[]{"Test 01", 10000L, 60, true, 522.7586f, 34.5668, "'Name:Sahan','Age:21','Content-Type:json'"});
+            Thread.sleep(1000);
+            fooStream.send(new Object[]{"Test 02", 10000L, 60, false, 768.987f, 34.5668, "'Name:Sahan','Age:21','Content-Type:json'"});
+            Thread.sleep(1000);
+
+            siddhiAppRuntime.shutdown();
+
+        } finally {
+            server2.stop();
         }
     }
 }
