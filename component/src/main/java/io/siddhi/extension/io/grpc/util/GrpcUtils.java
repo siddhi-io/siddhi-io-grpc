@@ -74,4 +74,15 @@ public class GrpcUtils {
         return null;
     }
 
+    public static Class getResponseClass(String path) throws ClassNotFoundException {
+        String stubName = getServiceName(path) + "BlockingStub";
+        Method[] methods = Class.forName(getServiceFullName(path) + "Grpc" + "$" + stubName).getMethods();
+        for (Method m : methods) {
+            if (m.getName().equals(getMethodName(path))) {
+                return m.getParameterTypes()[0];
+            }
+        }
+        return null;
+    }
+
 }

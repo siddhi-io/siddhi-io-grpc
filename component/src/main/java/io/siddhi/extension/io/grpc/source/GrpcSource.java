@@ -101,9 +101,6 @@ public class GrpcSource extends AbstractGrpcSource {
                     public void handleEmptyResponse(Any request, StreamObserver<Empty> responseObserver) {
                         Object requestObject = null;
                         try {
-//                            Class requestClass = Class.forName("package01.test.Request");//todo get the class name from url
-
-
 
                             Method parseFrom = requestClass.getDeclaredMethod("parseFrom", ByteString.class);
                             requestObject = parseFrom.invoke(requestClass,request.toByteString());

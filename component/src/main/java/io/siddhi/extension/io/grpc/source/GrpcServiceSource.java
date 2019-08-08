@@ -17,9 +17,10 @@
  */
 package io.siddhi.extension.io.grpc.source;
 
+import com.google.protobuf.AbstractMessageLite;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
-import com.google.protobuf.Empty;
+import com.google.protobuf.InvalidProtocolBufferException;
 import io.grpc.ServerBuilder;
 import io.grpc.ServerInterceptors;
 import io.grpc.Status;
@@ -33,8 +34,8 @@ import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.GenericServiceClass;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
 import io.siddhi.extension.io.grpc.util.GrpcSourceRegistry;
+import io.siddhi.extension.map.protobuf.utils.NewClass;
 import org.apache.log4j.Logger;
-import org.omg.CORBA.Request;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
 
@@ -60,7 +61,7 @@ import java.util.concurrent.ConcurrentHashMap;
                 @Parameter(name = "url",
                         description = "The url which can be used by a client to access the grpc server in this " +
                                 "extension. This url should consist the host address, port, service name, method " +
-                                "name in the following format. grpc://hostAddress:port/serviceName/methodName" ,
+                                "name in the following format. grpc://hostAddress:port/serviceName/methodName",
                         type = {DataType.STRING}),
         },
         examples = {
@@ -108,44 +109,19 @@ public class GrpcServiceSource extends AbstractGrpcSource {
                     streamObserverMap.put(messageId, responseObserver);
                 }
             }, serverInterceptor)).build();
-        }
-        else
-        {
+        } else {
             GenericServiceClass.setServiceName(this.serviceName);
             synchronized (this) { //in case of 2 server creates at the same time
-                GenericServiceClass.setEmptyResponseMethodName(this.methodName); //doesn't affect if 'methodname' changed after creating the server
+                GenericServiceClass.setNonEmptyResponseMethodName(this.methodName); //doesn't affect if 'methodname' changed after creating the server
                 GenericServiceClass.AnyServiceImplBase service = new GenericServiceClass.AnyServiceImplBase() {
                     @Override
                     public void handleNonEmptyResponse(Any request, StreamObserver<Any> responseObserver) {
 
-                        String messageId = UUID.randomUUID().toString();
-                        genericStreamObserverMap.put(messageId, responseObserver);
-                        if (headerString != null) {
-                            try {
-                                sourceEventListener.onEvent(request, extractHeaders(headerString + ", '" +
-                                        GrpcConstants.MESSAGE_ID + ":" + messageId + "'"));
-                            } catch (SiddhiAppRuntimeException e) {
-                                logger.error(siddhiAppContext.getName() + "Dropping request. " + e.getMessage());
-                                responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
-                            }
-                        } else {
-                            sourceEventListener.onEvent(request, new String[]{messageId});
-                        }
-                        genericStreamObserverMap.put(messageId, responseObserver);
-
-
-
-
                         Object requestObject = null;
                         try {
-                            Class className = Class.forName("package01.test.Request");//todo get the class name from url
 
-
-                            Method parseFrom = className.getDeclaredMethod("parseFrom", ByteString.class);
-                            requestObject = parseFrom.invoke(Request.class, request.toByteString());
-//                            System.out.println(requestObject);
-                        } catch (ClassNotFoundException e) {
-                            e.printStackTrace();
+                            Method parseFrom = requestClass.getDeclaredMethod("parseFrom", ByteString.class);
+                            requestObject = parseFrom.invoke(requestClass, request.toByteString());
                         } catch (NoSuchMethodException e) {
                             e.printStackTrace();
                         } catch (IllegalAccessException e) {
@@ -154,8 +130,30 @@ public class GrpcServiceSource extends AbstractGrpcSource {
                             e.printStackTrace();
                         }
 
+
+                        String messageId = UUID.randomUUID().toString();
+                        genericStreamObserverMap.put(messageId, responseObserver);
+
+                        NewClass newRequestObject = new NewClass(requestObject,messageId);
+
+                        if (headerString != null) {
+                            try {
+                                sourceEventListener.onEvent(newRequestObject, extractHeaders(headerString + ", '" +
+                                        GrpcConstants.MESSAGE_ID + ":" + messageId + "'"));
+                            } catch (SiddhiAppRuntimeException e) {
+                                logger.error(siddhiAppContext.getName() + "Dropping request. " + e.getMessage());
+                                responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
+                            }
+                        } else {
+                            sourceEventListener.onEvent(newRequestObject, new String[]{messageId});
+                        }
+                        genericStreamObserverMap.put(messageId, responseObserver);//todo why adding two times????
+
+
                     }
                 };
+                super.server = ServerBuilder.forPort(port).addService(service).build();
+
             }
         }
     }
@@ -171,17 +169,60 @@ public class GrpcServiceSource extends AbstractGrpcSource {
         this.headerString = headerString;
     }
 
-    public void handleCallback(String messageId, String responsePayload) {
+    public void handleCallback(String messageId, Object responsePayload) {
         if (isDefaultMode) {
+
+            String responsePayloadString = (String) responsePayload;
+
             Event.Builder responseBuilder = Event.newBuilder();
-            responseBuilder.setPayload(responsePayload);
+            responseBuilder.setPayload(responsePayloadString);
             Event response = responseBuilder.build();
             StreamObserver<Event> streamObserver = streamObserverMap.get(messageId);
             streamObserverMap.remove(messageId);
             streamObserver.onNext(response);
             streamObserver.onCompleted();
         }
+        else
+        {
+
+            System.out.println(responsePayload.getClass());
+
+            try {
+
+                Method toByteString = AbstractMessageLite.class.getDeclaredMethod("toByteString");
+                ByteString responseByteString = (ByteString) toByteString.invoke(responsePayload);
+                Any response =  Any.parseFrom(responseByteString);
+
+                StreamObserver<Any> streamObserver = genericStreamObserverMap.get(messageId);
+                genericStreamObserverMap.remove(messageId);
+                streamObserver.onNext(response);
+                streamObserver.onCompleted();
+
+
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+            } catch (InvalidProtocolBufferException e) {
+                e.printStackTrace();
+            }
+
+
+        }
     }
+//    public void handleCallback(String messageId, Any responsePayload) {
+//        if (!isDefaultMode) {
+////            Event.Builder responseBuilder = Event.newBuilder();
+////            responseBuilder.setPayload(responsePayload);
+////            Event response = responseBuilder.build();
+////            StreamObserver<Event> streamObserver = streamObserverMap.get(messageId);
+////            streamObserverMap.remove(messageId);
+////            streamObserver.onNext(response);
+////            streamObserver.onCompleted();
+//        }
+//    }
 
     @Override
     public void destroy() {

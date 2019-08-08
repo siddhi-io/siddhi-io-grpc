@@ -39,6 +39,10 @@ public class GenericTestServer {
 
                     @Override
                     public void process(Request request, StreamObserver<Response> responseObserver) {
+                        System.out.println("Request :::::::::::::::::::::::::::::::::::");
+                        System.out.println(request);
+                        System.out.println(":::::::::::::::::::::::::::::::::::::::::::");
+                        System.out.println("Server hit ....");
                         Response response = Response.newBuilder()
                                 .setIntValue(request.getIntValue())
                                 .setStringValue(request.getStringValue())

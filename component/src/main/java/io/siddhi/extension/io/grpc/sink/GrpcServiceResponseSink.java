@@ -86,6 +86,9 @@ public class GrpcServiceResponseSink extends Sink {
     private String sinkID;
     private String streamID;
 
+
+    private boolean defaultMode;
+
     @Override
     protected StateFactory init(StreamDefinition outputStreamDefinition, OptionHolder optionHolder,
                                 ConfigReader sinkConfigReader, SiddhiAppContext siddhiAppContext) {
@@ -116,13 +119,29 @@ public class GrpcServiceResponseSink extends Sink {
         }
         this.sourceId = optionHolder.validateAndGetOption(GrpcConstants.SOURCE_ID).getValue();
         this.messageIdOption = optionHolder.validateAndGetOption(GrpcConstants.MESSAGE_ID);
+        defaultMode = true;
+
+        if(!serviceName.equals("EventService"))
+        {
+            defaultMode = false;
+        }
+
         return null;
     }
 
     @Override
     public void publish(Object payload, DynamicOptions dynamicOptions, State state) {
+//        System.out.println("Payload :"+payload);
         String messageId = messageIdOption.getValue(dynamicOptions);
-        grpcSourceRegistry.getGrpcServiceSource(sourceId).handleCallback(messageId, (String) payload);
+        if(defaultMode)
+        {
+            grpcSourceRegistry.getGrpcServiceSource(sourceId).handleCallback(messageId,  payload);//todo changed parameter type to Object from String
+        }
+        else
+        {
+            grpcSourceRegistry.getGrpcServiceSource(sourceId).handleCallback(messageId, payload);
+        }
+
     }
 
     @Override

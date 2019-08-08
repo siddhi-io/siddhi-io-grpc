@@ -65,6 +65,7 @@ public abstract class AbstractGrpcSource extends Source {
     //-----------------------------------
 //    protected String methodName;
     protected Class requestClass;
+    protected Class responseClass;
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
@@ -124,6 +125,7 @@ public abstract class AbstractGrpcSource extends Source {
             initializeGrpcServer(port);
             try {
                 requestClass = getRequestClass(aURL.getPath());
+                responseClass = getResponseClass(aURL.getPath());
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }
