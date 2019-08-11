@@ -110,7 +110,7 @@
             <dependency>
                 <groupId>org.testng</groupId>
                 <artifactId>testng</artifactId>
-                <version>6.11</version>
+                <version>${testng.version}</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>
@@ -193,10 +193,11 @@
         </plugins>
     </build>
     <properties>
+        <testng.version>6.11</testng.version>
         <grpc.version>1.22.1</grpc.version>
         <transport.http.version>6.0.294</transport.http.version>
         <mavan.findbugsplugin.exclude.file>findbugs-exclude.xml</mavan.findbugsplugin.exclude.file>
-        <siddhi.version>5.0.0</siddhi.version>
+        <siddhi.version>5.1.2</siddhi.version>
         <siddhi.version.range>[5.0.0,6.0.0)</siddhi.version.range>
         <log4j.version>1.2.17.wso2v1</log4j.version>
         <carbon.transport.version>4.4.15</carbon.transport.version>

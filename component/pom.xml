@@ -164,7 +164,6 @@
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Name>${project.artifactId}</Bundle-Name>
                         <Export-Package>
-                            org.wso2.extension.siddhi.io.grpc.*,
                             org.wso2.extension.siddhi.io.grpc.*
                         </Export-Package>
                         <Import-Package>

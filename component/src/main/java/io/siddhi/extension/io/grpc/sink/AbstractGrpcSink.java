@@ -20,7 +20,6 @@ package io.siddhi.extension.io.grpc.sink;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.siddhi.core.config.SiddhiAppContext;
-import io.siddhi.core.exception.ConnectionUnavailableException;
 import io.siddhi.core.stream.ServiceDeploymentInfo;
 import io.siddhi.core.stream.output.sink.Sink;
 import io.siddhi.core.util.config.ConfigReader;
@@ -106,20 +105,20 @@ public abstract class AbstractGrpcSink extends Sink {
                                 SiddhiAppContext siddhiAppContext) {
         this.siddhiAppContext = siddhiAppContext;
         this.url = optionHolder.validateAndGetOption(GrpcConstants.PUBLISHER_URL).getValue();
-        this.streamID = siddhiAppContext.getName() + GrpcConstants.PORT_HOST_SEPARATOR + streamDefinition.getId();
+        this.streamID = streamDefinition.getId();
         if (optionHolder.isOptionExists(GrpcConstants.HEADERS)) {
             this.headersOption = optionHolder.validateAndGetOption(GrpcConstants.HEADERS);
         }
         if (!url.substring(0, 4).equalsIgnoreCase(GrpcConstants.GRPC_PROTOCOL_NAME)) {
-            throw new SiddhiAppValidationException(streamID + "The url must begin with \"" +
-                    GrpcConstants.GRPC_PROTOCOL_NAME + "\" for all grpc sinks");
+            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID +
+                    ": The url must begin with \"" + GrpcConstants.GRPC_PROTOCOL_NAME + "\" for all grpc sinks");
         }
         URL aURL;
         try {
             aURL = new URL(GrpcConstants.DUMMY_PROTOCOL_NAME + url.substring(4));
         } catch (MalformedURLException e) {
-            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": MalformedURLException. "
-                    + e.getMessage());
+            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID +
+                    ": MalformedURLException. " + e.getMessage());
         }
         String serviceName = getServiceName(aURL.getPath());
         this.methodName = getMethodName(aURL.getPath());
@@ -167,22 +166,6 @@ public abstract class AbstractGrpcSink extends Sink {
     }
 
     public abstract void initSink(OptionHolder optionHolder);
-
-    /**
-     * This method will be called before the processing method.
-     * Intention to establish connection to publish event.
-     * @throws ConnectionUnavailableException if end point is unavailable the ConnectionUnavailableException thrown
-     *                                        such that the  system will take care retrying for connection
-     */
-    @Override
-    public void connect() throws ConnectionUnavailableException {}
-
-    /**
-     * Called after all publishing is done, or when {@link ConnectionUnavailableException} is thrown
-     * Implementation of this method should contain the steps needed to disconnect from the sink.
-     */
-    @Override
-    public void disconnect() {}
 
     /**
      * The method can be called when removing an event receiver.

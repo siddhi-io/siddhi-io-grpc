@@ -41,30 +41,31 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.extractHeaders;
 /**
  * This handles receiving requests from grpc clients and populating the stream
  */
-@Extension(
-        name = "grpc",
-        namespace = "source",
-        description = "This extension starts a grpc server during initialization time. The server listens to " +
-                "requests from grpc stubs. This source has a default mode of operation and custom user defined grpc " +
-                "service mode. In the default mode this source will use EventService consume method. This method " +
-                "will receive requests and injects them into stream through a mapper.",
+@Extension(name = "grpc", namespace = "source", description = "This extension starts a grpc server during " +
+        "initialization time. The server listens to requests from grpc stubs. This source has a default mode of " +
+        "operation and custom user defined grpc service mode. In the default mode this source will use EventService " +
+        "consume method. This method will receive requests and injects them into stream through a mapper.",
         parameters = {
-                @Parameter(name = "url",
+                @Parameter(
+                        name = "url",
                         description = "The url which can be used by a client to access the grpc server in this " +
                                 "extension. This url should consist the host address, port, service name, method " +
-                                "name in the following format. grpc://hostAddress:port/serviceName/methodName" ,
+                                "name in the following format. `grpc://0.0.0.0:9763/<serviceName>/<methodName>`" ,
                         type = {DataType.STRING}),
-                @Parameter(name = "max.inbound.message.size",
+                @Parameter(
+                        name = "max.inbound.message.size",
                         description = "Sets the maximum message size in bytes allowed to be received on the server." ,
                         type = {DataType.INT},
                         optional = true,
                         defaultValue = "4194304"),
-                @Parameter(name = "max.inbound.metadata.size",
+                @Parameter(
+                        name = "max.inbound.metadata.size",
                         description = "Sets the maximum size of metadata in bytes allowed to be received." ,
                         type = {DataType.INT},
                         optional = true,
                         defaultValue = "8192"),
-                @Parameter(name = "server.shutdown.waiting.time",
+                @Parameter(
+                        name = "server.shutdown.waiting.time",
                         description = "The time in seconds to wait for the server to shutdown, giving up " +
                                 "if the timeout is reached." ,
                         type = {DataType.LONG},
@@ -72,22 +73,20 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.extractHeaders;
                         defaultValue = "5"),
         },
         examples = {
-                @Example(
-                        syntax = "@source(type='grpc', " +
-                                "url='grpc://locanhost:8888/org.wso2.grpc.EventService/consume', @map(type='json')) " +
-                                "define stream BarStream (message String);",
+                @Example(syntax = "@source(type='grpc', " +
+                        "url='grpc://locanhost:8888/org.wso2.grpc.EventService/consume', @map(type='json')) " +
+                        "define stream BarStream (message String);",
                         description = "Here the port is given as 8888. So a grpc server will be started on port 8888 " +
-                                "and the server will expose EventService. This is the default service packed with " +
-                                "the source. In EventService the consume method is"
+                        "and the server will expose EventService. This is the default service packed with the source." +
+                        " In EventService the consume method is"
                 ),
-                @Example(
-                        syntax = "@source(type='grpc', " +
-                                "url='grpc://locanhost:8888/org.wso2.grpc.EventService/consume', " +
-                                "@map(type='json', @attributes(name='trp:name', age='trp:age', message='message'))) " +
-                                "define stream BarStream (message String, name String, age int);",
+                @Example(syntax = "@source(type='grpc', " +
+                        "url='grpc://locanhost:8888/org.wso2.grpc.EventService/consume', " +
+                        "@map(type='json', @attributes(name='trp:name', age='trp:age', message='message'))) " +
+                        "define stream BarStream (message String, name String, age int);",
                         description = "Here we are getting headers sent with the request as transport properties and " +
-                                "injecting them into the stream. With each request a header will be sent in " +
-                                "MetaData in the following format: 'Name:John', 'Age:23'"
+                        "injecting them into the stream. With each request a header will be sent in MetaData in the " +
+                        "following format: 'Name:John', 'Age:23'"
                 )
         }
 )
@@ -110,7 +109,8 @@ public class GrpcSource extends AbstractGrpcSource {
                             sourceEventListener.onEvent(request.getPayload(), extractHeaders(headerString,
                                     requestedTransportPropertyNames));
                         } catch (SiddhiAppRuntimeException e) {
-                            logger.error(siddhiAppContext.getName() + ": Dropping request. " + e.getMessage());
+                            logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request. " +
+                                    e.getMessage());
                         }
 
                     } else {
@@ -140,10 +140,10 @@ public class GrpcSource extends AbstractGrpcSource {
         try {
             server.start();
             if (logger.isDebugEnabled()) {
-                logger.debug(siddhiAppContext.getName() + ": Server started");
+                logger.debug(siddhiAppContext.getName() + ":" + streamID + ": gRPC Server started");
             }
         } catch (IOException e) {
-            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": " + e.getMessage());
+            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ":" + streamID + ": " + e.getMessage());
         }
     }
 
@@ -156,14 +156,15 @@ public class GrpcSource extends AbstractGrpcSource {
             Server serverPointer = server;
             if (serverPointer == null) {
                 if (logger.isDebugEnabled()) {
-                    logger.debug(siddhiAppContext.getName() + ": Illegal state. Server already stopped.");
+                    logger.debug(siddhiAppContext.getName() + ":" + streamID + ": Illegal state. Server already " +
+                            "stopped.");
                 }
                 return;
             }
             serverPointer.shutdown();
             if (serverPointer.awaitTermination(serverShutdownWaitingTime, TimeUnit.SECONDS)) {
                 if (logger.isDebugEnabled()) {
-                    logger.debug(siddhiAppContext.getName() + ": Server stopped");
+                    logger.debug(siddhiAppContext.getName() + ":" + streamID + ": Server stopped");
                 }
                 return;
             }
@@ -171,9 +172,10 @@ public class GrpcSource extends AbstractGrpcSource {
             if (serverPointer.awaitTermination(serverShutdownWaitingTime, TimeUnit.SECONDS)) {
                 return;
             }
-            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": Unable to shutdown server");
+            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ":" + streamID + ": Unable to shutdown " +
+                    "server");
         } catch (InterruptedException e) {
-            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": " + e.getMessage());
+            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ":" + streamID + ": " + e.getMessage());
         }
     }
 }

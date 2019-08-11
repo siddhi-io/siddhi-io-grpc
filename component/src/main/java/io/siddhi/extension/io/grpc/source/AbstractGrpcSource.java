@@ -19,12 +19,10 @@ package io.siddhi.extension.io.grpc.source;
 
 import io.grpc.ServerBuilder;
 import io.siddhi.core.config.SiddhiAppContext;
-import io.siddhi.core.exception.ConnectionUnavailableException;
 import io.siddhi.core.stream.ServiceDeploymentInfo;
 import io.siddhi.core.stream.input.source.Source;
 import io.siddhi.core.stream.input.source.SourceEventListener;
 import io.siddhi.core.util.config.ConfigReader;
-import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
@@ -50,10 +48,12 @@ public abstract class AbstractGrpcSource extends Source {
     protected SourceServerInterceptor serverInterceptor;
     protected ServerBuilder serverBuilder;
     protected int serverShutdownWaitingTime;
+    protected String streamID;
+    private ServiceDeploymentInfo serviceDeploymentInfo;
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
-        return null;
+        return serviceDeploymentInfo;
     }
 
     /**
@@ -69,6 +69,7 @@ public abstract class AbstractGrpcSource extends Source {
     public StateFactory init(SourceEventListener sourceEventListener, OptionHolder optionHolder,
                              String[] requestedTransportPropertyNames, ConfigReader configReader,
                              SiddhiAppContext siddhiAppContext) {
+        this.streamID = sourceEventListener.getStreamDefinition().getId();
         this.siddhiAppContext = siddhiAppContext;
         this.sourceEventListener = sourceEventListener;
         this.serverShutdownWaitingTime = Integer.parseInt(optionHolder.getOrCreateOption(
@@ -76,20 +77,20 @@ public abstract class AbstractGrpcSource extends Source {
                 .getValue());
         this.url = optionHolder.validateAndGetOption(GrpcConstants.PUBLISHER_URL).getValue();
         if (!url.substring(0, 4).equalsIgnoreCase(GrpcConstants.GRPC_PROTOCOL_NAME)) {
-            throw new SiddhiAppValidationException(siddhiAppContext.getName() + "The url must begin with \""
-                    + GrpcConstants.GRPC_PROTOCOL_NAME + "\" for all grpc sinks");
+            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID + ": The url must " +
+                    "begin with \"" + GrpcConstants.GRPC_PROTOCOL_NAME + "\" for all grpc sinks");
         }
         URL aURL;
         try {
             aURL = new URL(GrpcConstants.DUMMY_PROTOCOL_NAME + url.substring(4));
         } catch (MalformedURLException e) {
-            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": MalformedURLException. "
-                    + e.getMessage());
+            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID +
+                    ": MalformedURLException. " + e.getMessage());
         }
         this.serviceName = getServiceName(aURL.getPath());
         this.port = aURL.getPort();
         initSource(optionHolder, requestedTransportPropertyNames);
-        this.serverInterceptor = new SourceServerInterceptor(this);
+        this.serverInterceptor = new SourceServerInterceptor(this, siddhiAppContext, streamID);
 
         //ServerBuilder parameters
         serverBuilder = ServerBuilder.forPort(port);
@@ -104,6 +105,7 @@ public abstract class AbstractGrpcSource extends Source {
         } else {
             //todo: handle generic grpc service
         }
+        this.serviceDeploymentInfo = new ServiceDeploymentInfo(port, false);
         return null;
     }
 
@@ -123,15 +125,6 @@ public abstract class AbstractGrpcSource extends Source {
     public Class[] getOutputEventClasses() {
         return new Class[0];
     }
-
-    @Override
-    public void connect(ConnectionCallback connectionCallback, State state) throws ConnectionUnavailableException {}
-
-    /**
-     * This method can be called when it is needed to disconnect from the end point.
-     */
-    @Override
-    public void disconnect() {}
 
     /**
      * Called at the end to clean all the resources consumed by the {@link Source}

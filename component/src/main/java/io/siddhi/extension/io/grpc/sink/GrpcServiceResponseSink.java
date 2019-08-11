@@ -41,31 +41,40 @@ import org.apache.log4j.Logger;
 /**
  * {@code GrpcServiceResponseSink} Handle sending responses for requests received via grpc-service source.
  */
-@Extension(
-        name = "grpc-service-response", namespace = "sink",
-        description = "This extension is used to send responses back to a gRPC client after receiving requests " +
-                "through grpc-service source. This calls a callback in grpc-service source to put response back in " +
-                "StreamObserver.",
+@Extension(name = "grpc-service-response", namespace = "sink", description = "This extension is used to send " +
+        "responses back to a gRPC client after receiving requests through grpc-service source.",
         parameters = {
-                @Parameter(name = "url",
+                @Parameter(
+                        name = "url",
                         description = "The url to which the outgoing events should be published via this extension. " +
                                 "This url should consist the host address, port, service name, method name in the " +
-                                "following format. grpc://hostAddress:port/serviceName/methodName/sequenceName" ,
+                                "following format. `grpc://0.0.0.0:9763/<serviceName>/<methodName>`" ,
                         type = {DataType.STRING}),
-                @Parameter(name = "source.id",
+                @Parameter(
+                        name = "source.id",
                         description = "A unique id to identify the correct source to which this sink is mapped. " +
                                 "There is a 1:1 mapping between source and sink" ,
                         type = {DataType.INT}),
         },
         examples = {
-                @Example(
-                        syntax = "@sink(type='grpc-service-response', " +
-                                "url = 'grpc://134.23.43.35:8080/org.wso2.grpc.EventService/consume/mySequence', " +
-                                "source.id='1'" +
-                                "@map(type='json')) "
-                                + "define stream FooStream (messageId String, message String);",
-                        description = "This sink sends the responses for requests received via grpc-service source " +
-                                "with the source.id 1"
+                @Example(syntax = "@sink(type='grpc-service-response', " +
+                        "url = 'grpc://134.23.43.35:8080/org.wso2.grpc.EventService/consume', " +
+                        "source.id='1'" +
+                        "@map(type='json')) " +
+                        "define stream BarStream (messageId String, message String);" +
+                        "" +
+                        "@source(type='grpc-service', " +
+                        "url='grpc://134.23.43.35:8080/org.wso2.grpc.EventService/process', " +
+                        "source.id='1', " +
+                        "@map(type='json', @attributes(messageId='trp:messageId', message='message'))) " +
+                        "define stream FooStream (messageId String, message String);" +
+                        "" +
+                        "from FooStream " +
+                        "select *  " +
+                        "insert into BarStream;",
+                        description = "The grpc requests are received through the grpc-service sink. Each received " +
+                        "event is sent back through grpc-service-source. This is just a passthrough through " +
+                        "Siddhi as we are selecting everything from FooStream and inserting into BarStream."
                 )
         }
 )
@@ -78,21 +87,20 @@ public class GrpcServiceResponseSink extends Sink {
     @Override
     protected StateFactory init(StreamDefinition outputStreamDefinition, OptionHolder optionHolder,
                                 ConfigReader sinkConfigReader, SiddhiAppContext siddhiAppContext) {
-        String streamID = siddhiAppContext.getName() + GrpcConstants.PORT_HOST_SEPARATOR
-                + outputStreamDefinition.getId();
+        String streamID = outputStreamDefinition.getId();
         String url = optionHolder.validateAndGetOption(GrpcConstants.PUBLISHER_URL).getValue();
         if (!url.substring(0, 4).equalsIgnoreCase(GrpcConstants.GRPC_PROTOCOL_NAME)) {
-            throw new SiddhiAppValidationException(streamID + "The url must begin with \"" +
-                    GrpcConstants.GRPC_PROTOCOL_NAME + "\" for all grpc sinks");
+            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID + "The url must " +
+                    "begin with \"" + GrpcConstants.GRPC_PROTOCOL_NAME + "\" for all grpc sinks");
         }
         if (optionHolder.isOptionExists(GrpcConstants.SOURCE_ID)) {
             this.sourceId = optionHolder.validateAndGetOption(GrpcConstants.SOURCE_ID).getValue();
         } else {
             if (optionHolder.validateAndGetOption(GrpcConstants.SINK_TYPE_OPTION)
                     .getValue().equalsIgnoreCase(GrpcConstants.GRPC_SERVICE_RESPONSE_SINK_NAME)) {
-                throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": For grpc-service-response " +
-                        "sink the parameter source.id is mandatory for receiving responses. Please provide a " +
-                        "source.id");
+                throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID + ": For " +
+                        "grpc-service-response sink the parameter source.id is mandatory for receiving responses. " +
+                        "Please provide a source.id");
             }
         }
         this.messageIdOption = optionHolder.validateAndGetOption(GrpcConstants.MESSAGE_ID);
@@ -108,6 +116,7 @@ public class GrpcServiceResponseSink extends Sink {
     @Override
     public void connect() throws ConnectionUnavailableException {
     }
+
     @Override
     public void disconnect() {
     }

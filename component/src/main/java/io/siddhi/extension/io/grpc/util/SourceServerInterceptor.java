@@ -21,6 +21,7 @@ import io.grpc.Metadata;
 import io.grpc.ServerCall;
 import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
+import io.siddhi.core.config.SiddhiAppContext;
 import io.siddhi.extension.io.grpc.source.AbstractGrpcSource;
 import org.apache.log4j.Logger;
 
@@ -32,9 +33,14 @@ import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
 public class SourceServerInterceptor implements ServerInterceptor {
   private static final Logger logger = Logger.getLogger(SourceServerInterceptor.class.getName());
   private AbstractGrpcSource associatedGrpcSource;
+  private SiddhiAppContext siddhiAppContext;
+  private String streamID;
 
-  public SourceServerInterceptor(AbstractGrpcSource associatedGrpcSource) {
+  public SourceServerInterceptor(AbstractGrpcSource associatedGrpcSource, SiddhiAppContext siddhiAppContext,
+                                 String streamID) {
     this.associatedGrpcSource = associatedGrpcSource;
+    this.siddhiAppContext = siddhiAppContext;
+    this.streamID = streamID;
   }
 
   @Override
@@ -44,7 +50,7 @@ public class SourceServerInterceptor implements ServerInterceptor {
     Metadata.Key<String> headerKey = Metadata.Key.of(GrpcConstants.HEADERS, ASCII_STRING_MARSHALLER);
     associatedGrpcSource.populateHeaderString(metadata.get(headerKey));
     if (logger.isDebugEnabled()) {
-      logger.debug("Header received: " + metadata.get(headerKey));
+      logger.debug(siddhiAppContext.getName() + ":" + streamID + ": Header received: " + metadata.get(headerKey));
     }
     return Contexts.interceptCall(Context.ROOT, serverCall, metadata, serverCallHandler);
   }

@@ -38,30 +38,27 @@ import org.wso2.grpc.Event;
  * callback to inject responses into this source
  */
 
-@Extension(
-        name = "grpc-call-response",
-        namespace = "source",
-        description = "This grpc source receives responses received from gRPC server for requests sent from a gRPC " +
-                "sink. The source will receive responses for sink with the same sink.id. For example if you have a " +
-                "gRPC sink with sink.id 15 then we need to set the sink.id as 15 in the source to receives " +
-                "responses. Sinks and sources have 1:1 mapping. When using the source to listen to responses from " +
-                "Micro Integrator the optional parameter sequence should be given. Since the default Micro " +
-                "Integrator connection service can provide access to many different sequences this should be " +
-                "specified to separate and listen to only one sequence responses.",
+@Extension(name = "grpc-call-response", namespace = "source", description = "This grpc source receives responses " +
+        "received from gRPC server for requests sent from a gRPC sink. The source will receive responses for sink " +
+        "with the same sink.id. For example if you have a gRPC sink with sink.id 15 then we need to set the sink.id " +
+        "as 15 in the source to receives responses. Sinks and sources have 1:1 mapping. When using the source to " +
+        "listen to responses from Micro Integrator the optional parameter sequence should be given. Since the " +
+        "default Micro Integrator connection service can provide access to many different sequences this should be " +
+        "specified to separate and listen to only one sequence responses.",
         parameters = {
-                @Parameter(name = "sink.id",
-                        description = "a unique ID that should be set for each gRPC source. There is a 1:1 mapping " +
-                                "between gRPC sinks and sources. Each sink has one particular source listening to " +
-                                "the responses to requests published from that sink. So the same sink.id should be " +
-                                "given when writing the sink also." ,
+                @Parameter(
+                        name = "sink.id",
+                        description = "a unique ID that should be set for each grpc-call source. There is a 1:1 " +
+                                "mapping between grpc-call sinks and grpc-call-response sources. Each sink has one " +
+                                "particular source listening to the responses to requests published from that sink. " +
+                                "So the same sink.id should be given when writing the sink also." ,
                         type = {DataType.INT}),
         },
         examples = {
-                @Example(
-                        syntax = "@source(type='grpc-call-response', sink.id= '1') " +
-                                "define stream BarStream (message String);",
+                @Example(syntax = "@source(type='grpc-call-response', sink.id= '1') " +
+                        "define stream BarStream (message String);",
                         description = "Here we are listening to responses  for requests sent from the sink with " +
-                                "sink.id 1 will be received here. The results will be injected into BarStream"
+                        "sink.id 1 will be received here. The results will be injected into BarStream"
                 )
         }
 )

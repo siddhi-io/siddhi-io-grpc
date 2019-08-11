@@ -1,7 +1,12 @@
 ﻿siddhi-io-grpc
 ======================================
 
-
+  [![Jenkins Build Status](https://wso2.org/jenkins/job/siddhi/job/siddhi-io-grpc/badge/icon)](https://wso2.org/jenkins/job/siddhi/job/siddhi-io-grpc/)
+  [![GitHub (pre-)Release](https://img.shields.io/github/release/siddhi-io/siddhi-io-grpc/all.svg)](https://github.com/siddhi-io/siddhi-io-grpc/releases)
+  [![GitHub (Pre-)Release Date](https://img.shields.io/github/release-date-pre/siddhi-io/siddhi-io-grpc.svg)](https://github.com/siddhi-io/siddhi-io-grpc/releases)
+  [![GitHub Open Issues](https://img.shields.io/github/issues-raw/siddhi-io/siddhi-io-grpc.svg)](https://github.com/siddhi-io/siddhi-io-grpc/issues)
+  [![GitHub Last Commit](https://img.shields.io/github/last-commit/siddhi-io/siddhi-io-grpc.svg)](https://github.com/siddhi-io/siddhi-io-grpc/commits/master)
+  [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 
 

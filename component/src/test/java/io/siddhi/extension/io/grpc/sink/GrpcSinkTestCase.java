@@ -191,7 +191,7 @@ public class GrpcSinkTestCase {
             SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
         } catch (SiddhiAppValidationException e) {
             Assert.assertTrue(e.getMessage().contains("Malformed URL. After port number atleast two sections " +
-                    "should be available seperated by / as follows grpc://host:port/ServiceName/MethodName"));
+                    "should be available seperated by '/' as in 'grpc://<host>:<port>/<ServiceName>/<MethodName>'"));
         }
     }
 

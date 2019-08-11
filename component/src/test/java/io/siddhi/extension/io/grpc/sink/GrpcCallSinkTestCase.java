@@ -27,8 +27,11 @@ import io.siddhi.extension.io.grpc.utils.TestServer;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.testng.Assert;
+import org.testng.annotations.AfterTest;
+import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
+import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class GrpcCallSinkTestCase {
@@ -36,13 +39,22 @@ public class GrpcCallSinkTestCase {
     private TestServer server = new TestServer();
     private AtomicInteger eventCount = new AtomicInteger(0);
 
+    @BeforeTest
+    public void init() throws IOException {
+        server.start();
+    }
+
+    @AfterTest
+    public void stop() throws InterruptedException {
+        server.stop();
+    }
+
     @Test
     public void test1() throws Exception {
         logger.info("Test case to call process sending 2 requests");
         logger.setLevel(Level.DEBUG);
         SiddhiManager siddhiManager = new SiddhiManager();
 
-        server.start();
         String inStreamDefinition = ""
                 + "@sink(type='grpc-call', " +
                 "url = 'grpc://localhost:8888/org.wso2.grpc.EventService/process/mySeq', " +
@@ -75,32 +87,28 @@ public class GrpcCallSinkTestCase {
             }
         });
         InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
-        try {
-            siddhiAppRuntime.start();
-            fooStream.send(new Object[]{"Request 1"});
-            Thread.sleep(1000);
-            siddhiAppRuntime.shutdown();
-        } finally {
-            server.stop();
-        }
+
+        siddhiAppRuntime.start();
+        fooStream.send(new Object[]{"Request 1"});
+        Thread.sleep(1000);
+        siddhiAppRuntime.shutdown();
     }
 
-    @Test
+    @Test(dependsOnMethods = {"test1"})
     public void testWithHeaders() throws Exception {
         logger.info("Test case to call process sending 2 requests");
         logger.setLevel(Level.DEBUG);
         SiddhiManager siddhiManager = new SiddhiManager();
 
-        server.start();
         String inStreamDefinition = ""
                 + "@sink(type='grpc-call', " +
-                "url = 'grpc://localhost:8888/org.wso2.grpc.EventService/process/mySeq', " +
-                "sink.id= '1', " +
+                "url = 'grpc://localhost:8889/org.wso2.grpc.EventService/process/mySeq', " +
+                "sink.id= '2', " +
                 "headers='{{headers}}', " +
                 "@map(type='json')) "
                 + "define stream FooStream (message String, headers String);";
 
-        String stream2 = "@source(type='grpc-call-response', sequence='mySeq', sink.id= '1', @map(type='json')) " +
+        String stream2 = "@source(type='grpc-call-response', sequence='mySeq', sink.id= '2', @map(type='json')) " +
                 "define stream BarStream (message String);";
         String query = "@info(name = 'query') "
                 + "from BarStream "
@@ -126,14 +134,10 @@ public class GrpcCallSinkTestCase {
             }
         });
         InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
-        try {
-            siddhiAppRuntime.start();
-            fooStream.send(new Object[]{"Request 1", "'Name:John','Age:23','Content-Type:text'"});
-            fooStream.send(new Object[]{"Request 2", "'Name:Nash','Age:54','Content-Type:json'"});
-            Thread.sleep(1000);
-            siddhiAppRuntime.shutdown();
-        } finally {
-            server.stop();
-        }
+        siddhiAppRuntime.start();
+        fooStream.send(new Object[]{"Request 1", "'Name:John','Age:23','Content-Type:text'"});
+        fooStream.send(new Object[]{"Request 2", "'Name:Nash','Age:54','Content-Type:json'"});
+        Thread.sleep(1000);
+        siddhiAppRuntime.shutdown();
     }
 }
