@@ -39,7 +39,7 @@ import org.wso2.grpc.Event;
  */
 
 @Extension(name = "grpc-call-response", namespace = "source", description = "This grpc source receives responses " +
-        "received from gRPC server for requests sent from a gRPC sink. The source will receive responses for sink " +
+        "received from gRPC server for requests sent from a grpc-call sink. The source will receive responses for sink " +
         "with the same sink.id. For example if you have a gRPC sink with sink.id 15 then we need to set the sink.id " +
         "as 15 in the source to receives responses. Sinks and sources have 1:1 mapping",
         parameters = {
@@ -52,15 +52,16 @@ import org.wso2.grpc.Event;
                         type = {DataType.INT}),
         },
         examples = {
-                @Example(syntax = "@source(type='grpc-call-response', sink.id= '1') " +
+                @Example(syntax = "" +
+                        "@source(type='grpc-call-response', sink.id= '1')\n" +
                         "define stream BarStream (message String);",
                         description = "Here we are listening to responses  for requests sent from the sink with " +
-                        "sink.id 1 will be received here. The results will be injected into BarStream"
+                                "sink.id 1 will be received here. The results will be injected into BarStream"
                 )
         }
 )
 public class GrpcCallResponseSource extends Source {
-    private GrpcSourceRegistry grpcSourceRegistry = GrpcSourceRegistry.getInstance();
+    private GrpcSourceRegistry grpcSourceRegistry = GrpcSourceRegistry.getInstance(); //todo: no need to have a reference.
     private String sinkID;
     private SourceEventListener sourceEventListener;
 
@@ -89,7 +90,7 @@ public class GrpcCallResponseSource extends Source {
     }
 
     public void onResponse(Event response) {
-        sourceEventListener.onEvent(response.getPayload(), new String[]{"1"});
+        sourceEventListener.onEvent(response.getPayload(), null); //todo: pass original event values as transport proerties.put all the metadata sent by server as key value pair
     }
 
     /**
@@ -100,7 +101,7 @@ public class GrpcCallResponseSource extends Source {
      */
     @Override
     public Class[] getOutputEventClasses() {
-        return new Class[]{String.class, Object.class};
+        return new Class[]{String.class, Object.class}; //todo: genmsgv3
     }
 
     @Override

@@ -24,6 +24,8 @@ import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
 import org.apache.log4j.Logger;
 
+import java.util.Set;
+
 import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
 
 /**
@@ -36,6 +38,10 @@ public class TestServerInterceptor implements ServerInterceptor {
   public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> serverCall,
                                                                Metadata metadata,
                                                                ServerCallHandler<ReqT, RespT> serverCallHandler) {
+    Set<String> metadataKeys = metadata.keys();
+    for (String key: metadataKeys) {
+
+    }
     Metadata.Key<String> headerKey = Metadata.Key.of("headers", ASCII_STRING_MARSHALLER);
     String headers = metadata.get(headerKey);
     metadata.removeAll(headerKey);

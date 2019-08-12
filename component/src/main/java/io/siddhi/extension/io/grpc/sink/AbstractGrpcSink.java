@@ -42,11 +42,11 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getServiceName;
 import static io.siddhi.extension.io.grpc.util.GrpcUtils.isSequenceNamePresent;
 
 /**
- * {@code AbstractGrpcSink} is a super class extended by GrpcCallSink, and GrpcSink.
+ * {@code AbstractGrpcSink} is a super class extended by GrpcCallSink, and GrpcSink. //todo make all capitl
  * This provides most of the initialization implementations
  */
 
-public abstract class AbstractGrpcSink extends Sink {
+public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and generate site and check
     private static final Logger logger = Logger.getLogger(AbstractGrpcSink.class.getName());
     protected SiddhiAppContext siddhiAppContext;
     protected ManagedChannel channel;
@@ -58,6 +58,7 @@ public abstract class AbstractGrpcSink extends Sink {
     protected String address;
     protected EventServiceGrpc.EventServiceFutureStub futureStub;
     protected Option headersOption;
+    protected Option metadataOption;
     protected ManagedChannelBuilder managedChannelBuilder;
     protected long channelTerminationWaitingTime;
 
@@ -88,7 +89,7 @@ public abstract class AbstractGrpcSink extends Sink {
      */
     @Override
     public String[] getSupportedDynamicOptions() {
-        return new String[]{GrpcConstants.HEADERS};
+        return new String[]{GrpcConstants.HEADERS, "metadata"};
     }
 
     /**
@@ -109,6 +110,10 @@ public abstract class AbstractGrpcSink extends Sink {
         if (optionHolder.isOptionExists(GrpcConstants.HEADERS)) {
             this.headersOption = optionHolder.validateAndGetOption(GrpcConstants.HEADERS);
         }
+        if (optionHolder.isOptionExists("metadata")) {
+            this.metadataOption = optionHolder.validateAndGetOption("metadata");
+        }
+        //todo: trim the string and remove white sapces
         if (!url.substring(0, 4).equalsIgnoreCase(GrpcConstants.GRPC_PROTOCOL_NAME)) {
             throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID +
                     ": The url must begin with \"" + GrpcConstants.GRPC_PROTOCOL_NAME + "\" for all grpc sinks");
@@ -118,19 +123,19 @@ public abstract class AbstractGrpcSink extends Sink {
             aURL = new URL(GrpcConstants.DUMMY_PROTOCOL_NAME + url.substring(4));
         } catch (MalformedURLException e) {
             throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID +
-                    ": MalformedURLException. " + e.getMessage());
+                    ": MalformedURLException. " + e.getMessage()); //todo: explain the cause. give original url and expected format
         }
         String serviceName = getServiceName(aURL.getPath());
         this.methodName = getMethodName(aURL.getPath());
         this.address = aURL.getAuthority();
         this.channelTerminationWaitingTime = Integer.parseInt(optionHolder.getOrCreateOption(
                 GrpcConstants.CHANNEL_TERMINATION_WAITING_TIME, GrpcConstants.CHANNEL_TERMINATION_WAITING_TIME_DEFAULT)
-                .getValue());
+                .getValue()); //todo: get in millisec. add it to variable names. if user doesnt give then only shutdown without await termination
 
         //ManagedChannelBuilder Properties. i.e gRPC connection parameters
-        this.managedChannelBuilder = ManagedChannelBuilder.forTarget(address).usePlaintext();
+        this.managedChannelBuilder = ManagedChannelBuilder.forTarget(address).usePlaintext(); //todo: if user doesnt give then dont provide the params
         managedChannelBuilder.idleTimeout(Long.parseLong(optionHolder.getOrCreateOption(GrpcConstants.IDLE_TIMEOUT,
-                GrpcConstants.IDLE_TIMEOUT_DEFAULT).getValue()), TimeUnit.SECONDS);
+                GrpcConstants.IDLE_TIMEOUT_DEFAULT).getValue()), TimeUnit.SECONDS); //todo: have everything in millisecond
         managedChannelBuilder.keepAliveTime(Long.parseLong(optionHolder.getOrCreateOption(GrpcConstants.KEEP_ALIVE_TIME,
                 GrpcConstants.KEEP_ALIVE_TIME_DEFAULT).getValue()), TimeUnit.SECONDS);
         managedChannelBuilder.keepAliveTimeout(Long.parseLong(optionHolder.getOrCreateOption(
@@ -140,7 +145,7 @@ public abstract class AbstractGrpcSink extends Sink {
                 GrpcConstants.KEEP_ALIVE_WITHOUT_CALLS, GrpcConstants.KEEP_ALIVE_WITHOUT_CALLS_DEFAULT).getValue()));
         managedChannelBuilder.maxRetryAttempts(Integer.parseInt(optionHolder.getOrCreateOption(
                 GrpcConstants.MAX_RETRY_ATTEMPTS, GrpcConstants.MAX_RETRY_ATTEMPTS_DEFAULT).getValue()));
-        managedChannelBuilder.maxHedgedAttempts(Integer.parseInt(optionHolder.getOrCreateOption(
+        managedChannelBuilder.maxHedgedAttempts(Integer.parseInt(optionHolder.getOrCreateOption( //todo: check how to disable
                 GrpcConstants.MAX_HEDGED_ATTEMPTS, GrpcConstants.MAX_HEDGED_ATTEMPTS_DEFAULT).getValue()));
         if (Boolean.parseBoolean(optionHolder.getOrCreateOption(GrpcConstants.ENABLE_RETRY,
                 GrpcConstants.ENABLE_RETRY_DEFAULT).getValue())) {
@@ -152,11 +157,11 @@ public abstract class AbstractGrpcSink extends Sink {
         }
         initSink(optionHolder);
 
-        if (serviceName.equals(GrpcConstants.DEFAULT_SERVICE_NAME)
-                && (methodName.equals(GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE)
+        if (serviceName.equals(GrpcConstants.DEFAULT_SERVICE_NAME) //todo: if user dznt give method name take as default
+                && (methodName.equals(GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE) //todo check one by one in subclass
                 || methodName.equals(GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE))) {
             this.isDefaultMode = true;
-            if (isSequenceNamePresent(aURL.getPath())) {
+            if (isSequenceNamePresent(aURL.getPath())) { //todo: move to subclass
                 this.sequenceName = getSequenceName(aURL.getPath());
             }
         } else {

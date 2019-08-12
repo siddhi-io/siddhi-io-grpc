@@ -39,7 +39,6 @@ import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
-import org.wso2.grpc.EventServiceGrpc.EventServiceFutureStub;
 
 import java.util.concurrent.TimeUnit;
 
@@ -70,7 +69,8 @@ import java.util.concurrent.TimeUnit;
         "}\n" +
         "----------------------------------------------\n\n" +
         "This grpc-call sink is used for scenarios where we send a request out and expect a response back. In " +
-        "default mode this will use EventService process method.",
+        "default mode this will use EventService process method. grpc-call-response source is used to receive the " +
+        "responses. A unique sink.id is used to correlate between the sink and its corresponding source.",
         parameters = {
                 @Parameter(
                         name = "url",
@@ -178,25 +178,29 @@ import java.util.concurrent.TimeUnit;
                         defaultValue = "8192"),
         },
         examples = {
-                @Example(syntax = "@sink(type='grpc-call', " +
-                        "url = 'grpc://194.23.98.100:8080/EventService/process', " +
-                        "sink.id= '1', @map(type='json')) "
-                        + "define stream FooStream (message String);",
-                        description = "Here a stream named FooStream is defined with grpc sink. A grpc server " +
-                        "should be running at 194.23.98.100 listening to port 8080. sink.id is set to 1 here. So we " +
-                        "can write a source with sink.id 1 so that it will listen to responses for requests " +
-                        "published from this stream. Note that since we are using EventService/process the sink " +
-                        "will be operating in default mode"
+                @Example(syntax = "" +
+                        "@sink(type='grpc-call',\n" +
+                        "      url = 'grpc://194.23.98.100:8080/EventService/process',\n" +
+                        "      sink.id= '1', @map(type='json'))\n" +
+                        "define stream FooStream (message String);\n",
+                        description = "" +
+                                "Here a stream named FooStream is defined with grpc sink. A grpc server " +
+                                "should be running at 194.23.98.100 listening to port 8080. sink.id is set to 1 here." +
+                                " So we can write a source with sink.id 1 so that it will listen to responses for " +
+                                "requests published from this stream. Note that since we are using EventService/" +
+                                "process the sink will be operating in default mode"
                 ),
-                @Example(syntax = "@sink(type='grpc-call', " +
-                        "url = 'grpc://194.23.98.100:8080/EventService/process', " +
-                        "sink.id= '1', @map(type='json')) " +
-                        "define stream FooStream (message String);" +
-                        "@source(type='grpc-call-response', sink.id= '1') " +
+                @Example(syntax = "" +
+                        "@sink(type='grpc-call',\n" +
+                        "      url = 'grpc://194.23.98.100:8080/EventService/process',\n" +
+                        "      sink.id= '1', @map(type='json'))\n" +
+                        "define stream FooStream (message String);\n" +
+                        "\n" +
+                        "@source(type='grpc-call-response', sink.id= '1')\n" +
                         "define stream BarStream (message String);",
                         description = "Here with the same FooStream definition we have added a BarStream which has " +
-                        "a grpc-call-response source with the same sink.id 1. So the responses for calls sent from " +
-                        "the FooStream will be added to BarStream."
+                                "a grpc-call-response source with the same sink.id 1. So the responses for calls " +
+                                "sent from the FooStream will be added to BarStream."
                 )
         }
 )
@@ -206,14 +210,14 @@ public class GrpcCallSink extends AbstractGrpcSink {
 
     @Override
     public void initSink(OptionHolder optionHolder) {
-        managedChannelBuilder.maxInboundMessageSize(Integer.parseInt(optionHolder.getOrCreateOption(
+        managedChannelBuilder.maxInboundMessageSize(Integer.parseInt(optionHolder.getOrCreateOption( //todo: remove the optional param default if not given
                 GrpcConstants.MAX_INBOUND_MESSAGE_SIZE, GrpcConstants.MAX_INBOUND_MESSAGE_SIZE_DEFAULT).getValue()));
         managedChannelBuilder.maxInboundMetadataSize(Integer.parseInt(optionHolder.getOrCreateOption(
                 GrpcConstants.MAX_INBOUND_METADATA_SIZE, GrpcConstants.MAX_INBOUND_METADATA_SIZE_DEFAULT).getValue()));
         if (optionHolder.isOptionExists(GrpcConstants.SINK_ID)) {
             this.sinkID = optionHolder.validateAndGetOption(GrpcConstants.SINK_ID).getValue();
         } else {
-            if (optionHolder.validateAndGetOption(GrpcConstants.SINK_TYPE_OPTION)
+            if (optionHolder.validateAndGetOption(GrpcConstants.SINK_TYPE_OPTION) //todo: remove error thorw.
                     .getValue().equalsIgnoreCase(GrpcConstants.GRPC_CALL_SINK_NAME)) {
                 throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID + ": For " +
                         "grpc-call sink the parameter sink.id is mandatory for receiving responses. Please provide " +
@@ -224,16 +228,16 @@ public class GrpcCallSink extends AbstractGrpcSink {
 
     @Override
     public void publish(Object payload, DynamicOptions dynamicOptions, State state)
-            throws ConnectionUnavailableException {
+            throws ConnectionUnavailableException { //todo: throw connection unavailable exception. fix headers
         if (isDefaultMode) {
             if (!(payload instanceof String)) {
                 throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ":" + streamID + ": Payload should " +
-                        "be of type String for default EventService but found " + payload.getClass().getName());
+                        "be of type String for default EventService but found " + payload.getClass().getName()); //todo: no need to check
             }
-            Event sequenceCallRequest = Event.newBuilder().setPayload((String) payload).build();
-            EventServiceFutureStub currentFutureStub = futureStub;
+            Event sequenceCallRequest = Event.newBuilder().setPayload((String) payload).build(); //todo to string
+            EventServiceGrpc.EventServiceFutureStub currentFutureStub = futureStub;
 
-            if (sequenceName != null || headersOption != null) {
+            if (sequenceName != null || headersOption != null) { //todo: have a method in abstract class and use in both sinks
                 Metadata header = new Metadata();
                 String headers = "";
                 if (sequenceName != null) {
@@ -255,11 +259,11 @@ public class GrpcCallSink extends AbstractGrpcSink {
             Futures.addCallback(futureResponse, new FutureCallback<Event>() {
                 @Override
                 public void onSuccess(Event result) {
-                    GrpcSourceRegistry.getInstance().getGrpcCallResponseSourceSource(sinkID).onResponse(result);
+                    GrpcSourceRegistry.getInstance().getGrpcCallResponseSourceSource(sinkID).onResponse(result); //todo check if the associated source is available in connect
                 }
 
                 @Override
-                public void onFailure(Throwable t) {
+                public void onFailure(Throwable t) { //todo: simulate connection unavailable and auth error and check the error message
                     logger.error(siddhiAppContext.getName() + ":" + streamID + ": " + t.getMessage());
                 }
             }, MoreExecutors.directExecutor());

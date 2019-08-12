@@ -155,7 +155,7 @@ public class GrpcSourceTestCase {
 
         String stream2 = "@source(type='grpc', url='grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
                 "@map(type='json', @attributes(name='trp:name', age='trp:age', message='message'))) " +
-                "define stream BarStream (message String, name String, age int);";
+                "define stream BarStream (message String, name String, age int);"; //todo: check whether we can get events into different stream from the same server with a particular url. may be create a dummy server for duplicated source with same url but have one service source
         String query = "@info(name = 'query') "
                 + "from BarStream "
                 + "select *  "

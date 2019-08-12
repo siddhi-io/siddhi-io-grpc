@@ -31,10 +31,10 @@ import java.util.List;
 public class GrpcUtils {
     public static String getServiceName(String path) {
         List<String> urlParts = new ArrayList<>(Arrays.asList(path.split(GrpcConstants.PORT_SERVICE_SEPARATOR)));
-        urlParts.removeAll(Collections.singletonList(GrpcConstants.EMPTY_STRING));
-        if (urlParts.size() < 2) {
-            throw new SiddhiAppValidationException("Malformed URL. After port number atleast two sections should " +
-                    "be available seperated by '/' as in 'grpc://<host>:<port>/<ServiceName>/<MethodName>'");
+        urlParts.removeAll(Collections.singletonList(GrpcConstants.EMPTY_STRING)); //todo throw exception is more slashes
+        if (urlParts.size() < 2) { //todo: return r]null for method name
+            throw new SiddhiAppValidationException("Malformed URL. After port number at least two sections should " +
+                    "be available separated by '/' as in 'grpc://<host>:<port>/<ServiceName>/<MethodName>'");
         }
         String[] fullyQualifiedServiceNameParts = urlParts.get(GrpcConstants.PATH_SERVICE_NAME_POSITION).split("\\.");
         return fullyQualifiedServiceNameParts[fullyQualifiedServiceNameParts.length - 1];
@@ -44,8 +44,8 @@ public class GrpcUtils {
         List<String> urlParts = new ArrayList<>(Arrays.asList(path.split(GrpcConstants.PORT_SERVICE_SEPARATOR)));
         urlParts.removeAll(Collections.singletonList(GrpcConstants.EMPTY_STRING));
         if (urlParts.size() < 2) {
-            throw new SiddhiAppValidationException("Malformed URL. After port number atleast two sections should " +
-                    "be available seperated by '/' as in 'grpc://<host>:<port>/<ServiceName>/<MethodName>'");
+            throw new SiddhiAppValidationException("Malformed URL. After port number at least two sections should " +
+                    "be available separated by '/' as in 'grpc://<host>:<port>/<ServiceName>/<MethodName>'");
         }
         return urlParts.get(GrpcConstants.PATH_METHOD_NAME_POSITION);
     }

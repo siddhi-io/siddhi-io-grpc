@@ -94,9 +94,10 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.extractHeaders;
                         defaultValue = "5"),
         },
         examples = {
-                @Example(syntax = "@source(type='grpc-service', " +
-                        "url='grpc://localhost:8888/org.wso2.grpc.EventService/process', source.id='1', " +
-                        "@map(type='json', @attributes(messageId='trp:messageId', message='message'))) " +
+                @Example(syntax = "" +
+                        "@source(type='grpc-service',\n" +
+                        "       url='grpc://localhost:8888/org.wso2.grpc.EventService/process', source.id='1', " +
+                        "       @map(type='json', @attributes(messageId='trp:messageId', message='message'))) " +
                         "define stream FooStream (messageId String, message String);",
                         description = "Here a grpc server will be started at port 8888. The process method of " +
                         "EventService will be exposed for clients. source.id is set as 1. So a grpc-service-response " +
@@ -180,7 +181,7 @@ public class GrpcServiceSource extends AbstractGrpcSource {
         }
 
         @Override
-        public void run() {
+        public void run() { //todo: wait until the servietimeout is hit as this task might get invoked before the initial delay provided
             StreamObserver streamObserver = streamObserverMap.remove(messageId);
             if (streamObserver != null) {
                 streamObserver.onError(new io.grpc.StatusRuntimeException(

@@ -34,7 +34,6 @@ import io.siddhi.extension.io.grpc.util.GrpcConstants;
 import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
-import org.wso2.grpc.EventServiceGrpc.EventServiceStub;
 
 import java.util.concurrent.TimeUnit;
 
@@ -45,7 +44,7 @@ import java.util.concurrent.TimeUnit;
         "Classes as defined in the user input jar. This extension has a default gRPC service classes added. The " +
         "default service is called " +
         "\"EventService\". Please find the following protobuf definition. \n\n" +
-        "-------------EventService.proto--------------\n" +
+        "-------------EventService.proto--------------\n" + //if thids doesnt owk=rk on s=website provide url
         "syntax = \"proto3\";\n" +
         "\n" +
         "option java_multiple_files = true;\n" +
@@ -80,7 +79,7 @@ import java.util.concurrent.TimeUnit;
                                 "If header parameter is not provided just the payload is sent" ,
                         type = {DataType.STRING},
                         optional = true,
-                        defaultValue = "null"),
+                        defaultValue = "null"), //todo: follow http -
                 @Parameter(
                         name = "idle.timeout",
                         description = "Set the duration in seconds without ongoing RPCs before going to idle mode." ,
@@ -155,31 +154,34 @@ import java.util.concurrent.TimeUnit;
                         defaultValue = "5"),
         },
         examples = {
-                @Example(syntax = "@sink(type='grpc', " +
-                        "url = 'grpc://134.23.43.35:8080/org.wso2.grpc.EventService/consume', " +
-                        "@map(type='json')) "
-                        + "define stream FooStream (message String);",
+                @Example(syntax = "" +
+                        "@sink(type='grpc',\n" +
+                        "      url = 'grpc://134.23.43.35:8080/org.wso2.grpc.EventService/consume',\n" +
+                        "      @map(type='json'))\n" +
+                        "define stream FooStream (message String);",
                         description = "Here a stream named FooStream is defined with grpc sink. A grpc server " +
-                        "should be running at 194.23.98.100 listening to port 8080. sink.id is set to 1 here. So we " +
-                        "can write a source with sink.id 1 so that it will listen to responses for requests " +
-                        "published from this stream. Note that since we are using EventService/consume the sink " +
-                        "will be operating in default mode"
+                                "should be running at 194.23.98.100 listening to port 8080. sink.id is set to 1 here." +
+                                " So we can write a source with sink.id 1 so that it will listen to responses for " +
+                                "requests published from this stream. Note that since we are using EventService/" +
+                                "consume the sink will be operating in default mode"
                 ),
-                @Example(syntax = "@sink(type='grpc', " +
-                        "url = 'grpc://134.23.43.35:8080/org.wso2.grpc.EventService/consume', " +
-                        "headers='{{headers}}', " +
-                        "@map(type='json'), @payload('{{message}}')) "
-                        + "define stream FooStream (message String, headers String);",
+                @Example(syntax = "" +
+                        "@sink(type='grpc',\n" +
+                        "      url = 'grpc://134.23.43.35:8080/org.wso2.grpc.EventService/consume',\n" +
+                        "      headers='{{headers}}',\n" +
+                        "      @map(type='json'),\n" +
+                        "           @payload('{{message}}'))\n" +
+                        "define stream FooStream (message String, headers String);",
                         description = "A similar example to above but with headers. Headers are also send into the " +
-                        "stream as a data. In the sink headers dynamic property reads the value and sends it as " +
-                        "MetaData with the request"
+                                "stream as a data. In the sink headers dynamic property reads the value and sends " +
+                                "it as MetaData with the request"
                 )
         }
 )
 
 public class GrpcSink extends AbstractGrpcSink {
     private static final Logger logger = Logger.getLogger(GrpcSink.class.getName());
-    private EventServiceStub asyncStub;
+    private EventServiceGrpc.EventServiceStub asyncStub;
 
     @Override
     public void initSink(OptionHolder optionHolder) {}
@@ -188,40 +190,53 @@ public class GrpcSink extends AbstractGrpcSink {
     public void publish(Object payload, DynamicOptions dynamicOptions, State state)
             throws ConnectionUnavailableException {
         if (isDefaultMode) {
-            Event sequenceCallRequest = Event.newBuilder().setPayload((String) payload).build();
-            EventServiceStub currentAsyncStub = asyncStub;
+            Event.Builder eventBuilder = Event.newBuilder().setPayload(payload.toString());
 
-            if (sequenceName != null || headersOption != null) {
-                Metadata header = new Metadata();
-                String headers = "";
-                if (sequenceName != null) {
-                    headers += "'sequence:" + sequenceName + "'";
-                    if (headersOption != null) {
-                        headers += ",";
-                    }
+            EventServiceGrpc.EventServiceStub currentAsyncStub = asyncStub;
+
+            if (metadataOption != null) {
+                Metadata metadata = new Metadata();
+                String metadataString = metadataOption.getValue(dynamicOptions);
+                metadataString = metadataString.replaceAll("'", "");
+                String[] metadataArray = metadataString.split(",");
+                for (String metadataKeyValue: metadataArray) {
+                    String[] headerKeyValueArray = metadataKeyValue.split(":");
+                    metadata.put(Metadata.Key.of(headerKeyValueArray[0], Metadata.ASCII_STRING_MARSHALLER), headerKeyValueArray[1]);
                 }
-                if (headersOption != null) {
-                    headers +=  headersOption.getValue(dynamicOptions);
-                }
-                Metadata.Key<String> key =
-                        Metadata.Key.of(GrpcConstants.HEADERS, Metadata.ASCII_STRING_MARSHALLER);
-                header.put(key, headers);
-                currentAsyncStub = MetadataUtils.attachHeaders(asyncStub, header);
+
+                currentAsyncStub = MetadataUtils.attachHeaders(asyncStub, metadata);
             }
 
-            StreamObserver<Empty> responseObserver = new StreamObserver<Empty>() {
+            if (headersOption != null) {
+                String headers = headersOption.getValue(dynamicOptions);
+                headers = headers.replaceAll("'", "");
+                String[] headersArray = headers.split(",");
+                for (String headerKeyValue: headersArray) {
+                    String[] headerKeyValueArray = headerKeyValue.split(":");
+                    eventBuilder.putHeaders(headerKeyValueArray[0], headerKeyValueArray[1]);
+                }
+            }
+
+            if (sequenceName != null) {
+                eventBuilder.putHeaders("sequence", sequenceName);
+            }
+
+            Event requestEvent = eventBuilder.build();
+
+            StreamObserver<Empty> responseObserver = new StreamObserver<Empty>() { //todo: try to send all the siddhi events using one stream observer
                 @Override
                 public void onNext(Empty event) {}
 
                 @Override
                 public void onError(Throwable t) {
+                    //todo: check the grpc exception and if connection unavailable throw it connectionunavaialable
                     logger.error(siddhiAppContext.getName() + ":" + streamID + ": " + t.getMessage());
                 }
 
                 @Override
                 public void onCompleted() {}
             };
-            currentAsyncStub.consume(sequenceCallRequest, responseObserver);
+            currentAsyncStub.consume(requestEvent, responseObserver);
         } else {
             //todo: handle publishing to generic service
         }
@@ -251,6 +266,8 @@ public class GrpcSink extends AbstractGrpcSink {
     public void disconnect() {
         try {
             channel.shutdown().awaitTermination(channelTerminationWaitingTime, TimeUnit.SECONDS);
+            channel = null;
+            //todo: add a test case for failing . siddhi app shotdown
         } catch (InterruptedException e) {
             throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ":" + streamID + ": Error in shutting " +
                     "down the channel. " + e.getMessage());

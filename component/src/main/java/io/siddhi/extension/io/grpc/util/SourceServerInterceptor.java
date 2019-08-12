@@ -42,11 +42,13 @@ public class SourceServerInterceptor implements ServerInterceptor {
     this.siddhiAppContext = siddhiAppContext;
     this.streamID = streamID;
   }
-
+//todo: make metadata static and and another field in our proto definition
   @Override
-  public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> serverCall,
+  public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> serverCall, //todo: check how to correlate the Event (actual payload) and MetaData.
                                                                Metadata metadata,
                                                                ServerCallHandler<ReqT, RespT> serverCallHandler) {
+//    serverCall.
+//    serverCallHandler.
     Metadata.Key<String> headerKey = Metadata.Key.of(GrpcConstants.HEADERS, ASCII_STRING_MARSHALLER);
     associatedGrpcSource.populateHeaderString(metadata.get(headerKey));
     if (logger.isDebugEnabled()) {

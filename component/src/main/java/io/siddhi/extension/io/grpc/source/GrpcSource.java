@@ -99,11 +99,12 @@ public class GrpcSource extends AbstractGrpcSource {
     @Override
     public void initializeGrpcServer(int port) {
         if (isDefaultMode) {
-            this.server = serverBuilder.addService(ServerInterceptors.intercept(
+            this.server = serverBuilder.addService(ServerInterceptors.intercept( //todo: check whether we can add services to a server after iot is started. check if same protobuf service can be added to the same server
                     new EventServiceGrpc.EventServiceImplBase() {
                 @Override
                 public void consume(Event request,
                                     StreamObserver<Empty> responseObserver) {
+//                    request.
                     if (headerString != null) {
                         try {
                             sourceEventListener.onEvent(request.getPayload(), extractHeaders(headerString,
@@ -112,7 +113,6 @@ public class GrpcSource extends AbstractGrpcSource {
                             logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request. " +
                                     e.getMessage());
                         }
-
                     } else {
                         sourceEventListener.onEvent(request.getPayload(), null);
                     }
@@ -132,7 +132,7 @@ public class GrpcSource extends AbstractGrpcSource {
 
     @Override
     public void populateHeaderString(String headerString) {
-        this.headerString = headerString;
+        this.headerString = headerString; //
     }
 
     @Override

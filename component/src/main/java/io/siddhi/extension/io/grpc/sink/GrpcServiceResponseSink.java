@@ -58,24 +58,26 @@ import org.apache.log4j.Logger;
                         type = {DataType.INT}),
         },
         examples = {
-                @Example(syntax = "@sink(type='grpc-service-response', " +
-                        "url = 'grpc://134.23.43.35:8080/org.wso2.grpc.EventService/consume', " +
-                        "source.id='1'" +
-                        "@map(type='json')) " +
-                        "define stream BarStream (messageId String, message String);" +
-                        "" +
-                        "@source(type='grpc-service', " +
-                        "url='grpc://134.23.43.35:8080/org.wso2.grpc.EventService/process', " +
-                        "source.id='1', " +
-                        "@map(type='json', @attributes(messageId='trp:messageId', message='message'))) " +
+                @Example(syntax = "" +
+                        "@sink(type='grpc-service-response',\n" +
+                        "      url = 'grpc://134.23.43.35:8080/org.wso2.grpc.EventService/consume',\n" +
+                        "      source.id='1',\n" +
+                        "      @map(type='json'))\n" +
+                        "define stream BarStream (messageId String, message String);\n" +
+                        "\n" +
+                        "@source(type='grpc-service',\n" +
+                        "        url='grpc://134.23.43.35:8080/org.wso2.grpc.EventService/process',\n" +
+                        "        source.id='1',\n" +
+                        "        @map(type='json',\n" +
+                        "             @attributes(messageId='trp:messageId', message='message')))\n" +
                         "define stream FooStream (messageId String, message String);" +
-                        "" +
-                        "from FooStream " +
-                        "select *  " +
-                        "insert into BarStream;",
+                        "\n" +
+                        "from FooStream\n" +
+                        "select * \n" +
+                        "insert into BarStream;\n",
                         description = "The grpc requests are received through the grpc-service sink. Each received " +
-                        "event is sent back through grpc-service-source. This is just a passthrough through " +
-                        "Siddhi as we are selecting everything from FooStream and inserting into BarStream."
+                                "event is sent back through grpc-service-source. This is just a passthrough through " +
+                                "Siddhi as we are selecting everything from FooStream and inserting into BarStream."
                 )
         }
 )

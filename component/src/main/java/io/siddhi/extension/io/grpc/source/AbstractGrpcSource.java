@@ -72,7 +72,7 @@ public abstract class AbstractGrpcSource extends Source {
         this.streamID = sourceEventListener.getStreamDefinition().getId();
         this.siddhiAppContext = siddhiAppContext;
         this.sourceEventListener = sourceEventListener;
-        this.serverShutdownWaitingTime = Integer.parseInt(optionHolder.getOrCreateOption(
+        this.serverShutdownWaitingTime = Integer.parseInt(optionHolder.getOrCreateOption( //todo: if waiting time not given use =shutdon nly
                 GrpcConstants.SERVER_SHUTDOWN_WAITING_TIME, GrpcConstants.SERVER_SHUTDOWN_WAITING_TIME_DEFAULT)
                 .getValue());
         this.url = optionHolder.validateAndGetOption(GrpcConstants.PUBLISHER_URL).getValue();
@@ -85,7 +85,7 @@ public abstract class AbstractGrpcSource extends Source {
             aURL = new URL(GrpcConstants.DUMMY_PROTOCOL_NAME + url.substring(4));
         } catch (MalformedURLException e) {
             throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID +
-                    ": MalformedURLException. " + e.getMessage());
+                    ": MalformedURLException. " + e.getMessage()); //todo: same corrections as abstrctsink
         }
         this.serviceName = getServiceName(aURL.getPath());
         this.port = aURL.getPort();
