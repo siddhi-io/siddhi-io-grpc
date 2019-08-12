@@ -41,10 +41,7 @@ import org.wso2.grpc.Event;
 @Extension(name = "grpc-call-response", namespace = "source", description = "This grpc source receives responses " +
         "received from gRPC server for requests sent from a gRPC sink. The source will receive responses for sink " +
         "with the same sink.id. For example if you have a gRPC sink with sink.id 15 then we need to set the sink.id " +
-        "as 15 in the source to receives responses. Sinks and sources have 1:1 mapping. When using the source to " +
-        "listen to responses from Micro Integrator the optional parameter sequence should be given. Since the " +
-        "default Micro Integrator connection service can provide access to many different sequences this should be " +
-        "specified to separate and listen to only one sequence responses.",
+        "as 15 in the source to receives responses. Sinks and sources have 1:1 mapping",
         parameters = {
                 @Parameter(
                         name = "sink.id",

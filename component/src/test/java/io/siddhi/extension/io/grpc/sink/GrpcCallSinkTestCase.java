@@ -36,7 +36,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class GrpcCallSinkTestCase {
     private static final Logger logger = Logger.getLogger(GrpcSinkTestCase.class.getName());
-    private TestServer server = new TestServer();
+    private TestServer server = new TestServer(8889);
     private AtomicInteger eventCount = new AtomicInteger(0);
 
     @BeforeTest
@@ -57,7 +57,7 @@ public class GrpcCallSinkTestCase {
 
         String inStreamDefinition = ""
                 + "@sink(type='grpc-call', " +
-                "url = 'grpc://localhost:8888/org.wso2.grpc.EventService/process/mySeq', " +
+                "url = 'grpc://localhost:8889/org.wso2.grpc.EventService/process/mySeq', " +
                 "sink.id= '1', @map(type='json')) "
                 + "define stream FooStream (message String);";
 
@@ -94,7 +94,7 @@ public class GrpcCallSinkTestCase {
         siddhiAppRuntime.shutdown();
     }
 
-    @Test(dependsOnMethods = {"test1"})
+    @Test(dependsOnMethods = "test1")
     public void testWithHeaders() throws Exception {
         logger.info("Test case to call process sending 2 requests");
         logger.setLevel(Level.DEBUG);

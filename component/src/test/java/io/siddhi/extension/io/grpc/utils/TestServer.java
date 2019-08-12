@@ -33,13 +33,18 @@ public class TestServer {
     private static final Logger logger = Logger.getLogger(TestServer.class.getName());
     private Server server;
     private TestServerInterceptor testInterceptor = new TestServerInterceptor();
+    private int port;
+
+    public TestServer(int port) {
+        this.port = port;
+    }
 
     public void start() throws IOException {
         if (server != null) {
             throw new IllegalStateException("Already started");
         }
         server = ServerBuilder
-                .forPort(8888)
+                .forPort(port)
                 .addService(
                         ServerInterceptors.intercept(new EventServiceGrpc.EventServiceImplBase() {
             @Override

@@ -38,7 +38,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class GrpcSinkTestCase {
     private static final Logger log = Logger.getLogger(GrpcSinkTestCase.class.getName());
-    private TestServer server = new TestServer();
+    private TestServer server = new TestServer(8888);
     private AtomicInteger eventCount = new AtomicInteger(0);
 
     @BeforeTest

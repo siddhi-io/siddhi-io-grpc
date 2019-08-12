@@ -9,41 +9,59 @@
   [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 
+The **siddhi-io-grpc extension** is an extension to <a target="_blank" href="https://wso2.github.io/siddhi">Siddhi</a> that receives and publishes events via gRPC protocol, calls external services, and serves incoming requests and provide responses.
 
-**Using the extension in <a target="_blank" href="https://github.com/wso2/product-sp">WSO2 Stream Processor</a>**
+For information on <a target="_blank" href="https://siddhi.io/">Siddhi</a> and it's features refer <a target="_blank" href="https://siddhi.io/redirect/docs.html">Siddhi Documentation</a>. 
 
-* You can use this extension in the latest <a target="_blank" href="https://github.com/wso2/product-sp/releases">WSO2 Stream Processor</a> that is a part of <a target="_blank" href="http://wso2.com/analytics?utm_source=gitanalytics&utm_campaign=gitanalytics_Jul17">WSO2 Analytics</a> offering, with editor, debugger and simulation support.
+## Download
 
-* This extension is shipped by default with WSO2 Stream Processor, if you wish to use an alternative version of this extension you can replace the component <a target="_blank" href="https://github.com/wso2-extensions/siddhi-io-grpc/releases">jar</a> that can be found in the `<STREAM_PROCESSOR_HOME>/lib` directory.
+* from <a target="_blank" href="https://mvnrepository.com/artifact/io.siddhi.extension.io.grpc/siddhi-io-grpc/">here</a>.
 
-**Using the extension as a <a target="_blank" href="https://wso2.github.io/siddhi/documentation/running-as-a-java-library">java library</a>**
+## Latest API Docs 
 
-* This extension can be added as a maven dependency along with other Siddhi dependencies to your project.
+Latest API Docs is <a target="_blank" href="https://siddhi-io.github.io/siddhi-io-grpc/api/1.0.0">1.0.0</a>.
 
+## Features
+##### Default Service Protobuf Definition
+```proto
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "org.wso2.grpc";
+
+package org.wso2.grpc.eventservice;
+
+import "google/protobuf/empty.proto";
+
+service EventService {
+    rpc process(Event) returns (Event) {}
+    rpc consume(Event) returns (google.protobuf.Empty) {}
+}
+
+message Event {
+    string payload = 1;
+}
 ```
-     <dependency>
-        <groupId>org.wso2.extension.siddhi.io.grpc</groupId>
-        <artifactId>siddhi-io-grpc</artifactId>
-        <version>x.x.x</version>
-     </dependency>
-```
+* <a target="_blank" href="https://siddhi-io.github.io/siddhi-io-grpc/api/1.0.0/#grpc-sink">grpc</a> *<a target="_blank" href="https://siddhi.io/en/v5.0/docs/query-guide/#sink">(Sink)</a>*<br><div style="padding-left: 1em;"><p><br>This extension publishes event data encoded into GRPC Classes as defined in the user input jar. This extension has a default gRPC service classes added. The default service is called "EventService". This grpc sink is used for scenarios where we send a request and don't expect a response back. I.e getting a google.protobuf.Empty response back.</p></div>
+* <a target="_blank" href="https://siddhi-io.github.io/siddhi-io-grpc/api/1.0.0/#grpc-call-sink">grpc-call</a> *<a target="_blank" href="https://siddhi.io/en/v5.0/docs/query-guide/#sink">(Sink)</a>*<br><div style="padding-left: 1em;"><p><br>This extension publishes event data encoded into GRPC Classes as defined in the user input jar. This extension has a default gRPC service classes jar added. The default service is called "EventService". This grpc-call sink is used for scenarios where we send a request out and expect a response back. In default mode this will use EventService process method.</p></div>
+* <a target="_blank" href="https://siddhi-io.github.io/siddhi-io-grpc/api/1.0.0/#grpc-service-response-sink">grpc-service-response</a> *<a target="_blank" href="https://siddhi.io/en/v5.0/docs/query-guide/#sink">(Sink)</a>*<br><div style="padding-left: 1em;"><p><br>This extension is used to send responses back to a gRPC client after receiving requests through grpc-service source. This correlates with the particular source using a unique <code>source.id</code></p></div>
+* <a target="_blank" href="https://siddhi-io.github.io/siddhi-io-grpc/api/1.0.0/#grpc-source">grpc</a> *<a target="_blank" href="https://siddhi.io/en/v5.0/docs/query-guide/#source">(Source)</a>*<br><div style="padding-left: 1em;"><p><br>This extension starts a grpc server during initialization time. The server listens to requests from grpc stubs. This source has a default mode of operation and custom user defined grpc service mode. In the default mode this source will use EventService consume method. This method will receive requests and injects them into stream through a mapper.</p></div>
+* <a target="_blank" href="https://siddhi-io.github.io/siddhi-io-grpc/api/1.0.0/#grpc-service-source">grpc-service</a> *<a target="_blank" href="https://siddhi.io/en/v5.0/docs/query-guide/#source">(Source)</a>*<br><div style="padding-left: 1em;"><p><br>This extension implements a grpc server for receiving and responding to requests. During initialization time a grpc server is started on the user specified port exposing the required service as given in the url. This source also has a default mode and a user defined grpc service mode. In the default mode this will use the EventService process method. This accepts grpc message class Event as defined in the EventService proto. This uses GrpcServiceResponse sink to send reponses back in the same Event message format.</p></div>
+* <a target="_blank" href="https://siddhi-io.github.io/siddhi-io-grpc/api/1.0.0/#grpc-call-response-source">grpc-call-response</a> *<a target="_blank" href="https://siddhi.io/en/v5.0/docs/query-guide/#source">(Source)</a>*<br><div style="padding-left: 1em;"><p><br>This grpc source receives responses received from gRPC server for requests sent from a gRPC sink. The source will receive responses for sink with the same <code>sink.id</code>. For example if you have a gRPC sink with <code>sink.id</code> 15 then we need to set the <code>sink.id</code> as 15 in the source to receives responses. Sinks and sources have 1:1 mapping.</p></div>
 
 
+## Dependencies 
 
+There are no other dependencies needed for this extension. 
 
+## Installation
 
+For installing this extension on various siddhi execution environments refer Siddhi documentation section on <a target="_blank" href="https://siddhi.io/redirect/add-extensions.html">adding extensions</a>.
 
+## Support and Contribution
 
+* We encourage users to ask questions and get support via <a target="_blank" href="https://stackoverflow.com/questions/tagged/siddhi">StackOverflow</a>, make sure to add the `siddhi` tag to the issue for better response.
 
- * Post your questions with the <a target="_blank" href="http://stackoverflow.com/search?q=siddhi">"Siddhi"</a> tag in <a target="_blank" href="http://stackoverflow.com/search?q=siddhi">Stackoverflow</a>.
+* If you find any issues related to the extension please report them on <a target="_blank" href="https://github.com/siddhi-io/siddhi-execution-string/issues">the issue tracker</a>.
 
- * Siddhi developers can be contacted via the mailing lists:
-
-    Developers List   : [dev@wso2.org](mailto:dev@wso2.org)
-
-    Architecture List : [architecture@wso2.org](mailto:architecture@wso2.org)
-
-
-* We are committed to ensuring support for this extension in production. Our unique approach ensures that all support leverages our open development methodology and is provided by the very same engineers who build the technology.
-
-* For more details and to take advantage of this unique opportunity contact us via <a target="_blank" href="http://wso2.com/support?utm_source=gitanalytics&utm_campaign=gitanalytics_Jul17">http://wso2.com/support/</a>.
+* For production support and other contribution related information refer <a target="_blank" href="https://siddhi.io/community/">Siddhi Community</a> documentation.

@@ -101,7 +101,7 @@ public class GrpcServiceSourceTestCase {
         siddhiAppRuntime.shutdown();
     }
 
-    @Test
+    @Test(dependsOnMethods = "testToCallProcess")
     public void testWithHeader() throws Exception {
         logger.info("Test case to call process");
         logger.setLevel(Level.DEBUG);
@@ -172,7 +172,7 @@ public class GrpcServiceSourceTestCase {
         siddhiAppRuntime.shutdown();
     }
 
-    @Test
+    @Test(dependsOnMethods = "testWithHeader")
     public void testWithIncompleteHeader() throws Exception {
         logger.info("Test case to call process");
         logger.setLevel(Level.DEBUG);
@@ -243,7 +243,7 @@ public class GrpcServiceSourceTestCase {
         siddhiAppRuntime.shutdown();
     }
 
-    @Test
+    @Test(dependsOnMethods = "testWithIncompleteHeader")
     public void testCaseForServiceTimeout() throws Exception {
         logger.info("Test case to call process");
         logger.setLevel(Level.DEBUG);

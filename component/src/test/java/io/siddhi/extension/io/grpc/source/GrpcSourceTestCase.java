@@ -90,7 +90,7 @@ public class GrpcSourceTestCase {
         siddhiAppRuntime.shutdown();
     }
 
-    @Test
+    @Test(dependsOnMethods = "test1")
     public void testWithHeaders() throws Exception {
         logger.info("Test case to call process");
         logger.setLevel(Level.DEBUG);
@@ -147,7 +147,7 @@ public class GrpcSourceTestCase {
         siddhiAppRuntime.shutdown();
     }
 
-    @Test
+    @Test(dependsOnMethods = "testWithHeaders")
     public void testWithIncompleteHeaders() throws Exception {
         logger.info("Test case to call process");
         logger.setLevel(Level.DEBUG);

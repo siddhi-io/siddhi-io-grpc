@@ -44,8 +44,8 @@ import java.util.concurrent.TimeUnit;
 @Extension(name = "grpc", namespace = "sink", description = "This extension publishes event data encoded into GRPC " +
         "Classes as defined in the user input jar. This extension has a default gRPC service classes added. The " +
         "default service is called " +
-        "\"EventService\". Please find the following protobuf definition. " +
-        "-------------EventService.proto--------------" +
+        "\"EventService\". Please find the following protobuf definition. \n\n" +
+        "-------------EventService.proto--------------\n" +
         "syntax = \"proto3\";\n" +
         "\n" +
         "option java_multiple_files = true;\n" +
@@ -63,8 +63,8 @@ import java.util.concurrent.TimeUnit;
         "\n" +
         "message Event {\n" +
         "    string payload = 1;\n" +
-        "}" +
-        "----------------------------------------------" +
+        "}\n" +
+        "----------------------------------------------\n\n" +
         "This grpc sink is used for scenarios where we send a request and don't expect a response back. I.e " +
         "getting a google.protobuf.Empty response back.",
         parameters = {
@@ -215,9 +215,7 @@ public class GrpcSink extends AbstractGrpcSink {
 
                 @Override
                 public void onError(Throwable t) {
-                    if (logger.isDebugEnabled()) {
-                        logger.debug(siddhiAppContext.getName() + ":" + streamID + ": " + t.getMessage());
-                    }
+                    logger.error(siddhiAppContext.getName() + ":" + streamID + ": " + t.getMessage());
                 }
 
                 @Override

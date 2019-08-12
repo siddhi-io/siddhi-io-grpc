@@ -42,7 +42,8 @@ import org.apache.log4j.Logger;
  * {@code GrpcServiceResponseSink} Handle sending responses for requests received via grpc-service source.
  */
 @Extension(name = "grpc-service-response", namespace = "sink", description = "This extension is used to send " +
-        "responses back to a gRPC client after receiving requests through grpc-service source.",
+        "responses back to a gRPC client after receiving requests through grpc-service source. This correlates with " +
+        "the particular source using a unique source.id",
         parameters = {
                 @Parameter(
                         name = "url",

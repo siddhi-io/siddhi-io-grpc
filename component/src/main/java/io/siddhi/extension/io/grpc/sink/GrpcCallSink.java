@@ -48,8 +48,8 @@ import java.util.concurrent.TimeUnit;
  */
 @Extension(name = "grpc-call", namespace = "sink", description = "This extension publishes event data encoded into " +
         "GRPC Classes as defined in the user input jar. This extension has a default gRPC service classes jar " +
-        "added. The default service is called \"EventService\". Please find the following protobuf definition. \n" +
-        "-------------EventService.proto--------------" +
+        "added. The default service is called \"EventService\". Please find the following protobuf definition. \n\n" +
+        "-------------EventService.proto--------------\n" +
         "syntax = \"proto3\";\n" +
         "\n" +
         "option java_multiple_files = true;\n" +
@@ -67,8 +67,8 @@ import java.util.concurrent.TimeUnit;
         "\n" +
         "message Event {\n" +
         "    string payload = 1;\n" +
-        "}" +
-        "----------------------------------------------" +
+        "}\n" +
+        "----------------------------------------------\n\n" +
         "This grpc-call sink is used for scenarios where we send a request out and expect a response back. In " +
         "default mode this will use EventService process method.",
         parameters = {
@@ -78,6 +78,13 @@ import java.util.concurrent.TimeUnit;
                                 "This url should consist the host address, port, service name, method name in the " +
                                 "following format. `grpc://0.0.0.0:9763/<serviceName>/<methodName>`" ,
                         type = {DataType.STRING}),
+                @Parameter(
+                        name = "sink.id",
+                        description = "a unique ID that should be set for each grpc-call-sink. There is a 1:1 " +
+                                "mapping between grpc-call sinks and grpc-call-response sources. Each sink has one " +
+                                "particular source listening to the responses to requests published from that sink. " +
+                                "So the same sink.id should be given when writing the source also." ,
+                        type = {DataType.INT}),
                 @Parameter(
                         name = "headers",
                         description = "GRPC Request headers in format `\"'<key>:<value>','<key>:<value>'\"`. " +
@@ -169,13 +176,6 @@ import java.util.concurrent.TimeUnit;
                         type = {DataType.LONG},
                         optional = true,
                         defaultValue = "8192"),
-                @Parameter(
-                        name = "sink.id",
-                        description = "a unique ID that should be set for each grpc-call-sink. There is a 1:1 " +
-                                "mapping between grpc-call sinks and grpc-call-response sources. Each sink has one " +
-                                "particular source listening to the responses to requests published from that sink. " +
-                                "So the same sink.id should be given when writing the source also." ,
-                        type = {DataType.INT}),
         },
         examples = {
                 @Example(syntax = "@sink(type='grpc-call', " +
@@ -260,9 +260,7 @@ public class GrpcCallSink extends AbstractGrpcSink {
 
                 @Override
                 public void onFailure(Throwable t) {
-                    if (logger.isDebugEnabled()) {
-                        logger.debug(siddhiAppContext.getName() + ":" + streamID + ": " + t.getMessage());
-                    }
+                    logger.error(siddhiAppContext.getName() + ":" + streamID + ": " + t.getMessage());
                 }
             }, MoreExecutors.directExecutor());
         } else {
