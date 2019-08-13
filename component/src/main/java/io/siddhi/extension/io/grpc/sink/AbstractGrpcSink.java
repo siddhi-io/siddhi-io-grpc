@@ -19,17 +19,22 @@ package io.siddhi.extension.io.grpc.sink;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.Metadata;
+import io.grpc.stub.AbstractStub;
+import io.grpc.stub.MetadataUtils;
 import io.siddhi.core.config.SiddhiAppContext;
 import io.siddhi.core.stream.ServiceDeploymentInfo;
 import io.siddhi.core.stream.output.sink.Sink;
 import io.siddhi.core.util.config.ConfigReader;
 import io.siddhi.core.util.snapshot.state.StateFactory;
+import io.siddhi.core.util.transport.DynamicOptions;
 import io.siddhi.core.util.transport.Option;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
 import io.siddhi.query.api.definition.StreamDefinition;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.log4j.Logger;
+import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
 
 import java.net.MalformedURLException;
@@ -193,5 +198,35 @@ public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and
     @Override
     public void destroy() {
         channel = null;
+    }
+
+    public Event.Builder addHeadersToEventBuilder(DynamicOptions dynamicOptions, Event.Builder eventBuilder) {
+        if (headersOption != null) {
+            String headers = headersOption.getValue(dynamicOptions);
+            headers = headers.replaceAll("'", "");
+            String[] headersArray = headers.split(",");
+            for (String headerKeyValue: headersArray) {
+                String[] headerKeyValueArray = headerKeyValue.split(":");
+                eventBuilder.putHeaders(headerKeyValueArray[0], headerKeyValueArray[1]);
+            }
+        }
+
+        if (sequenceName != null) {
+            eventBuilder.putHeaders("sequence", sequenceName);
+        }
+        return eventBuilder;
+    }
+
+    public AbstractStub attachMetaDataToStub(DynamicOptions dynamicOptions, AbstractStub stub) {
+        Metadata metadata = new Metadata();
+        String metadataString = metadataOption.getValue(dynamicOptions);
+        metadataString = metadataString.replaceAll("'", "");
+        String[] metadataArray = metadataString.split(",");
+        for (String metadataKeyValue: metadataArray) {
+            String[] headerKeyValueArray = metadataKeyValue.split(":");
+            metadata.put(Metadata.Key.of(headerKeyValueArray[0], Metadata.ASCII_STRING_MARSHALLER), headerKeyValueArray[1]);
+        }
+
+        return MetadataUtils.attachHeaders(stub, metadata);
     }
 }

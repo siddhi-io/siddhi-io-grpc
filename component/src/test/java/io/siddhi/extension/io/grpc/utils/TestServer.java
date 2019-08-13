@@ -51,7 +51,8 @@ public class TestServer {
             public void process(Event request,
                                 StreamObserver<Event> responseObserver) {
                 if (logger.isDebugEnabled()) {
-                    logger.debug("Server process hit with " + request.getPayload());
+                    logger.debug("Server process hit with payload = " + request.getPayload() + " and Headers = {"
+                            + request.getHeadersMap().toString() + "}");
                 }
                 Event.Builder responseBuilder = Event.newBuilder();
                 String json = "{ \"message\": \"Hello from Server!\"}";

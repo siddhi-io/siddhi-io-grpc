@@ -22,8 +22,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import io.grpc.ManagedChannelBuilder;
-import io.grpc.Metadata;
-import io.grpc.stub.MetadataUtils;
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
 import io.siddhi.annotation.Parameter;
@@ -219,60 +217,43 @@ public class GrpcCallSink extends AbstractGrpcSink {
                         GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE + "' but given " + methodName);
             }
         }
-        managedChannelBuilder.maxInboundMessageSize(Integer.parseInt(optionHolder.getOrCreateOption( //todo: remove the optional param default if not given
-                GrpcConstants.MAX_INBOUND_MESSAGE_SIZE, GrpcConstants.MAX_INBOUND_MESSAGE_SIZE_DEFAULT).getValue()));
-        managedChannelBuilder.maxInboundMetadataSize(Integer.parseInt(optionHolder.getOrCreateOption(
-                GrpcConstants.MAX_INBOUND_METADATA_SIZE, GrpcConstants.MAX_INBOUND_METADATA_SIZE_DEFAULT).getValue()));
-        if (optionHolder.isOptionExists(GrpcConstants.SINK_ID)) {
-            this.sinkID = optionHolder.validateAndGetOption(GrpcConstants.SINK_ID).getValue();
-        } else {
-            if (optionHolder.validateAndGetOption(GrpcConstants.SINK_TYPE_OPTION) //todo: remove error thorw.
-                    .getValue().equalsIgnoreCase(GrpcConstants.GRPC_CALL_SINK_NAME)) {
-                throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID + ": For " +
-                        "grpc-call sink the parameter sink.id is mandatory for receiving responses. Please provide " +
-                        "a sink.id");
-            }
+        if (optionHolder.isOptionExists(GrpcConstants.MAX_INBOUND_MESSAGE_SIZE)) {
+            managedChannelBuilder.maxInboundMessageSize(Integer.parseInt(optionHolder.validateAndGetOption(
+                    GrpcConstants.MAX_INBOUND_MESSAGE_SIZE).getValue()));
         }
+        if (optionHolder.isOptionExists(GrpcConstants.MAX_INBOUND_METADATA_SIZE)) {
+            managedChannelBuilder.maxInboundMetadataSize(Integer.parseInt(optionHolder.validateAndGetOption(
+                    GrpcConstants.MAX_INBOUND_METADATA_SIZE).getValue()));
+        }
+        this.sinkID = optionHolder.validateAndGetOption(GrpcConstants.SINK_ID).getValue();
     }
 
     @Override
     public void publish(Object payload, DynamicOptions dynamicOptions, State state)
-            throws ConnectionUnavailableException { //todo: throw connection unavailable exception. fix headers
+            throws ConnectionUnavailableException {
         if (isDefaultMode) {
-            if (!(payload instanceof String)) {
-                throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ":" + streamID + ": Payload should " +
-                        "be of type String for default EventService but found " + payload.getClass().getName()); //todo: no need to check
-            }
-            Event sequenceCallRequest = Event.newBuilder().setPayload((String) payload).build(); //todo to string
+            Event.Builder eventBuilder = Event.newBuilder().setPayload(payload.toString());
             EventServiceGrpc.EventServiceFutureStub currentFutureStub = futureStub;
 
-            if (sequenceName != null || headersOption != null) { //todo: have a method in abstract class and use in both sinks
-                Metadata header = new Metadata();
-                String headers = "";
-                if (sequenceName != null) {
-                    headers += "'sequence:" + sequenceName + "'";
-                    if (headersOption != null) {
-                        headers += ",";
-                    }
-                }
-                if (headersOption != null) {
-                    headers +=  headersOption.getValue(dynamicOptions);
-                }
-                Metadata.Key<String> key =
-                        Metadata.Key.of(GrpcConstants.HEADERS, Metadata.ASCII_STRING_MARSHALLER);
-                header.put(key, headers);
-                currentFutureStub = MetadataUtils.attachHeaders(futureStub, header);
+            if (headersOption != null || sequenceName != null) {
+                eventBuilder = addHeadersToEventBuilder(dynamicOptions, eventBuilder);
             }
+
+            if (metadataOption != null) {
+                currentFutureStub = (EventServiceGrpc.EventServiceFutureStub) attachMetaDataToStub(dynamicOptions,
+                        currentFutureStub);
+            }
+
             ListenableFuture<Event> futureResponse =
-                    currentFutureStub.process(sequenceCallRequest);
+                    currentFutureStub.process(eventBuilder.build());
             Futures.addCallback(futureResponse, new FutureCallback<Event>() {
                 @Override
                 public void onSuccess(Event result) {
-                    GrpcSourceRegistry.getInstance().getGrpcCallResponseSourceSource(sinkID).onResponse(result); //todo check if the associated source is available in connect
+                    GrpcSourceRegistry.getInstance().getGrpcCallResponseSourceSource(sinkID).onResponse(result);
                 }
 
                 @Override
-                public void onFailure(Throwable t) { //todo: simulate connection unavailable and auth error and check the error message
+                public void onFailure(Throwable t) { //todo: simulate  auth error and check the error message
                     logger.error(siddhiAppContext.getName() + ":" + streamID + ": " + t.getMessage());
                 }
             }, MoreExecutors.directExecutor());
@@ -293,6 +274,11 @@ public class GrpcCallSink extends AbstractGrpcSink {
         this.futureStub = EventServiceGrpc.newFutureStub(channel);
         logger.info(siddhiAppContext.getName() + ": gRPC service on " + streamID + " has successfully connected to "
                 + url);
+        if (GrpcSourceRegistry.getInstance().getGrpcCallResponseSourceSource(sinkID) == null) {
+            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": " + streamID + " For grpc-call sink " +
+                    "to work a grpc-call-response source should be available with the same sink.id. In this case " +
+                    "sink.id is " + sinkID + ". Please provide a grpc-call-response source with the sink.id "+ sinkID);
+        }
     }
 
     /**

@@ -204,37 +204,18 @@ public class GrpcSink extends AbstractGrpcSink {
             throws ConnectionUnavailableException {
         if (isDefaultMode) {
             Event.Builder eventBuilder = Event.newBuilder().setPayload(payload.toString());
-
             EventServiceGrpc.EventServiceStub currentAsyncStub = asyncStub;
 
+            if (headersOption != null || sequenceName != null) {
+                eventBuilder = addHeadersToEventBuilder(dynamicOptions, eventBuilder);
+            }
+
             if (metadataOption != null) {
-                Metadata metadata = new Metadata();
-                String metadataString = metadataOption.getValue(dynamicOptions);
-                metadataString = metadataString.replaceAll("'", "");
-                String[] metadataArray = metadataString.split(",");
-                for (String metadataKeyValue: metadataArray) {
-                    String[] headerKeyValueArray = metadataKeyValue.split(":");
-                    metadata.put(Metadata.Key.of(headerKeyValueArray[0], Metadata.ASCII_STRING_MARSHALLER), headerKeyValueArray[1]);
-                }
-
-                currentAsyncStub = MetadataUtils.attachHeaders(asyncStub, metadata);
+                currentAsyncStub = (EventServiceGrpc.EventServiceStub) attachMetaDataToStub(dynamicOptions,
+                        currentAsyncStub);
             }
 
-            if (headersOption != null) {
-                String headers = headersOption.getValue(dynamicOptions);
-                headers = headers.replaceAll("'", "");
-                String[] headersArray = headers.split(",");
-                for (String headerKeyValue: headersArray) {
-                    String[] headerKeyValueArray = headerKeyValue.split(":");
-                    eventBuilder.putHeaders(headerKeyValueArray[0], headerKeyValueArray[1]);
-                }
-            }
-
-            if (sequenceName != null) {
-                eventBuilder.putHeaders("sequence", sequenceName);
-            }
-
-            Event requestEvent = eventBuilder.build();
+//            Event requestEvent = eventBuilder.build();
 
             StreamObserver<Empty> responseObserver = new StreamObserver<Empty>() { //todo: try to send all the siddhi events using one stream observer
                 @Override
@@ -251,7 +232,7 @@ public class GrpcSink extends AbstractGrpcSink {
                 @Override
                 public void onCompleted() {}
             };
-            currentAsyncStub.consume(requestEvent, responseObserver);
+            currentAsyncStub.consume(eventBuilder.build(), responseObserver);
         } else {
             //todo: handle publishing to generic service
         }
