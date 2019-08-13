@@ -19,6 +19,8 @@ package io.siddhi.extension.io.grpc.sink;
 
 import com.google.protobuf.Empty;
 import io.grpc.Metadata;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.MetadataUtils;
 import io.grpc.stub.StreamObserver;
 import io.siddhi.annotation.Example;
@@ -239,8 +241,10 @@ public class GrpcSink extends AbstractGrpcSink {
                 public void onNext(Empty event) {}
 
                 @Override
-                public void onError(Throwable t) {
-                    //todo: check the grpc exception and if connection unavailable throw it connectionunavaialable
+                public void onError(Throwable t) { //parent method doest have error in its signature. so cant throw from here
+//                    if (((StatusRuntimeException) t).getStatus().getCode().equals(Status.UNAVAILABLE)) {
+//                        throw new ConnectionUnavailableException(siddhiAppContext.getName() + ": " + streamID + ": " + t.getMessage());
+//                    }
                     logger.error(siddhiAppContext.getName() + ":" + streamID + ": " + t.getMessage());
                 }
 
@@ -282,7 +286,6 @@ public class GrpcSink extends AbstractGrpcSink {
                 channel.shutdown();
             }
             channel = null;
-            //todo: add a test case for failing . siddhi app shotdown
         } catch (InterruptedException e) {
             throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ":" + streamID + ": Error in shutting " +
                     "down the channel. " + e.getMessage());

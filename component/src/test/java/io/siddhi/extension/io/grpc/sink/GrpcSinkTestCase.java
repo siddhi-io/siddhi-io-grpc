@@ -20,6 +20,7 @@ package io.siddhi.extension.io.grpc.sink;
 import io.siddhi.core.SiddhiAppRuntime;
 import io.siddhi.core.SiddhiManager;
 import io.siddhi.core.stream.input.InputHandler;
+import io.siddhi.core.util.persistence.InMemoryPersistenceStore;
 import io.siddhi.extension.io.grpc.utils.TestAppender;
 import io.siddhi.extension.io.grpc.utils.TestServer;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
@@ -52,7 +53,7 @@ public class GrpcSinkTestCase {
     }
 
     @Test
-    public void testCaseToCallProcessWithSimpleRequest() throws Exception {
+    public void testCaseToCallConsumeWithSimpleRequest() throws Exception {
         log.info("Test case to call consume");
         final TestAppender appender = new TestAppender();
         final Logger rootLogger = Logger.getRootLogger();
@@ -83,7 +84,7 @@ public class GrpcSinkTestCase {
     }
 
     @Test
-    public void testCaseToCallProcessWithTwoRequests() throws Exception {
+    public void testCaseToCallConsumeWithTwoRequests() throws Exception {
         log.info("Test case to call consume with 2 requests");
         final TestAppender appender = new TestAppender();
         final Logger rootLogger = Logger.getRootLogger();
@@ -331,5 +332,83 @@ public class GrpcSinkTestCase {
 //        Assert.assertTrue(logMessages.contains("Server consume hit with [Request 2]"));
 //        Assert.assertTrue(logMessages.contains("Header received: 'Name:John','Age:23','Content-Type:text'"));
 //        Assert.assertTrue(logMessages.contains("Header received: 'Name:Nash','Age:54','Content-Type:json'"));
+    }
+
+    @Test
+    public void testCaseFailingWithUnavailableServer() throws Exception {
+        log.info("Test case to call consume");
+        final TestAppender appender = new TestAppender();
+        final Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(Level.DEBUG);
+        rootLogger.addAppender(appender);
+        SiddhiManager siddhiManager = new SiddhiManager();
+        server.stop();
+
+        String inStreamDefinition = ""
+                + "@sink(type='grpc', url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
+                "@map(type='json', @payload('{{message}}'))) " +
+                "define stream FooStream (message String);";
+
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
+        InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
+
+        siddhiAppRuntime.start();
+        fooStream.send(new Object[]{"Request 1"});
+        Thread.sleep(1000);
+        siddhiAppRuntime.shutdown();
+        server.start();
+
+        final List<LoggingEvent> log = appender.getLog();
+        List<String> logMessages = new ArrayList<>();
+        for (LoggingEvent logEvent : log) {
+            String message = String.valueOf(logEvent.getMessage());
+            logMessages.add(message);
+        }
+        Assert.assertTrue(logMessages.contains("Server consume hit with [Request 1]"));
+    }
+
+    @Test
+    public void testCaseWithSiddhiAppShutdown() throws Exception {
+        log.info("Test case to call consume with 2 requests");
+        final TestAppender appender = new TestAppender();
+        final Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(Level.DEBUG);
+        rootLogger.addAppender(appender);
+        SiddhiManager siddhiManager = new SiddhiManager();
+        siddhiManager.setPersistenceStore(new InMemoryPersistenceStore());
+
+        String inStreamDefinition = ""
+                + "@sink(type='grpc', url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
+                "@map(type='json', @payload('{{message}}'))) " +
+                "define stream FooStream (message String);";
+
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
+        InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
+
+        siddhiAppRuntime.start();
+        fooStream.send(new Object[]{"Request 1"});
+        Thread.sleep(1000);
+        siddhiManager.persist();
+        Thread.sleep(100);
+        siddhiAppRuntime.shutdown();
+        Thread.sleep(100);
+
+        siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
+        fooStream = siddhiAppRuntime.getInputHandler("FooStream");
+        siddhiAppRuntime.start();
+        siddhiManager.restoreLastState();
+
+        fooStream.send(new Object[]{"Request 2"});
+        Thread.sleep(1000);
+        siddhiAppRuntime.shutdown();
+
+        final List<LoggingEvent> log = appender.getLog();
+        List<String> logMessages = new ArrayList<>();
+        for (LoggingEvent logEvent : log) {
+            String message = String.valueOf(logEvent.getMessage());
+            logMessages.add(message);
+        }
+        Assert.assertTrue(logMessages.contains("Server consume hit with [Request 1]"));
+        Assert.assertTrue(logMessages.contains("Server consume hit with [Request 2]"));
     }
 }
