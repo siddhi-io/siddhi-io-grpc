@@ -30,7 +30,7 @@ service EventService {
     rpc consume(Event) returns (google.protobuf.Empty) {}
 }
 
-message Event { //todo: add a map for headers
+message Event {
     string payload = 1;
-//    map<>
+    map<string, string> headers = 2;
 }

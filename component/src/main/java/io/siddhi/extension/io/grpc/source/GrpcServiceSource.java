@@ -36,16 +36,12 @@ import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static io.siddhi.extension.io.grpc.util.GrpcUtils.extractHeaders;
 
@@ -143,7 +139,6 @@ public class GrpcServiceSource extends AbstractGrpcSource {
     protected String[] requestedTransportPropertyNames;
     protected Server server;
     private Timer timer;
-    private ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
 
     @Override
     public void initializeGrpcServer(int port) {
@@ -167,7 +162,8 @@ public class GrpcServiceSource extends AbstractGrpcSource {
                         sourceEventListener.onEvent(request.getPayload(), new String[]{messageId});
                     }
                     streamObserverMap.put(messageId, responseObserver);
-                    timer.schedule(new ServiceSourceTimeoutChecker(messageId), serviceTimeout);
+                    timer.schedule(new ServiceSourceTimeoutChecker(messageId,
+                            siddhiAppContext.getTimestampGenerator().currentTime()), serviceTimeout);
                 }
             }, serverInterceptor)).build();
         }
@@ -175,13 +171,23 @@ public class GrpcServiceSource extends AbstractGrpcSource {
 
     class ServiceSourceTimeoutChecker extends TimerTask {
         private String messageId;
+        private long requestReceivedTime;
 
-        public ServiceSourceTimeoutChecker(String messageId) {
+        public ServiceSourceTimeoutChecker(String messageId, long requestReceivedTime) {
             this.messageId = messageId;
+            this.requestReceivedTime = requestReceivedTime;
         }
 
         @Override
-        public void run() { //todo: wait until the servietimeout is hit as this task might get invoked before the initial delay provided
+        public void run() {
+            while (requestReceivedTime > siddhiAppContext.getTimestampGenerator().currentTime() - serviceTimeout) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": " + streamID + ": "
+                            + e.getMessage());
+                }
+            }
             StreamObserver streamObserver = streamObserverMap.remove(messageId);
             if (streamObserver != null) {
                 streamObserver.onError(new io.grpc.StatusRuntimeException(

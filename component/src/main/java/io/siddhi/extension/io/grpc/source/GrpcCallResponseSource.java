@@ -17,6 +17,7 @@
  */
 package io.siddhi.extension.io.grpc.source;
 
+import com.google.protobuf.GeneratedMessageV3;
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
 import io.siddhi.annotation.Parameter;
@@ -32,6 +33,8 @@ import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.GrpcSourceRegistry;
 import org.wso2.grpc.Event;
+
+import java.util.Map;
 
 /**
  * {@code GrpcSource} Handle receiving of responses for gRPC calls. Does not have connection logics as sink will add a
@@ -61,9 +64,9 @@ import org.wso2.grpc.Event;
         }
 )
 public class GrpcCallResponseSource extends Source {
-    private GrpcSourceRegistry grpcSourceRegistry = GrpcSourceRegistry.getInstance(); //todo: no need to have a reference.
     private String sinkID;
     private SourceEventListener sourceEventListener;
+    private String[] requestedTransportPropertyNames;
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
@@ -84,13 +87,25 @@ public class GrpcCallResponseSource extends Source {
                              String[] requestedTransportPropertyNames, ConfigReader configReader,
                              SiddhiAppContext siddhiAppContext) {
         this.sourceEventListener = sourceEventListener;
+        this.requestedTransportPropertyNames = requestedTransportPropertyNames;
         sinkID = optionHolder.validateAndGetOption("sink.id").getValue();
-        grpcSourceRegistry.putGrpcCallResponseSource(sinkID, this);
+        GrpcSourceRegistry.getInstance().putGrpcCallResponseSource(sinkID, this);
         return null;
     }
 
-    public void onResponse(Event response) {
-        sourceEventListener.onEvent(response.getPayload(), null); //todo: pass original event values as transport proerties.put all the metadata sent by server as key value pair
+    public void onResponse(Event response, Map<String, String> siddhiRequestEventData) {
+        sourceEventListener.onEvent(response.getPayload(), getTransportProperties(response.getHeadersMap(), siddhiRequestEventData));
+    }
+
+    private String[] getTransportProperties(Map<String, String> headersMap, Map<String, String> siddhiRequestEventData) {
+        siddhiRequestEventData.putAll(headersMap);
+        String[] transportProperties = new String[requestedTransportPropertyNames.length];
+        for (int i = 0; i < requestedTransportPropertyNames.length; i++) {
+            if (siddhiRequestEventData.containsKey(requestedTransportPropertyNames[i])) {
+                transportProperties[i] = siddhiRequestEventData.get(requestedTransportPropertyNames[i]);
+            }
+        }
+        return transportProperties;
     }
 
     /**
@@ -101,7 +116,7 @@ public class GrpcCallResponseSource extends Source {
      */
     @Override
     public Class[] getOutputEventClasses() {
-        return new Class[]{String.class, Object.class}; //todo: genmsgv3
+        return new Class[]{String.class, GeneratedMessageV3.class};
     }
 
     @Override
@@ -122,7 +137,7 @@ public class GrpcCallResponseSource extends Source {
      */
     @Override
     public void destroy() {
-        grpcSourceRegistry.removeGrpcCallResponseSource(sinkID);
+        GrpcSourceRegistry.getInstance().removeGrpcCallResponseSource(sinkID);
     }
 
     /**

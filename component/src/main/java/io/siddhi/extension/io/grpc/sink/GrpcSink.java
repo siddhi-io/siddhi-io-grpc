@@ -18,6 +18,8 @@
 package io.siddhi.extension.io.grpc.sink;
 
 import com.google.protobuf.Empty;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
@@ -212,13 +214,15 @@ public class GrpcSink extends AbstractGrpcSink {
             }
 
 //            Event requestEvent = eventBuilder.build();
+            System.out.println(Thread.currentThread().getId());
 
             StreamObserver<Empty> responseObserver = new StreamObserver<Empty>() { //todo: try to send all the siddhi events using one stream observer
                 @Override
                 public void onNext(Empty event) {}
 
                 @Override
-                public void onError(Throwable t) { //parent method doest have error in its signature. so cant throw from here
+                public void onError(Throwable t) { //parent method doest have error in its signature. so cant throw from here todo ask suho
+                    System.out.println(Thread.currentThread().getId());
 //                    if (((StatusRuntimeException) t).getStatus().getCode().equals(Status.UNAVAILABLE)) {
 //                        throw new ConnectionUnavailableException(siddhiAppContext.getName() + ": " + streamID + ": " + t.getMessage());
 //                    }
@@ -226,7 +230,9 @@ public class GrpcSink extends AbstractGrpcSink {
                 }
 
                 @Override
-                public void onCompleted() {}
+                public void onCompleted() {
+                    System.out.println(Thread.currentThread().getId());
+                }
             };
             currentAsyncStub.consume(eventBuilder.build(), responseObserver);
         } else {

@@ -33,11 +33,15 @@ import io.siddhi.core.util.transport.DynamicOptions;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
 import io.siddhi.extension.io.grpc.util.GrpcSourceRegistry;
+import io.siddhi.query.api.definition.Attribute;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -247,9 +251,11 @@ public class GrpcCallSink extends AbstractGrpcSink {
             ListenableFuture<Event> futureResponse =
                     currentFutureStub.process(eventBuilder.build());
             Futures.addCallback(futureResponse, new FutureCallback<Event>() {
+                Map<String, String> siddhiRequestEventData = getRequestEventDataMap(dynamicOptions);
                 @Override
                 public void onSuccess(Event result) {
-                    GrpcSourceRegistry.getInstance().getGrpcCallResponseSourceSource(sinkID).onResponse(result);
+                    GrpcSourceRegistry.getInstance().getGrpcCallResponseSourceSource(sinkID).onResponse(result,
+                            siddhiRequestEventData);
                 }
 
                 @Override
@@ -260,6 +266,17 @@ public class GrpcCallSink extends AbstractGrpcSink {
         } else {
             //todo: handle publishing to generic service
         }
+    }
+
+    private Map<String, String> getRequestEventDataMap(DynamicOptions dynamicOptions) {
+        io.siddhi.core.event.Event event = dynamicOptions.getEvent();
+        Object[] data = event.getData();
+        List<Attribute> attributes = streamDefinition.getAttributeList();
+        Map<String, String> requestEventDataMap = new HashMap<>();
+        for (int i = 0; i < attributes.size(); i++) {
+            requestEventDataMap.put(attributes.get(i).getName(), data[i].toString());
+        }
+        return requestEventDataMap;
     }
 
     /**

@@ -66,6 +66,7 @@ public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and
     protected Option metadataOption;
     protected ManagedChannelBuilder managedChannelBuilder;
     protected long channelTerminationWaitingTimeInMillis = -1L;
+    protected StreamDefinition streamDefinition;
 
     /**
      * Returns the list of classes which this sink can consume.
@@ -110,6 +111,7 @@ public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and
     protected StateFactory init(StreamDefinition streamDefinition, OptionHolder optionHolder, ConfigReader configReader,
                                 SiddhiAppContext siddhiAppContext) {
         this.siddhiAppContext = siddhiAppContext;
+        this.streamDefinition = streamDefinition;
         this.url = optionHolder.validateAndGetOption(GrpcConstants.PUBLISHER_URL).getValue().trim();
         this.streamID = streamDefinition.getId();
         if (optionHolder.isOptionExists(GrpcConstants.HEADERS)) {

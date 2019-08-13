@@ -17,6 +17,7 @@
  */
 package io.siddhi.extension.io.grpc.source;
 
+import com.google.protobuf.GeneratedMessageV3;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.siddhi.core.config.SiddhiAppContext;
@@ -130,7 +131,7 @@ public abstract class AbstractGrpcSource extends Source {
      */
     @Override
     public Class[] getOutputEventClasses() {
-        return new Class[0];
+        return new Class[]{String.class, GeneratedMessageV3.class};
     }
 
     /**

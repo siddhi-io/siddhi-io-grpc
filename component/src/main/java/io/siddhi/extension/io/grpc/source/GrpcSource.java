@@ -33,9 +33,6 @@ import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
 
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
-
 import static io.siddhi.extension.io.grpc.util.GrpcUtils.extractHeaders;
 
 /**

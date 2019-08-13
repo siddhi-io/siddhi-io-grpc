@@ -112,7 +112,7 @@ public class GrpcCallSinkTestCase {
                 "@map(type='json', @payload('{{message}}'))) "
                 + "define stream FooStream (message String, headers String);";
 
-        String stream2 = "@source(type='grpc-call-response', sink.id= '2', @map(type='json')) " +
+        String stream2 = "@source(type='grpc-call-response', sink.id= '2', @map(type='json'), ) " +
                 "define stream BarStream (message String);";
         String query = "@info(name = 'query') "
                 + "from BarStream "
@@ -211,5 +211,51 @@ public class GrpcCallSinkTestCase {
 //        Assert.assertTrue(logMessages.contains("Server consume hit with [Request 2]"));
 //        Assert.assertTrue(logMessages.contains("Header received: 'Name:John','Age:23','Content-Type:text'"));
 //        Assert.assertTrue(logMessages.contains("Header received: 'Name:Nash','Age:54','Content-Type:json'"));
+    }
+
+    @Test
+    public void testOfEnrichingData() throws Exception {
+        logger.info("Test case to call process sending 2 requests");
+        logger.setLevel(Level.DEBUG);
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String inStreamDefinition = ""
+                + "@sink(type='grpc-call', " +
+                "url = 'grpc://localhost:8889/org.wso2.grpc.EventService/process/mySeq', " +
+                "sink.id= '1', @map(type='json')) "
+                + "define stream FooStream (requestMessage String);";
+
+        String stream2 = "@source(type='grpc-call-response', sequence='mySeq', sink.id= '1', " +
+                "@map(type='json', @attributes(requestMessage='trp:requestMessage', message='message'))) " +
+                "define stream BarStream (message String, requestMessage String);";
+        String query = "@info(name = 'query') "
+                + "from BarStream "
+                + "select *  "
+                + "insert into outputStream;";
+
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition + stream2 +
+                query);
+        siddhiAppRuntime.addCallback("query", new QueryCallback() {
+            @Override
+            public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
+                EventPrinter.print(timeStamp, inEvents, removeEvents);
+                for (int i = 0; i < inEvents.length; i++) {
+                    eventCount.incrementAndGet();
+                    switch (i) {
+                        case 0:
+                            Assert.assertEquals((String) inEvents[i].getData()[0], "Hello from Server!");
+                            break;
+                        default:
+                            Assert.fail();
+                    }
+                }
+            }
+        });
+        InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
+
+        siddhiAppRuntime.start();
+        fooStream.send(new Object[]{"Request 1"});
+        Thread.sleep(1000);
+        siddhiAppRuntime.shutdown();
     }
 }
