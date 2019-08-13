@@ -137,14 +137,7 @@ public class GrpcSource extends AbstractGrpcSource {
 
     @Override
     public void connect(ConnectionCallback connectionCallback, State state) throws ConnectionUnavailableException {
-        try {
-            server.start();
-            if (logger.isDebugEnabled()) {
-                logger.debug(siddhiAppContext.getName() + ":" + streamID + ": gRPC Server started");
-            }
-        } catch (IOException e) {
-            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ":" + streamID + ": " + e.getMessage());
-        }
+        connectGrpcServer(server, logger);
     }
 
     /**
@@ -152,30 +145,6 @@ public class GrpcSource extends AbstractGrpcSource {
      */
     @Override
     public void disconnect() {
-        try {
-            Server serverPointer = server;
-            if (serverPointer == null) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug(siddhiAppContext.getName() + ":" + streamID + ": Illegal state. Server already " +
-                            "stopped.");
-                }
-                return;
-            }
-            serverPointer.shutdown();
-            if (serverPointer.awaitTermination(serverShutdownWaitingTime, TimeUnit.SECONDS)) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug(siddhiAppContext.getName() + ":" + streamID + ": Server stopped");
-                }
-                return;
-            }
-            serverPointer.shutdownNow();
-            if (serverPointer.awaitTermination(serverShutdownWaitingTime, TimeUnit.SECONDS)) {
-                return;
-            }
-            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ":" + streamID + ": Unable to shutdown " +
-                    "server");
-        } catch (InterruptedException e) {
-            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ":" + streamID + ": " + e.getMessage());
-        }
+        disconnectGrpcServer(server, logger);
     }
 }

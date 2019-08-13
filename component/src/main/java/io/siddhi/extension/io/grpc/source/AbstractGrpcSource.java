@@ -17,8 +17,10 @@
  */
 package io.siddhi.extension.io.grpc.source;
 
+import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.siddhi.core.config.SiddhiAppContext;
+import io.siddhi.core.exception.SiddhiAppRuntimeException;
 import io.siddhi.core.stream.ServiceDeploymentInfo;
 import io.siddhi.core.stream.input.source.Source;
 import io.siddhi.core.stream.input.source.SourceEventListener;
@@ -28,9 +30,12 @@ import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
 import io.siddhi.extension.io.grpc.util.SourceServerInterceptor;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
+import org.apache.log4j.Logger;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.concurrent.TimeUnit;
 
 import static io.siddhi.extension.io.grpc.util.GrpcUtils.getServiceName;
 
@@ -47,7 +52,7 @@ public abstract class AbstractGrpcSource extends Source {
     private int port;
     protected SourceServerInterceptor serverInterceptor;
     protected ServerBuilder serverBuilder;
-    protected int serverShutdownWaitingTime;
+    protected long serverShutdownWaitingTimeInMillis = -1L;
     protected String streamID;
     private ServiceDeploymentInfo serviceDeploymentInfo;
 
@@ -72,9 +77,10 @@ public abstract class AbstractGrpcSource extends Source {
         this.streamID = sourceEventListener.getStreamDefinition().getId();
         this.siddhiAppContext = siddhiAppContext;
         this.sourceEventListener = sourceEventListener;
-        this.serverShutdownWaitingTime = Integer.parseInt(optionHolder.getOrCreateOption( //todo: if waiting time not given use =shutdon nly
-                GrpcConstants.SERVER_SHUTDOWN_WAITING_TIME, GrpcConstants.SERVER_SHUTDOWN_WAITING_TIME_DEFAULT)
-                .getValue());
+        if (optionHolder.isOptionExists(GrpcConstants.SERVER_SHUTDOWN_WAITING_TIME)) {
+            this.serverShutdownWaitingTimeInMillis = Long.parseLong(optionHolder.validateAndGetOption(
+                    GrpcConstants.SERVER_SHUTDOWN_WAITING_TIME).getValue());
+        }
         this.url = optionHolder.validateAndGetOption(GrpcConstants.PUBLISHER_URL).getValue();
         if (!url.substring(0, 4).equalsIgnoreCase(GrpcConstants.GRPC_PROTOCOL_NAME)) {
             throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID + ": The url must " +
@@ -85,7 +91,8 @@ public abstract class AbstractGrpcSource extends Source {
             aURL = new URL(GrpcConstants.DUMMY_PROTOCOL_NAME + url.substring(4));
         } catch (MalformedURLException e) {
             throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID +
-                    ": MalformedURLException. " + e.getMessage()); //todo: same corrections as abstrctsink
+                    ": Error in URL format. Expected format is `grpc://0.0.0.0:9763/<serviceName>/<methodName>` but " +
+                    "the provided url is " + url + ". " + e.getMessage());
         }
         this.serviceName = getServiceName(aURL.getPath());
         this.port = aURL.getPort();
@@ -148,5 +155,45 @@ public abstract class AbstractGrpcSource extends Source {
     @Override
     public void resume() {
 
+    }
+
+    public void connectGrpcServer(Server server, Logger logger) {
+        try {
+            server.start();
+            if (logger.isDebugEnabled()) {
+                logger.debug(siddhiAppContext.getName() + ":" + streamID + ": gRPC Server started");
+            }
+        } catch (IOException e) {
+            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ":" + streamID + ": " + e.getMessage());
+        }
+    }
+
+    public void disconnectGrpcServer(Server server, Logger logger) {
+        try {
+            if (server == null) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug(siddhiAppContext.getName() + ":" + streamID + ": Illegal state. Server already " +
+                            "stopped.");
+                }
+                return;
+            }
+            server.shutdown();
+            if (serverShutdownWaitingTimeInMillis != -1L) {
+                if (server.awaitTermination(serverShutdownWaitingTimeInMillis, TimeUnit.MILLISECONDS)) {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug(siddhiAppContext.getName() + ":" + streamID + ": Server stopped");
+                    }
+                    return;
+                }
+                server.shutdownNow();
+                if (server.awaitTermination(serverShutdownWaitingTimeInMillis, TimeUnit.SECONDS)) {
+                    return;
+                }
+                throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ":" + streamID + ": Unable to " +
+                        "shutdown server");
+            }
+        } catch (InterruptedException e) {
+            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ":" + streamID + ": " + e.getMessage());
+        }
     }
 }

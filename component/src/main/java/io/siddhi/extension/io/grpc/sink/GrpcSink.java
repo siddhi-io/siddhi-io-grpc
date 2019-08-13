@@ -18,10 +18,6 @@
 package io.siddhi.extension.io.grpc.sink;
 
 import com.google.protobuf.Empty;
-import io.grpc.Metadata;
-import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
-import io.grpc.stub.MetadataUtils;
 import io.grpc.stub.StreamObserver;
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
