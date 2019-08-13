@@ -40,14 +40,16 @@ public class TestServerInterceptor implements ServerInterceptor {
                                                                ServerCallHandler<ReqT, RespT> serverCallHandler) {
     Set<String> metadataKeys = metadata.keys();
     for (String key: metadataKeys) {
-
+      if (logger.isDebugEnabled()) {
+        logger.debug("Header received: " + key + ": " + metadata.get(Metadata.Key.of(key, ASCII_STRING_MARSHALLER)));
+      }
     }
-    Metadata.Key<String> headerKey = Metadata.Key.of("headers", ASCII_STRING_MARSHALLER);
-    String headers = metadata.get(headerKey);
-    metadata.removeAll(headerKey);
-    if (logger.isDebugEnabled() && headers != null) {
-      logger.debug("Header received: " + headers);
-    }
+//    Metadata.Key<String> headerKey = ;
+//    String headers = metadata.get(headerKey);
+//    metadata.removeAll(headerKey);
+//    if (logger.isDebugEnabled() && headers != null) {
+//      logger.debug("Header received: " + headers);
+//    }
     return Contexts.interceptCall(Context.ROOT, serverCall, metadata, serverCallHandler);
   }
 }

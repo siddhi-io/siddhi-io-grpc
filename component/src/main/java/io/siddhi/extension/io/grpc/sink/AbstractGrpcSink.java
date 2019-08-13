@@ -42,7 +42,7 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getServiceName;
 import static io.siddhi.extension.io.grpc.util.GrpcUtils.isSequenceNamePresent;
 
 /**
- * {@code AbstractGrpcSink} is a super class extended by GrpcCallSink, and GrpcSink. //todo make all capitl
+ * {@code AbstractGrpcSink} is a super class extended by GrpcCallSink, and GrpcSink.
  * This provides most of the initialization implementations
  */
 
@@ -60,7 +60,7 @@ public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and
     protected Option headersOption;
     protected Option metadataOption;
     protected ManagedChannelBuilder managedChannelBuilder;
-    protected long channelTerminationWaitingTime;
+    protected long channelTerminationWaitingTimeInMillis = -1L;
 
     /**
      * Returns the list of classes which this sink can consume.
@@ -105,7 +105,7 @@ public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and
     protected StateFactory init(StreamDefinition streamDefinition, OptionHolder optionHolder, ConfigReader configReader,
                                 SiddhiAppContext siddhiAppContext) {
         this.siddhiAppContext = siddhiAppContext;
-        this.url = optionHolder.validateAndGetOption(GrpcConstants.PUBLISHER_URL).getValue();
+        this.url = optionHolder.validateAndGetOption(GrpcConstants.PUBLISHER_URL).getValue().trim();
         this.streamID = streamDefinition.getId();
         if (optionHolder.isOptionExists(GrpcConstants.HEADERS)) {
             this.headersOption = optionHolder.validateAndGetOption(GrpcConstants.HEADERS);
@@ -113,7 +113,6 @@ public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and
         if (optionHolder.isOptionExists("metadata")) {
             this.metadataOption = optionHolder.validateAndGetOption("metadata");
         }
-        //todo: trim the string and remove white sapces
         if (!url.substring(0, 4).equalsIgnoreCase(GrpcConstants.GRPC_PROTOCOL_NAME)) {
             throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID +
                     ": The url must begin with \"" + GrpcConstants.GRPC_PROTOCOL_NAME + "\" for all grpc sinks");
@@ -123,50 +122,65 @@ public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and
             aURL = new URL(GrpcConstants.DUMMY_PROTOCOL_NAME + url.substring(4));
         } catch (MalformedURLException e) {
             throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID +
-                    ": MalformedURLException. " + e.getMessage()); //todo: explain the cause. give original url and expected format
+                    ": Error in URL format. Expected format is `grpc://0.0.0.0:9763/<serviceName>/<methodName>` but " +
+                    "the provided url is " + url + ". " + e.getMessage());
         }
         String serviceName = getServiceName(aURL.getPath());
         this.methodName = getMethodName(aURL.getPath());
         this.address = aURL.getAuthority();
-        this.channelTerminationWaitingTime = Integer.parseInt(optionHolder.getOrCreateOption(
-                GrpcConstants.CHANNEL_TERMINATION_WAITING_TIME, GrpcConstants.CHANNEL_TERMINATION_WAITING_TIME_DEFAULT)
-                .getValue()); //todo: get in millisec. add it to variable names. if user doesnt give then only shutdown without await termination
+        if (optionHolder.isOptionExists(GrpcConstants.CHANNEL_TERMINATION_WAITING_TIME_MILLIS)) {
+            this.channelTerminationWaitingTimeInMillis = Long.parseLong(optionHolder.validateAndGetOption(
+                    GrpcConstants.CHANNEL_TERMINATION_WAITING_TIME_MILLIS).getValue());
+        }
 
         //ManagedChannelBuilder Properties. i.e gRPC connection parameters
-        this.managedChannelBuilder = ManagedChannelBuilder.forTarget(address).usePlaintext(); //todo: if user doesnt give then dont provide the params
-        managedChannelBuilder.idleTimeout(Long.parseLong(optionHolder.getOrCreateOption(GrpcConstants.IDLE_TIMEOUT,
-                GrpcConstants.IDLE_TIMEOUT_DEFAULT).getValue()), TimeUnit.SECONDS); //todo: have everything in millisecond
-        managedChannelBuilder.keepAliveTime(Long.parseLong(optionHolder.getOrCreateOption(GrpcConstants.KEEP_ALIVE_TIME,
-                GrpcConstants.KEEP_ALIVE_TIME_DEFAULT).getValue()), TimeUnit.SECONDS);
-        managedChannelBuilder.keepAliveTimeout(Long.parseLong(optionHolder.getOrCreateOption(
-                GrpcConstants.KEEP_ALIVE_TIMEOUT, GrpcConstants.KEEP_ALIVE_TIMEOUT_DEFAULT).getValue()),
-                TimeUnit.SECONDS);
-        managedChannelBuilder.keepAliveWithoutCalls(Boolean.parseBoolean(optionHolder.getOrCreateOption(
-                GrpcConstants.KEEP_ALIVE_WITHOUT_CALLS, GrpcConstants.KEEP_ALIVE_WITHOUT_CALLS_DEFAULT).getValue()));
-        managedChannelBuilder.maxRetryAttempts(Integer.parseInt(optionHolder.getOrCreateOption(
-                GrpcConstants.MAX_RETRY_ATTEMPTS, GrpcConstants.MAX_RETRY_ATTEMPTS_DEFAULT).getValue()));
-        managedChannelBuilder.maxHedgedAttempts(Integer.parseInt(optionHolder.getOrCreateOption( //todo: check how to disable
-                GrpcConstants.MAX_HEDGED_ATTEMPTS, GrpcConstants.MAX_HEDGED_ATTEMPTS_DEFAULT).getValue()));
+        managedChannelBuilder = ManagedChannelBuilder.forTarget(address).usePlaintext(); //todo: implement tls
+        if (optionHolder.isOptionExists(GrpcConstants.IDLE_TIMEOUT_MILLIS)) {
+            managedChannelBuilder.idleTimeout(Long.parseLong(optionHolder.validateAndGetOption(
+                    GrpcConstants.IDLE_TIMEOUT_MILLIS).getValue()), TimeUnit.MILLISECONDS);
+        }
+        if (optionHolder.isOptionExists(GrpcConstants.KEEP_ALIVE_TIME_MILLIS)) {
+            managedChannelBuilder.keepAliveTime(Long.parseLong(optionHolder.validateAndGetOption(
+                    GrpcConstants.KEEP_ALIVE_TIME_MILLIS).getValue()), TimeUnit.MILLISECONDS);
+        }
+        if (optionHolder.isOptionExists(GrpcConstants.KEEP_ALIVE_TIMEOUT_MILLIS)) {
+            managedChannelBuilder.keepAliveTimeout(Long.parseLong(optionHolder.validateAndGetOption(
+                    GrpcConstants.KEEP_ALIVE_TIMEOUT_MILLIS).getValue()), TimeUnit.MILLISECONDS);
+        }
+        if (optionHolder.isOptionExists(GrpcConstants.KEEP_ALIVE_WITHOUT_CALLS)) {
+            managedChannelBuilder.keepAliveWithoutCalls(Boolean.parseBoolean(optionHolder.validateAndGetOption(
+                    GrpcConstants.KEEP_ALIVE_WITHOUT_CALLS).getValue()));
+        }
+        if (optionHolder.isOptionExists(GrpcConstants.MAX_HEDGED_ATTEMPTS)) {
+            managedChannelBuilder.maxHedgedAttempts(Integer.parseInt(optionHolder.validateAndGetOption( //todo: check how to disable
+                    GrpcConstants.MAX_HEDGED_ATTEMPTS).getValue()));
+        }
         if (Boolean.parseBoolean(optionHolder.getOrCreateOption(GrpcConstants.ENABLE_RETRY,
                 GrpcConstants.ENABLE_RETRY_DEFAULT).getValue())) {
             managedChannelBuilder.enableRetry();
-            managedChannelBuilder.retryBufferSize(Long.parseLong(optionHolder.getOrCreateOption(
-                    GrpcConstants.RETRY_BUFFER_SIZE, GrpcConstants.RETRY_BUFFER_SIZE_DEFAULT).getValue()));
-            managedChannelBuilder.perRpcBufferLimit(Long.parseLong(optionHolder.getOrCreateOption(
-                    GrpcConstants.PER_RPC_BUFFER_SIZE, GrpcConstants.PER_RPC_BUFFER_SIZE_DEFAULT).getValue()));
+            if (optionHolder.isOptionExists(GrpcConstants.MAX_RETRY_ATTEMPTS)) {
+                managedChannelBuilder.maxRetryAttempts(Integer.parseInt(optionHolder.validateAndGetOption(
+                        GrpcConstants.MAX_RETRY_ATTEMPTS).getValue()));
+            }
+            if (optionHolder.isOptionExists(GrpcConstants.RETRY_BUFFER_SIZE)) {
+                managedChannelBuilder.retryBufferSize(Long.parseLong(optionHolder.validateAndGetOption(
+                        GrpcConstants.RETRY_BUFFER_SIZE).getValue()));
+            }
+            if (optionHolder.isOptionExists(GrpcConstants.PER_RPC_BUFFER_SIZE)) {
+                managedChannelBuilder.perRpcBufferLimit(Long.parseLong(optionHolder.validateAndGetOption(
+                        GrpcConstants.PER_RPC_BUFFER_SIZE).getValue()));
+            }
         }
-        initSink(optionHolder);
 
-        if (serviceName.equals(GrpcConstants.DEFAULT_SERVICE_NAME) //todo: if user dznt give method name take as default
-                && (methodName.equals(GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE) //todo check one by one in subclass
-                || methodName.equals(GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE))) {
+        if (serviceName.equals(GrpcConstants.DEFAULT_SERVICE_NAME)) {
             this.isDefaultMode = true;
-            if (isSequenceNamePresent(aURL.getPath())) { //todo: move to subclass
+            if (isSequenceNamePresent(aURL.getPath())) {
                 this.sequenceName = getSequenceName(aURL.getPath());
             }
         } else {
             //todo: handle generic grpc service
         }
+        initSink(optionHolder);
         return null;
     }
 

@@ -210,6 +210,15 @@ public class GrpcCallSink extends AbstractGrpcSink {
 
     @Override
     public void initSink(OptionHolder optionHolder) {
+        if (isDefaultMode) {
+            if (methodName == null) {
+                methodName = GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE;
+            } else if (!methodName.equalsIgnoreCase(GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE)) {
+                throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": " + streamID + ": In default " +
+                        "mode grpc-call-sink when using EventService the method name should be '" +
+                        GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE + "' but given " + methodName);
+            }
+        }
         managedChannelBuilder.maxInboundMessageSize(Integer.parseInt(optionHolder.getOrCreateOption( //todo: remove the optional param default if not given
                 GrpcConstants.MAX_INBOUND_MESSAGE_SIZE, GrpcConstants.MAX_INBOUND_MESSAGE_SIZE_DEFAULT).getValue()));
         managedChannelBuilder.maxInboundMetadataSize(Integer.parseInt(optionHolder.getOrCreateOption(
@@ -293,7 +302,12 @@ public class GrpcCallSink extends AbstractGrpcSink {
     @Override
     public void disconnect() {
         try {
-            channel.shutdown().awaitTermination(channelTerminationWaitingTime, TimeUnit.SECONDS);
+            if (channelTerminationWaitingTimeInMillis != -1L) {
+                channel.shutdown().awaitTermination(channelTerminationWaitingTimeInMillis, TimeUnit.MILLISECONDS);
+            } else {
+                channel.shutdown();
+            }
+            channel = null;
         } catch (InterruptedException e) {
             throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ":" + streamID + ": Error in shutting " +
                     "down the channel. " + e.getMessage());

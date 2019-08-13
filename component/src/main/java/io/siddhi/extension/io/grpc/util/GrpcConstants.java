@@ -46,15 +46,15 @@ public class GrpcConstants {
     public static final int PATH_SEQUENCE_NAME_POSITION = 2;
 
     //ManagedChannelBuilder Properties
-    public static final String IDLE_TIMEOUT = "idle.timeout";
+    public static final String IDLE_TIMEOUT_MILLIS = "idle.timeout";
     public static final String IDLE_TIMEOUT_DEFAULT = "1800";
     public static final String MAX_INBOUND_MESSAGE_SIZE = "max.inbound.message.size";
     public static final String MAX_INBOUND_MESSAGE_SIZE_DEFAULT = "4194304";
     public static final String MAX_INBOUND_METADATA_SIZE = "max.inbound.metadata.size";
     public static final String MAX_INBOUND_METADATA_SIZE_DEFAULT = "8192";
-    public static final String KEEP_ALIVE_TIME = "keep.alive.time";
+    public static final String KEEP_ALIVE_TIME_MILLIS = "keep.alive.time";
     public static final String KEEP_ALIVE_TIME_DEFAULT = String.valueOf(Long.MAX_VALUE);
-    public static final String KEEP_ALIVE_TIMEOUT = "keep.alive.timeout";
+    public static final String KEEP_ALIVE_TIMEOUT_MILLIS = "keep.alive.timeout";
     public static final String KEEP_ALIVE_TIMEOUT_DEFAULT = "20";
     public static final String KEEP_ALIVE_WITHOUT_CALLS = "keep.alive.without.calls";
     public static final String KEEP_ALIVE_WITHOUT_CALLS_DEFAULT = "false";
@@ -68,8 +68,8 @@ public class GrpcConstants {
     public static final String PER_RPC_BUFFER_SIZE_DEFAULT = "1048576";
     public static final String ENABLE_RETRY = "enable.retry";
     public static final String ENABLE_RETRY_DEFAULT = "false";
-    public static final String CHANNEL_TERMINATION_WAITING_TIME = "channel.termination.waiting.time";
-    public static final String CHANNEL_TERMINATION_WAITING_TIME_DEFAULT = "5";
+    public static final String CHANNEL_TERMINATION_WAITING_TIME_MILLIS = "channel.termination.waiting.time";
+    public static final String CHANNEL_TERMINATION_WAITING_TIME_MILLIS_DEFAULT = "5000";
     public static final String SERVER_SHUTDOWN_WAITING_TIME = "server.shutdown.waiting.time";
     public static final String SERVER_SHUTDOWN_WAITING_TIME_DEFAULT = "5";
 

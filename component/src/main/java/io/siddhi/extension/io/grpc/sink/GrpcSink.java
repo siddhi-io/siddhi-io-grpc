@@ -31,6 +31,7 @@ import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.transport.DynamicOptions;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
+import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
@@ -184,7 +185,17 @@ public class GrpcSink extends AbstractGrpcSink {
     private EventServiceGrpc.EventServiceStub asyncStub;
 
     @Override
-    public void initSink(OptionHolder optionHolder) {}
+    public void initSink(OptionHolder optionHolder) {
+        if (isDefaultMode) {
+            if (methodName == null) {
+                methodName = GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE;
+            } else if (!methodName.equalsIgnoreCase(GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE)) {
+                throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": " + streamID + ": In default " +
+                        "mode grpc-sink when using EventService the method name should be '" +
+                        GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE + "' but given " + methodName);
+            }
+        }
+    }
 
     @Override
     public void publish(Object payload, DynamicOptions dynamicOptions, State state)
@@ -265,7 +276,11 @@ public class GrpcSink extends AbstractGrpcSink {
     @Override
     public void disconnect() {
         try {
-            channel.shutdown().awaitTermination(channelTerminationWaitingTime, TimeUnit.SECONDS);
+            if (channelTerminationWaitingTimeInMillis != -1L) {
+                channel.shutdown().awaitTermination(channelTerminationWaitingTimeInMillis, TimeUnit.MILLISECONDS);
+            } else {
+                channel.shutdown();
+            }
             channel = null;
             //todo: add a test case for failing . siddhi app shotdown
         } catch (InterruptedException e) {
