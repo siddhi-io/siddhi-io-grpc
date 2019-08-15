@@ -20,6 +20,7 @@ package io.siddhi.extension.io.grpc.sink;
 import io.siddhi.core.SiddhiAppRuntime;
 import io.siddhi.core.SiddhiManager;
 import io.siddhi.core.stream.input.InputHandler;
+import io.siddhi.extension.io.grpc.utils.GrpcTestUtil;
 import io.siddhi.extension.io.grpc.utils.TestAppender;
 import io.siddhi.extension.io.grpc.utils.TestServer;
 import io.siddhi.extension.io.grpc.utils.TestTLSServer;
@@ -33,7 +34,9 @@ import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class GrpcSinkAuthTestCase {
@@ -81,5 +84,28 @@ public class GrpcSinkAuthTestCase {
             logMessages.add(message);
         }
         Assert.assertTrue(logMessages.contains("Server consume hit with [Request 1]"));
+    }
+
+    @Test
+    public void testCaseToCallConsumeWithSimpleRequest2() throws Exception {
+        GrpcTestUtil.setCarbonHome();
+        Map<String, String> masterConfigs = new HashMap<>();
+        masterConfigs.put("sink.http.keyStoreLocation", "${carbon.home}/resources/security/wso2carbon.jks");
+
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String inStreamDefinition = ""
+                + "@sink(type='grpc', url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
+                "@map(type='json', @payload('{{message}}'))) " +
+                "define stream FooStream (message String);";
+
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
+        InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
+
+        siddhiAppRuntime.start();
+        fooStream.send(new Object[]{"Request 1"});
+        Thread.sleep(1000);
+        siddhiAppRuntime.shutdown();
+
     }
 }

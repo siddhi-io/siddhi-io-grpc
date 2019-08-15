@@ -34,7 +34,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-public class TestTLSServer {
+public class TestTLSServer { //todo: follow http in setting the certificates
     private static final Logger logger = Logger.getLogger(TestServer.class.getName());
     private Server server;
     private TestServerInterceptor testInterceptor = new TestServerInterceptor();
@@ -47,15 +47,15 @@ public class TestTLSServer {
         this.port = port;
     }
 
-    private SslContextBuilder getSslContextBuilder() {
-        SslContextBuilder sslClientContextBuilder = SslContextBuilder.forServer(new File(certChainFilePath),
-                new File(privateKeyFilePath));
-        if (trustCertCollectionFilePath != null) {
-            sslClientContextBuilder.trustManager(new File(trustCertCollectionFilePath));
-            sslClientContextBuilder.clientAuth(ClientAuth.REQUIRE);
-        }
-        return GrpcSslContexts.configure(sslClientContextBuilder);
-    }
+//    private SslContextBuilder getSslContextBuilder() {
+//        SslContextBuilder sslClientContextBuilder = SslContextBuilder.forServer(new File(certChainFilePath),
+//                new File(privateKeyFilePath));
+//        if (trustCertCollectionFilePath != null) {
+//            sslClientContextBuilder.trustManager(new File(trustCertCollectionFilePath));
+//            sslClientContextBuilder.clientAuth(ClientAuth.REQUIRE);
+//        }
+//        return GrpcSslContexts.configure(sslClientContextBuilder);
+//    }
 
     public void start() throws IOException {
         if (server != null) {

@@ -70,7 +70,8 @@ public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and
     protected EventServiceGrpc.EventServiceFutureStub futureStub;
     protected Option headersOption;
     protected Option metadataOption;
-    protected ManagedChannelBuilder managedChannelBuilder;
+    protected NettyChannelBuilder managedChannelBuilder;
+//    protected NettyChannelBuilder nettyChannelBuilder;
     protected long channelTerminationWaitingTimeInMillis = -1L;
     protected StreamDefinition streamDefinition;
 
@@ -148,7 +149,7 @@ public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and
 
         //ManagedChannelBuilder Properties. i.e gRPC connection parameters
 //        managedChannelBuilder = ManagedChannelBuilder.forTarget(address).usePlaintext(); //todo: implement tls
-        managedChannelBuilder = ManagedChannelBuilder.forTarget(address).overrideAuthority("org.wso2.grpc.test");
+        managedChannelBuilder = NettyChannelBuilder.forTarget(address).overrideAuthority("org.wso2.grpc.test").sslContext(GrpcSslContexts.forClient().keyManager());
         if (optionHolder.isOptionExists(GrpcConstants.IDLE_TIMEOUT_MILLIS)) {
             managedChannelBuilder.idleTimeout(Long.parseLong(optionHolder.validateAndGetOption(
                     GrpcConstants.IDLE_TIMEOUT_MILLIS).getValue()), TimeUnit.MILLISECONDS);

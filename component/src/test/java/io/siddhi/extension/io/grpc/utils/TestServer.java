@@ -18,6 +18,7 @@
 package io.siddhi.extension.io.grpc.utils;
 
 import com.google.protobuf.Empty;
+import io.grpc.BindableService;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.ServerInterceptors;
@@ -35,6 +36,33 @@ public class TestServer {
     private TestServerInterceptor testInterceptor = new TestServerInterceptor();
     private int port;
 
+    private BindableService myService = new EventServiceGrpc.EventServiceImplBase() {
+        @Override
+        public void process(Event request,
+                            StreamObserver<Event> responseObserver) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Server process hit with payload = " + request.getPayload() + " and Headers = {"
+                        + request.getHeadersMap().toString() + "}");
+            }
+            Event.Builder responseBuilder = Event.newBuilder();
+            String json = "{ \"message\": \"Hello from Server!\"}";
+            responseBuilder.setPayload(json);
+            Event response = responseBuilder.build();
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        }
+
+        @Override
+        public void consume(Event request,
+                            StreamObserver<Empty> responseObserver) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Server consume hit with " + request.getPayload());
+            }
+            responseObserver.onNext(Empty.getDefaultInstance());
+            responseObserver.onCompleted();
+        }
+    };
+
     public TestServer(int port) {
         this.port = port;
     }
@@ -46,32 +74,7 @@ public class TestServer {
         server = ServerBuilder
                 .forPort(port)
                 .addService(
-                        ServerInterceptors.intercept(new EventServiceGrpc.EventServiceImplBase() {
-            @Override
-            public void process(Event request,
-                                StreamObserver<Event> responseObserver) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Server process hit with payload = " + request.getPayload() + " and Headers = {"
-                            + request.getHeadersMap().toString() + "}");
-                }
-                Event.Builder responseBuilder = Event.newBuilder();
-                String json = "{ \"message\": \"Hello from Server!\"}";
-                responseBuilder.setPayload(json);
-                Event response = responseBuilder.build();
-                responseObserver.onNext(response);
-                responseObserver.onCompleted();
-            }
-
-            @Override
-            public void consume(Event request,
-                                StreamObserver<Empty> responseObserver) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Server consume hit with " + request.getPayload());
-                }
-                responseObserver.onNext(Empty.getDefaultInstance());
-                responseObserver.onCompleted();
-            }
-        }, testInterceptor)).build();
+                        ServerInterceptors.intercept(myService, testInterceptor)).addService(myService).build();
         server.start();
         if (logger.isDebugEnabled()) {
             logger.debug("Server started");

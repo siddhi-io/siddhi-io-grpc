@@ -55,7 +55,7 @@ public class GrpcCallSinkTestCase {
 
     @Test
     public void test1() throws Exception {
-        logger.info("Test case to call process sending 2 requests");
+        logger.info("Test case to call process sending a request");
         logger.setLevel(Level.DEBUG);
         SiddhiManager siddhiManager = new SiddhiManager();
 
