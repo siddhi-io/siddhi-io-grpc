@@ -306,7 +306,7 @@ public class GrpcServiceSourceTestCase {
         siddhiAppRuntime.shutdown();
     }
 
-    @Test(dependsOnMethods = "testToCallProcess")
+    @Test//(dependsOnMethods = "testToCallProcess")
     public void testWithHeaders() throws Exception {
         logger.info("Test case to call process");
         logger.setLevel(Level.DEBUG);

@@ -20,6 +20,10 @@ package io.siddhi.extension.io.grpc.sink;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.Metadata;
+import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
+import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
+import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
+import io.grpc.netty.shaded.io.netty.handler.ssl.SslContextBuilder;
 import io.grpc.stub.AbstractStub;
 import io.grpc.stub.MetadataUtils;
 import io.siddhi.core.config.SiddhiAppContext;
@@ -37,6 +41,8 @@ import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
 
+import javax.net.ssl.SSLException;
+import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.concurrent.TimeUnit;
@@ -141,7 +147,8 @@ public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and
         }
 
         //ManagedChannelBuilder Properties. i.e gRPC connection parameters
-        managedChannelBuilder = ManagedChannelBuilder.forTarget(address).usePlaintext(); //todo: implement tls
+//        managedChannelBuilder = ManagedChannelBuilder.forTarget(address).usePlaintext(); //todo: implement tls
+        managedChannelBuilder = ManagedChannelBuilder.forTarget(address).overrideAuthority("org.wso2.grpc.test");
         if (optionHolder.isOptionExists(GrpcConstants.IDLE_TIMEOUT_MILLIS)) {
             managedChannelBuilder.idleTimeout(Long.parseLong(optionHolder.validateAndGetOption(
                     GrpcConstants.IDLE_TIMEOUT_MILLIS).getValue()), TimeUnit.MILLISECONDS);
@@ -189,6 +196,21 @@ public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and
         }
         initSink(optionHolder);
         return null;
+    }
+
+    private static SslContext buildSslContext(String trustCertCollectionFilePath,
+                                              String clientCertChainFilePath,
+                                              String clientPrivateKeyFilePath) throws SSLException {
+        SslContextBuilder builder = GrpcSslContexts.forClient();
+        clientPrivateKeyFilePath = "/Users/niruhan/wso2/source_codes/siddhi-io-grpc-1/component/src/test/resources/certs/client.key";
+        clientCertChainFilePath = "/Users/niruhan/wso2/source_codes/siddhi-io-grpc-1/component/src/test/resources/certs/client.pem";
+        if (trustCertCollectionFilePath != null) {
+            builder.trustManager(new File(trustCertCollectionFilePath));
+        }
+        if (clientCertChainFilePath != null && clientPrivateKeyFilePath != null) {
+            builder.keyManager(new File(clientCertChainFilePath), new File(clientPrivateKeyFilePath));
+        }
+        return builder.build();
     }
 
     public abstract void initSink(OptionHolder optionHolder);
