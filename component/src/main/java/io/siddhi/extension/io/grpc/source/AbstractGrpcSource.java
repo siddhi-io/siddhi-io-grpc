@@ -44,7 +44,7 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getServiceName;
  * This is an abstract class extended by GrpcSource and GrpcServiceSource. This provides most of initialization
  * implementations common for both sources
  */
-public abstract class AbstractGrpcSource extends Source {
+public abstract class AbstractGrpcSource extends Source { //todo: one source url for multiple streams by keeping a map of dummy sources
     protected SiddhiAppContext siddhiAppContext;
     protected SourceEventListener sourceEventListener;
     private String url;
@@ -111,7 +111,7 @@ public abstract class AbstractGrpcSource extends Source {
                 this.isDefaultMode = true;
                 initializeGrpcServer(port);
         } else {
-            //todo: handle generic grpc service
+
         }
         this.serviceDeploymentInfo = new ServiceDeploymentInfo(port, false);
         return null;
@@ -120,8 +120,6 @@ public abstract class AbstractGrpcSource extends Source {
     public abstract void initializeGrpcServer(int port);
 
     public abstract void initSource(OptionHolder optionHolder, String[] requestedTransportPropertyNames);
-
-    public abstract void populateHeaderString(String headerString);
 
     /**
      * Returns the list of classes which this source can output.

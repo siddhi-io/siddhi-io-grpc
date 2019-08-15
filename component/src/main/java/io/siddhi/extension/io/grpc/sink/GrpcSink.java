@@ -221,7 +221,7 @@ public class GrpcSink extends AbstractGrpcSink {
                 public void onNext(Empty event) {}
 
                 @Override
-                public void onError(Throwable t) { //parent method doest have error in its signature. so cant throw from here todo ask suho
+                public void onError(Throwable t) { //parent method doest have error in its signature. so cant throw from here
                     System.out.println(Thread.currentThread().getId());
 //                    if (((StatusRuntimeException) t).getStatus().getCode().equals(Status.UNAVAILABLE)) {
 //                        throw new ConnectionUnavailableException(siddhiAppContext.getName() + ": " + streamID + ": " + t.getMessage());
@@ -236,7 +236,7 @@ public class GrpcSink extends AbstractGrpcSink {
             };
             currentAsyncStub.consume(eventBuilder.build(), responseObserver);
         } else {
-            //todo: handle publishing to generic service
+
         }
     }
 

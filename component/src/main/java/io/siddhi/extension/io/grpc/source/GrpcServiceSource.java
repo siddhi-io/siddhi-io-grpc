@@ -134,7 +134,6 @@ public class GrpcServiceSource extends AbstractGrpcSource {
     private static final Logger logger = Logger.getLogger(GrpcServiceSource.class.getName());
     private Map<String, StreamObserver<Event>> streamObserverMap = Collections.synchronizedMap(new HashMap<>());
     private String sourceId;
-    private String headerString;
     private long serviceTimeout;
     protected String[] requestedTransportPropertyNames;
     protected Server server;
@@ -148,22 +147,20 @@ public class GrpcServiceSource extends AbstractGrpcSource {
                 @Override
                 public void process(Event request,
                                     StreamObserver<Event> responseObserver) {
-                    String messageId = UUID.randomUUID().toString();
-                    if (headerString != null) {
-                        try {
-                            sourceEventListener.onEvent(request.getPayload(), extractHeaders(headerString + ", '" +
-                                    GrpcConstants.MESSAGE_ID + ":" + messageId + "'", requestedTransportPropertyNames));
-                        } catch (SiddhiAppRuntimeException e) {
-                            logger.error(siddhiAppContext.getName() + ":" + streamID + "Dropping request. " +
-                                    e.getMessage());
-                            responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
-                        }
+                    if (request.getPayload() == null) {
+                        logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request due to " +
+                                "missing payload ");
+                        responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
                     } else {
-                        sourceEventListener.onEvent(request.getPayload(), new String[]{messageId});
+                        String messageId = UUID.randomUUID().toString();
+                        Map<String, String> transportPropertyMap = new HashMap<>();
+                        transportPropertyMap.put(GrpcConstants.MESSAGE_ID, messageId);
+                        transportPropertyMap.putAll(request.getHeadersMap());
+                        sourceEventListener.onEvent(request.getPayload(), extractHeaders(transportPropertyMap, requestedTransportPropertyNames));
+                        streamObserverMap.put(messageId, responseObserver);
+                        timer.schedule(new ServiceSourceTimeoutChecker(messageId,
+                                siddhiAppContext.getTimestampGenerator().currentTime()), serviceTimeout);
                     }
-                    streamObserverMap.put(messageId, responseObserver);
-                    timer.schedule(new ServiceSourceTimeoutChecker(messageId,
-                            siddhiAppContext.getTimestampGenerator().currentTime()), serviceTimeout);
                 }
             }, serverInterceptor)).build();
         }
@@ -217,11 +214,6 @@ public class GrpcServiceSource extends AbstractGrpcSource {
     @Override
     public void disconnect() {
         disconnectGrpcServer(server, logger);
-    }
-
-    @Override
-    public void populateHeaderString(String headerString) {
-        this.headerString = headerString;
     }
 
     public void handleCallback(String messageId, String responsePayload) {

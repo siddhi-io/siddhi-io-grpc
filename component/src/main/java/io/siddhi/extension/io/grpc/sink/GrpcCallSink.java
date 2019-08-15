@@ -264,7 +264,7 @@ public class GrpcCallSink extends AbstractGrpcSink {
                 }
             }, MoreExecutors.directExecutor());
         } else {
-            //todo: handle publishing to generic service
+
         }
     }
 

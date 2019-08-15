@@ -91,7 +91,7 @@ public class GrpcSourceTestCase {
     }
 
     @Test(dependsOnMethods = "test1")
-    public void testWithHeaders() throws Exception {
+    public void testWithMetaData() throws Exception {
         logger.info("Test case to call process");
         logger.setLevel(Level.DEBUG);
         SiddhiManager siddhiManager = new SiddhiManager();
@@ -147,15 +147,73 @@ public class GrpcSourceTestCase {
         siddhiAppRuntime.shutdown();
     }
 
-    @Test(dependsOnMethods = "testWithHeaders")
-    public void testWithIncompleteHeaders() throws Exception {
+//    @Test(dependsOnMethods = "testWithHeaders")
+//    public void testWithIncompleteHeaders() throws Exception {
+//        logger.info("Test case to call process");
+//        logger.setLevel(Level.DEBUG);
+//        SiddhiManager siddhiManager = new SiddhiManager();
+//
+//        String stream2 = "@source(type='grpc', url='grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
+//                "@map(type='json', @attributes(name='trp:name', age='trp:age', message='message'))) " +
+//                "define stream BarStream (message String, name String, age int);"; //todo: check whether we can get events into different stream from the same server with a particular url. may be create a dummy server for duplicated source with same url but have one service source
+//        String query = "@info(name = 'query') "
+//                + "from BarStream "
+//                + "select *  "
+//                + "insert into outputStream;";
+//
+//        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(stream2 + query);
+//        siddhiAppRuntime.addCallback("query", new QueryCallback() {
+//            @Override
+//            public void receive(long timeStamp, io.siddhi.core.event.Event[] inEvents,
+//                                io.siddhi.core.event.Event[] removeEvents) {
+//                EventPrinter.print(timeStamp, inEvents, removeEvents);
+//                for (int i = 0; i < inEvents.length; i++) {
+//                    eventCount.incrementAndGet();
+//                    switch (i) {
+//                        case 0:
+//                            Assert.assertEquals((String) inEvents[i].getData()[0], "Hello !");
+//                            break;
+//                        default:
+//                            Assert.fail();
+//                    }
+//                }
+//            }
+//        });
+//
+//        Event.Builder requestBuilder = Event.newBuilder();
+//
+//        String json = "{ \"message\": \"Hello !\"}";
+//
+//        requestBuilder.setPayload(json);
+//        Event sequenceCallRequest = requestBuilder.build();
+//        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888")
+//                .usePlaintext(true)
+//                .build();
+//        EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
+//
+//        Metadata header = new Metadata();
+//        String headers = "'Name:John'";
+//        Metadata.Key<String> key =
+//                Metadata.Key.of(GrpcConstants.HEADERS, Metadata.ASCII_STRING_MARSHALLER);
+//        header.put(key, headers);
+//        blockingStub = MetadataUtils.attachHeaders(blockingStub, header);
+//
+//        siddhiAppRuntime.start();
+//        Empty emptyResponse = blockingStub.consume(sequenceCallRequest);
+//        Thread.sleep(1000);
+//        siddhiAppRuntime.shutdown();
+//    }
+
+    @Test//(dependsOnMethods = "test1")
+    public void testWithHeaders() throws Exception {
         logger.info("Test case to call process");
         logger.setLevel(Level.DEBUG);
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String stream2 = "@source(type='grpc', url='grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
+//                "headers='{{headers}}', " +
                 "@map(type='json', @attributes(name='trp:name', age='trp:age', message='message'))) " +
-                "define stream BarStream (message String, name String, age int);"; //todo: check whether we can get events into different stream from the same server with a particular url. may be create a dummy server for duplicated source with same url but have one service source
+                "define stream BarStream (message String, name String, age int);";
         String query = "@info(name = 'query') "
                 + "from BarStream "
                 + "select *  "
@@ -185,19 +243,13 @@ public class GrpcSourceTestCase {
         String json = "{ \"message\": \"Hello !\"}";
 
         requestBuilder.setPayload(json);
+        requestBuilder.putHeaders("name", "john");
+        requestBuilder.putHeaders("age", "24");
         Event sequenceCallRequest = requestBuilder.build();
         ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888")
                 .usePlaintext(true)
                 .build();
         EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
-
-        Metadata header = new Metadata();
-        String headers = "'Name:John'";
-        Metadata.Key<String> key =
-                Metadata.Key.of(GrpcConstants.HEADERS, Metadata.ASCII_STRING_MARSHALLER);
-        header.put(key, headers);
-        blockingStub = MetadataUtils.attachHeaders(blockingStub, header);
-
         siddhiAppRuntime.start();
         Empty emptyResponse = blockingStub.consume(sequenceCallRequest);
         Thread.sleep(1000);

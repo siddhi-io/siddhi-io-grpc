@@ -185,7 +185,7 @@ public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and
                 this.sequenceName = getSequenceName(aURL.getPath());
             }
         } else {
-            //todo: handle generic grpc service
+
         }
         initSink(optionHolder);
         return null;

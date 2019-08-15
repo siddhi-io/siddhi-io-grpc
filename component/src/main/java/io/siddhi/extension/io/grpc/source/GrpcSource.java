@@ -20,6 +20,7 @@ package io.siddhi.extension.io.grpc.source;
 import com.google.protobuf.Empty;
 import io.grpc.Server;
 import io.grpc.ServerInterceptors;
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
@@ -89,47 +90,46 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.extractHeaders;
 )
 public class GrpcSource extends AbstractGrpcSource {
     private static final Logger logger = Logger.getLogger(GrpcSource.class.getName());
-    private String headerString;
     protected String[] requestedTransportPropertyNames;
     protected Server server;
 
     @Override
     public void initializeGrpcServer(int port) {
         if (isDefaultMode) {
-            this.server = serverBuilder.addService(ServerInterceptors.intercept( //todo: check whether we can add services to a server after iot is started. check if same protobuf service can be added to the same server
+            this.server = serverBuilder.addService(ServerInterceptors.intercept(
                     new EventServiceGrpc.EventServiceImplBase() {
                 @Override
                 public void consume(Event request,
                                     StreamObserver<Empty> responseObserver) {
-//                    request.
-                    if (headerString != null) {
+                    if (request.getPayload() == null) {
+                        logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request due to " +
+                                "missing payload ");
+                        responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
+                    } else {
                         try {
-                            sourceEventListener.onEvent(request.getPayload(), extractHeaders(headerString,
-                                    requestedTransportPropertyNames));
+                            if (request.getHeadersMap().size() != 0) {
+                                sourceEventListener.onEvent(request.getPayload(), extractHeaders(request.getHeadersMap(),
+                                        requestedTransportPropertyNames));
+                            } else {
+                                sourceEventListener.onEvent(request.getPayload(), null);
+                            }
                         } catch (SiddhiAppRuntimeException e) {
                             logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request. " +
                                     e.getMessage());
                         }
-                    } else {
-                        sourceEventListener.onEvent(request.getPayload(), null);
+                        responseObserver.onNext(Empty.getDefaultInstance());
+                        responseObserver.onCompleted();
                     }
-                    responseObserver.onNext(Empty.getDefaultInstance());
-                    responseObserver.onCompleted();
                 }
             }, serverInterceptor)).build();
         } else {
-            //todo: generic server logic here
+
         }
     }
 
     @Override
     public void initSource(OptionHolder optionHolder, String[] requestedTransportPropertyNames) {
         this.requestedTransportPropertyNames = requestedTransportPropertyNames.clone();
-    }
-
-    @Override
-    public void populateHeaderString(String headerString) {
-        this.headerString = headerString; //
     }
 
     @Override
