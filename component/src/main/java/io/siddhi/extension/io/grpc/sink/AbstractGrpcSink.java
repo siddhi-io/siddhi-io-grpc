@@ -149,7 +149,11 @@ public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and
 
         //ManagedChannelBuilder Properties. i.e gRPC connection parameters
 //        managedChannelBuilder = ManagedChannelBuilder.forTarget(address).usePlaintext(); //todo: implement tls
-        managedChannelBuilder = NettyChannelBuilder.forTarget(address).overrideAuthority("org.wso2.grpc.test").sslContext(GrpcSslContexts.forClient().keyManager());
+        try {
+            managedChannelBuilder = NettyChannelBuilder.forTarget(address).sslContext(GrpcSslContexts.forClient().trustManager(new File("/Users/niruhan/wso2/source_codes/siddhi-io-grpc-1/component/src/test/resources/certs/server2.pem")).build());
+        } catch (SSLException e) {
+            e.printStackTrace();
+        }
         if (optionHolder.isOptionExists(GrpcConstants.IDLE_TIMEOUT_MILLIS)) {
             managedChannelBuilder.idleTimeout(Long.parseLong(optionHolder.validateAndGetOption(
                     GrpcConstants.IDLE_TIMEOUT_MILLIS).getValue()), TimeUnit.MILLISECONDS);

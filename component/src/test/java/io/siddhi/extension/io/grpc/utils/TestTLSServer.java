@@ -39,8 +39,8 @@ public class TestTLSServer { //todo: follow http in setting the certificates
     private Server server;
     private TestServerInterceptor testInterceptor = new TestServerInterceptor();
     private int port;
-    private String certChainFilePath = "/Users/niruhan/wso2/source_codes/siddhi-io-grpc-1/component/src/test/resources/certs/server.pem";
-    private String privateKeyFilePath = "/Users/niruhan/wso2/source_codes/siddhi-io-grpc-1/component/src/test/resources/certs/server.key";
+    private String certChainFilePath = "/Users/niruhan/wso2/source_codes/siddhi-io-grpc-1/component/src/test/resources/certs/server2.pem";
+    private String privateKeyFilePath = "/Users/niruhan/wso2/source_codes/siddhi-io-grpc-1/component/src/test/resources/certs/server2.key";
     private String trustCertCollectionFilePath;
 
     public TestTLSServer(int port) {
