@@ -34,7 +34,6 @@ import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.GenericServiceClass;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
 import io.siddhi.extension.io.grpc.util.GrpcSourceRegistry;
-import io.siddhi.extension.map.protobuf.utils.NewClass;
 import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
@@ -134,18 +133,19 @@ public class GrpcServiceSource extends AbstractGrpcSource {
                         String messageId = UUID.randomUUID().toString();
                         genericStreamObserverMap.put(messageId, responseObserver);
 
-                        NewClass newRequestObject = new NewClass(requestObject,messageId);
+//                        NewClass newRequestObject = new NewClass(requestObject,messageId);
+                        System.out.println("message ID ::::::"+messageId);
 
                         if (headerString != null) {
                             try {
-                                sourceEventListener.onEvent(newRequestObject, extractHeaders(headerString + ", '" +
+                                sourceEventListener.onEvent(requestObject, extractHeaders(headerString + ", '" +
                                         GrpcConstants.MESSAGE_ID + ":" + messageId + "'"));
                             } catch (SiddhiAppRuntimeException e) {
                                 logger.error(siddhiAppContext.getName() + "Dropping request. " + e.getMessage());
                                 responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
                             }
                         } else {
-                            sourceEventListener.onEvent(newRequestObject, new String[]{messageId});
+                            sourceEventListener.onEvent(requestObject, new String[]{messageId});//because message class does not have messageId value
                         }
                         genericStreamObserverMap.put(messageId, responseObserver);//todo why adding two times????
 

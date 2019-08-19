@@ -89,7 +89,7 @@ public class GrpcSource extends AbstractGrpcSource {
                     responseObserver.onNext(Empty.getDefaultInstance());
                     responseObserver.onCompleted();
                 }
-            }, serverInterceptor)).build();
+            }, serverInterceptor)).build(); //todo does generic grpc should follow the same way
         } else {
             //todo: generic server logic here
             GenericServiceClass.setServiceName(this.serviceName);

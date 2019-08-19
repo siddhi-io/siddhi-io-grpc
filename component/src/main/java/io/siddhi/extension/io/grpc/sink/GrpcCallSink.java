@@ -124,6 +124,7 @@ public class GrpcCallSink extends AbstractGrpcSink {
             //todo: handle publishing to generic service
             try {
 
+                Object currentFutureStub = stubObject;
                 if (headersOption != null) {
                     Metadata header = new Metadata();
                     String headers = headersOption.getValue(dynamicOptions);
@@ -133,12 +134,13 @@ public class GrpcCallSink extends AbstractGrpcSink {
                     Class[] headerMethodParameters = new Class[]{stubClass.getSuperclass(), Metadata.class};
                     Object[] headerMethodArguments = new Object[]{stubObject, header};
                     Method addHeaders = MetadataUtils.class.getDeclaredMethod("attachHeaders",headerMethodParameters);
-                    stubObject = addHeaders.invoke(stubObject,headerMethodArguments);
+
+                    currentFutureStub = addHeaders.invoke(stubObject,headerMethodArguments);
                 }
 
 
                 Method m = stubClass.getDeclaredMethod(methodName, requestClass);
-                ListenableFuture<Object> genericRes = (ListenableFuture<Object>) m.invoke(stubObject, payload);
+                ListenableFuture<Object> genericRes = (ListenableFuture<Object>) m.invoke(currentFutureStub, payload);
 
 
                 Futures.addCallback(genericRes, new FutureCallback<Object>() {

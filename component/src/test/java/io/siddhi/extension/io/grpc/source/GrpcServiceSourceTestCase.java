@@ -372,7 +372,7 @@ public class GrpcServiceSourceTestCase {
                 Request request = Request.newBuilder()
                         .setStringValue("Test 01")
                         .setIntValue(100)
-                        .setBooleanValue(false)
+                        .setBooleanValue(true)
                         .setDoubleValue(168.4567)
                         .setFloatValue(45.345f)
                         .setLongValue(1000000L)
