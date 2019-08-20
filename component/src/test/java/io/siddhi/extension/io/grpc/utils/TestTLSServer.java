@@ -24,14 +24,24 @@ import io.grpc.ServerInterceptors;
 import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 import io.grpc.netty.shaded.io.netty.handler.ssl.ClientAuth;
+import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
 import io.grpc.netty.shaded.io.netty.handler.ssl.SslContextBuilder;
 import io.grpc.stub.StreamObserver;
 import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
 
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.TrustManagerFactory;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
 import java.util.concurrent.TimeUnit;
 
 public class TestTLSServer { //todo: follow http in setting the certificates
@@ -42,26 +52,57 @@ public class TestTLSServer { //todo: follow http in setting the certificates
     private String certChainFilePath = "/Users/niruhan/wso2/source_codes/siddhi-io-grpc-1/component/src/test/resources/certs/server2.pem";
     private String privateKeyFilePath = "/Users/niruhan/wso2/source_codes/siddhi-io-grpc-1/component/src/test/resources/certs/server2.key";
     private String trustCertCollectionFilePath;
+    private KeyStore keyStore;
 
-    public TestTLSServer(int port) {
+    public TestTLSServer(int port) throws KeyStoreException {
         this.port = port;
+        keyStore = KeyStore.getInstance("JKS");
     }
 
-//    private SslContextBuilder getSslContextBuilder() {
-//        SslContextBuilder sslClientContextBuilder = SslContextBuilder.forServer(new File(certChainFilePath),
-//                new File(privateKeyFilePath));
-//        if (trustCertCollectionFilePath != null) {
-//            sslClientContextBuilder.trustManager(new File(trustCertCollectionFilePath));
-//            sslClientContextBuilder.clientAuth(ClientAuth.REQUIRE);
-//        }
-//        return GrpcSslContexts.configure(sslClientContextBuilder);
-//    }
+    private SslContextBuilder getSslContextBuilder() {
+        SslContextBuilder sslClientContextBuilder = SslContextBuilder.forServer(new File(certChainFilePath),
+                new File(privateKeyFilePath));
+        if (trustCertCollectionFilePath != null) {
+            sslClientContextBuilder.trustManager(new File(trustCertCollectionFilePath));
+            sslClientContextBuilder.clientAuth(ClientAuth.REQUIRE);
+        }
+        return GrpcSslContexts.configure(sslClientContextBuilder);
+    }
+
+    private SslContext getCarbonSslContext() {
+        char[] passphrase = "wso2carbon".toCharArray();
+
+        try {
+            keyStore.load(new FileInputStream(System.getProperty("carbon.home") + "/resources/security/wso2carbon.jks"),
+                    passphrase);
+            KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
+            kmf.init(keyStore, passphrase);
+            TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
+            tmf.init(keyStore);
+            SslContextBuilder sslClientContextBuilder = SslContextBuilder.forServer(kmf);
+    //        SslContext ssl = SslContext.defaultServerProvider().;
+            sslClientContextBuilder = GrpcSslContexts.configure(sslClientContextBuilder);
+            SslContext sslContext = sslClientContextBuilder.build();
+            return sslContext;
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (CertificateException e) {
+            e.printStackTrace();
+        } catch (UnrecoverableKeyException e) {
+            e.printStackTrace();
+        } catch (KeyStoreException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 
     public void start() throws IOException {
         if (server != null) {
             throw new IllegalStateException("Already started");
         }
-        server = ServerBuilder
+        server = NettyServerBuilder
                 .forPort(port)
                 .addService(new EventServiceGrpc.EventServiceImplBase() {
                             @Override
@@ -89,7 +130,8 @@ public class TestTLSServer { //todo: follow http in setting the certificates
                                 responseObserver.onCompleted();
                             }
                         })
-                .useTransportSecurity(new File(certChainFilePath), new File(privateKeyFilePath))
+                .sslContext(getCarbonSslContext())
+//                .useTransportSecurity(new File(certChainFilePath), new File(privateKeyFilePath))
                 .build();
         server.start();
         if (logger.isDebugEnabled()) {

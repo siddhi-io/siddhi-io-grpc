@@ -27,6 +27,7 @@ import io.grpc.netty.shaded.io.netty.handler.ssl.SslContextBuilder;
 import io.grpc.stub.AbstractStub;
 import io.grpc.stub.MetadataUtils;
 import io.siddhi.core.config.SiddhiAppContext;
+import io.siddhi.core.exception.SiddhiAppCreationException;
 import io.siddhi.core.stream.ServiceDeploymentInfo;
 import io.siddhi.core.stream.output.sink.Sink;
 import io.siddhi.core.util.config.ConfigReader;
@@ -41,10 +42,20 @@ import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
 
+import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLException;
+import javax.net.ssl.TrustManagerFactory;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
 import java.util.concurrent.TimeUnit;
 
 import static io.siddhi.extension.io.grpc.util.GrpcUtils.getMethodName;
@@ -70,10 +81,10 @@ public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and
     protected EventServiceGrpc.EventServiceFutureStub futureStub;
     protected Option headersOption;
     protected Option metadataOption;
-    protected NettyChannelBuilder managedChannelBuilder;
-//    protected NettyChannelBuilder nettyChannelBuilder;
+    protected ManagedChannelBuilder managedChannelBuilder;
     protected long channelTerminationWaitingTimeInMillis = -1L;
     protected StreamDefinition streamDefinition;
+    private boolean isTLSEnabled = false;
 
     /**
      * Returns the list of classes which this sink can consume.
@@ -146,14 +157,23 @@ public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and
             this.channelTerminationWaitingTimeInMillis = Long.parseLong(optionHolder.validateAndGetOption(
                     GrpcConstants.CHANNEL_TERMINATION_WAITING_TIME_MILLIS).getValue());
         }
-
-        //ManagedChannelBuilder Properties. i.e gRPC connection parameters
-//        managedChannelBuilder = ManagedChannelBuilder.forTarget(address).usePlaintext(); //todo: implement tls
-        try {
-            managedChannelBuilder = NettyChannelBuilder.forTarget(address).sslContext(GrpcSslContexts.forClient().trustManager(new File("/Users/niruhan/wso2/source_codes/siddhi-io-grpc-1/component/src/test/resources/certs/server2.pem")).build());
-        } catch (SSLException e) {
-            e.printStackTrace();
+        if (optionHolder.isOptionExists(GrpcConstants.ENABLE_TLS)) {
+            if (Boolean.parseBoolean(optionHolder.validateAndGetOption(GrpcConstants.ENABLE_TLS).getValue()))
+                isTLSEnabled = true;
         }
+
+        if (isTLSEnabled) {
+            try {
+                managedChannelBuilder = NettyChannelBuilder.forTarget(address).sslContext(GrpcSslContexts.forClient().trustManager(getTrustManagerFactory()).build());
+                //new File("/Users/niruhan/wso2/source_codes/siddhi-io-grpc-1/component/src/test/resources/certs/server2.pem"
+            } catch (SSLException e) {
+                throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " + streamID + ": Error while " +
+                        "creating gRPC channel. " + e.getMessage());
+            }
+        } else {
+            managedChannelBuilder = ManagedChannelBuilder.forTarget(address).usePlaintext();
+        }
+
         if (optionHolder.isOptionExists(GrpcConstants.IDLE_TIMEOUT_MILLIS)) {
             managedChannelBuilder.idleTimeout(Long.parseLong(optionHolder.validateAndGetOption(
                     GrpcConstants.IDLE_TIMEOUT_MILLIS).getValue()), TimeUnit.MILLISECONDS);
@@ -200,6 +220,30 @@ public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and
 
         }
         initSink(optionHolder);
+        return null;
+    }
+
+    private TrustManagerFactory getTrustManagerFactory() {
+        KeyStore keyStore;
+        char[] passphrase = "wso2carbon".toCharArray();
+        try {
+            keyStore = KeyStore.getInstance("JKS");
+            keyStore.load(new FileInputStream(System.getProperty("carbon.home") + "/resources/security/wso2carbon.jks"),
+                    passphrase);
+            TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
+            tmf.init(keyStore);
+            return tmf;
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (CertificateException e) {
+            e.printStackTrace();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (KeyStoreException e) {
+            e.printStackTrace();
+        }
         return null;
     }
 

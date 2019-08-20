@@ -33,6 +33,9 @@ import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.security.KeyStoreException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -43,15 +46,28 @@ public class GrpcSinkAuthTestCase {
     private static final Logger log = Logger.getLogger(GrpcSinkTestCase.class.getName());
     private TestTLSServer server = new TestTLSServer(8888);
     private AtomicInteger eventCount = new AtomicInteger(0);
+    public static final String CARBON_HOME = "carbon.home";
+
+    public GrpcSinkAuthTestCase() throws KeyStoreException {
+    }
 
     @BeforeTest
     public void init() throws IOException {
+        setCarbonHome();
         server.start();
     }
 
     @AfterTest
     public void stop() throws InterruptedException {
         server.stop();
+    }
+
+    private void setCarbonHome() {
+        Path carbonHome = Paths.get("");
+        carbonHome = Paths.get(carbonHome.toString(), "src", "test");
+        System.setProperty(CARBON_HOME, carbonHome.toString());
+//        logger.info("Carbon Home Absolute path set to: " + carbonHome.toAbsolutePath());
+
     }
 
     @Test
@@ -65,7 +81,7 @@ public class GrpcSinkAuthTestCase {
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inStreamDefinition = ""
-                + "@sink(type='grpc', url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
+                + "@sink(type='grpc', url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', tls='true', " +
                 "@map(type='json', @payload('{{message}}'))) " +
                 "define stream FooStream (message String);";
 

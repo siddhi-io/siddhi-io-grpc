@@ -40,6 +40,7 @@ public class GrpcConstants {
     public static final String SOURCE_ID = "source.id";
     public static final String MESSAGE_ID = "message.id";
     public static final String HEADERS = "headers";
+    public static final String ENABLE_TLS = "tls";
 
     public static final int PATH_SERVICE_NAME_POSITION = 0;
     public static final int PATH_METHOD_NAME_POSITION = 1;

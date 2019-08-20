@@ -42,15 +42,15 @@ public class GrpcSinkTestCase {
     private TestServer server = new TestServer(8888);
     private AtomicInteger eventCount = new AtomicInteger(0);
 
-    @BeforeTest
-    public void init() throws IOException {
-        server.start();
-    }
-
-    @AfterTest
-    public void stop() throws InterruptedException {
-        server.stop();
-    }
+//    @BeforeTest
+//    public void init() throws IOException {
+//        server.start();
+//    }
+//
+//    @AfterTest
+//    public void stop() throws InterruptedException {
+//        server.stop();
+//    }
 
     @Test
     public void testCaseToCallConsumeWithSimpleRequest() throws Exception {
