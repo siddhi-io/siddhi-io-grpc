@@ -34,60 +34,72 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class GrpcSinkAuthTestCase {
     private static final Logger log = Logger.getLogger(GrpcSinkTestCase.class.getName());
-    private TestTLSServer server = new TestTLSServer(8888);
+//    private TestTLSServer server = new TestTLSServer(8888);
     public static final String CARBON_HOME = "carbon.home";
 
     public GrpcSinkAuthTestCase() throws KeyStoreException {
-    }
-
-    @BeforeTest
-    public void init() throws IOException {
-        setCarbonHome();
-        server.start();
-    }
-
-    @AfterTest
-    public void stop() throws InterruptedException {
-        server.stop();
     }
 
     private void setCarbonHome() {
         Path carbonHome = Paths.get("");
         carbonHome = Paths.get(carbonHome.toString(), "src", "test");
         System.setProperty(CARBON_HOME, carbonHome.toString());
-//        logger.info("Carbon Home Absolute path set to: " + carbonHome.toAbsolutePath());
 
     }
 
     @Test
-    public void testCaseToCallConsumeWithSimpleRequest() throws Exception {
-//        System.exit(0);
-//        log.info("Test case to call consume");
-//        final TestAppender appender = new TestAppender();
-//        final Logger rootLogger = Logger.getRootLogger();
-//        rootLogger.setLevel(Level.DEBUG);
-//        rootLogger.addAppender(appender);
+    public void testForServerAuthentication() throws Exception {
+        TestTLSServer server = new TestTLSServer(8888, false);
+        setCarbonHome();
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inStreamDefinition = ""
-                + "@sink(type='grpc', url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', tls='true', " +
+                + "@sink(type='grpc', url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume'," +
+                "truststore.file = '/Users/niruhan/wso2/source_codes/siddhi-io-grpc-1/component/src/test/resources/security/wso2carbon.jks'," +
+                "truststore.password = 'wso2carbon', " +
                 "@map(type='json', @payload('{{message}}'))) " +
                 "define stream FooStream (message String);";
 
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
         InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
 
-        siddhiAppRuntime.start();
-        fooStream.send(new Object[]{"Request 1"});
-        Thread.sleep(1000);
-        siddhiAppRuntime.shutdown();
+        server.start();
+        try {
+            siddhiAppRuntime.start();
+            fooStream.send(new Object[]{"Request 1"});
+            Thread.sleep(1000);
+            siddhiAppRuntime.shutdown();
+        } finally {
+            server.stop();
+        }
+    }
 
-//        final List<LoggingEvent> log = appender.getLog();
-//        List<String> logMessages = new ArrayList<>();
-//        for (LoggingEvent logEvent : log) {
-//            String message = String.valueOf(logEvent.getMessage());
-//            logMessages.add(message);
-//        }
-//        Assert.assertTrue(logMessages.contains("Server consume hit with [Request 1]"));
+    @Test
+    public void testForMutualAuthentication() throws Exception {
+        TestTLSServer server = new TestTLSServer(8888, true);
+        setCarbonHome();
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String inStreamDefinition = ""
+                + "@sink(type='grpc', url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume'," +
+                "truststore.file = '/Users/niruhan/wso2/source_codes/siddhi-io-grpc-1/component/src/test/resources/security/wso2carbon.jks'," +
+                "truststore.password = 'wso2carbon', " +
+                "keystore.file = '/Users/niruhan/wso2/source_codes/siddhi-io-grpc-1/component/src/test/resources/security/wso2carbon.jks', " +
+                "keystore.password = 'wso2carbon', " +
+                "@map(type='json', @payload('{{message}}'))) " +
+                "define stream FooStream (message String);";
+
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
+        InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
+
+        server.start();
+        try {
+            siddhiAppRuntime.start();
+            fooStream.send(new Object[]{"Request 1"});
+            Thread.sleep(1000);
+            siddhiAppRuntime.shutdown();
+        } finally {
+            server.stop();
+        }
     }
 }
