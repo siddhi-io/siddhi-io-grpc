@@ -85,6 +85,10 @@ public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and
     protected long channelTerminationWaitingTimeInMillis = -1L;
     protected StreamDefinition streamDefinition;
     private boolean isTLSEnabled = false;
+    private String truststoreFilePath;
+    private String truststorePasswod;
+    private String keystoreFilePath;
+    private String keystorePasswod;
 
     /**
      * Returns the list of classes which this sink can consume.
@@ -157,21 +161,39 @@ public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and
             this.channelTerminationWaitingTimeInMillis = Long.parseLong(optionHolder.validateAndGetOption(
                     GrpcConstants.CHANNEL_TERMINATION_WAITING_TIME_MILLIS).getValue());
         }
-        if (optionHolder.isOptionExists(GrpcConstants.ENABLE_TLS)) {
-            if (Boolean.parseBoolean(optionHolder.validateAndGetOption(GrpcConstants.ENABLE_TLS).getValue()))
-                isTLSEnabled = true;
+
+        if (optionHolder.isOptionExists(GrpcConstants.TRUSTSTORE_FILE)) {
+            this.truststoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_FILE).getValue();
+            this.truststorePasswod = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_PASSWORD).getValue();
         }
 
-        if (isTLSEnabled) {
-            try {
-                managedChannelBuilder = NettyChannelBuilder.forTarget(address).sslContext(GrpcSslContexts.forClient().trustManager(getTrustManagerFactory()).build());
-                //new File("/Users/niruhan/wso2/source_codes/siddhi-io-grpc-1/component/src/test/resources/certs/server2.pem"
-            } catch (SSLException e) {
-                throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " + streamID + ": Error while " +
-                        "creating gRPC channel. " + e.getMessage());
+        if (optionHolder.isOptionExists(GrpcConstants.KEYSTORE_FILE)) {
+            this.keystoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_FILE).getValue();
+            this.keystorePasswod = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_PASSWORD).getValue();
+        }
+
+        managedChannelBuilder = NettyChannelBuilder.forTarget(address);
+
+        try {
+            if (truststoreFilePath != null && keystoreFilePath != null) {
+                managedChannelBuilder = ((NettyChannelBuilder) managedChannelBuilder).sslContext(GrpcSslContexts
+                        .forClient().trustManager(getTrustManagerFactory(truststoreFilePath, truststorePasswod))
+                        .keyManager(getKeyManagerFactory(keystoreFilePath, keystorePasswod)).build());
+            } else if (truststoreFilePath != null) {
+                managedChannelBuilder = ((NettyChannelBuilder) managedChannelBuilder).sslContext(GrpcSslContexts
+                        .forClient().trustManager(getTrustManagerFactory(truststoreFilePath, truststorePasswod))
+                        .build());
+            } else if (keystoreFilePath != null) {
+                managedChannelBuilder = ((NettyChannelBuilder) managedChannelBuilder).sslContext(GrpcSslContexts
+                        .forClient().keyManager(getKeyManagerFactory(keystoreFilePath, keystorePasswod))
+                        .build());
+            } else {
+                managedChannelBuilder = managedChannelBuilder.usePlaintext();
             }
-        } else {
-            managedChannelBuilder = ManagedChannelBuilder.forTarget(address).usePlaintext();
+        } catch (KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException |
+                UnrecoverableKeyException e) {
+            throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " + streamID + ": Error while " +
+                    "creating gRPC channel. " + e.getMessage());
         }
 
         if (optionHolder.isOptionExists(GrpcConstants.IDLE_TIMEOUT_MILLIS)) {
@@ -223,28 +245,26 @@ public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and
         return null;
     }
 
-    private TrustManagerFactory getTrustManagerFactory() {
-        KeyStore keyStore;
-        char[] passphrase = "wso2carbon".toCharArray();
-        try {
-            keyStore = KeyStore.getInstance("JKS");
-            keyStore.load(new FileInputStream(System.getProperty("carbon.home") + "/resources/security/wso2carbon.jks"),
-                    passphrase);
-            TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
-            tmf.init(keyStore);
-            return tmf;
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (CertificateException e) {
-            e.printStackTrace();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (KeyStoreException e) {
-            e.printStackTrace();
-        }
-        return null;
+    private TrustManagerFactory getTrustManagerFactory(String JKSPath, String password) throws KeyStoreException,
+            IOException, NoSuchAlgorithmException, CertificateException {
+        char[] passphrase = password.toCharArray();
+        KeyStore keyStore = KeyStore.getInstance(GrpcConstants.DEFAULT_KEYSTORE_TYPE);
+        keyStore.load(new FileInputStream(JKSPath),
+                passphrase);
+        TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
+        tmf.init(keyStore);
+        return tmf;
+    }
+
+    private KeyManagerFactory getKeyManagerFactory(String JKSPath, String password) throws KeyStoreException,
+            IOException, CertificateException, NoSuchAlgorithmException, UnrecoverableKeyException {
+        KeyStore keyStore = KeyStore.getInstance(GrpcConstants.DEFAULT_KEYSTORE_TYPE);
+        char[] passphrase = password.toCharArray();
+        keyStore.load(new FileInputStream(JKSPath),
+                passphrase);
+        KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
+        kmf.init(keyStore, passphrase);
+        return kmf;
     }
 
     private static SslContext buildSslContext(String trustCertCollectionFilePath,
