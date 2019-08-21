@@ -142,7 +142,7 @@ public class GrpcServiceSource extends AbstractGrpcSource {
     @Override
     public void initializeGrpcServer(int port) {
         if (isDefaultMode) {
-            this.server = ServerBuilder.forPort(port).addService(ServerInterceptors.intercept(
+            this.server = serverBuilder.addService(ServerInterceptors.intercept(
                     new EventServiceGrpc.EventServiceImplBase() {
                 @Override
                 public void process(Event request,

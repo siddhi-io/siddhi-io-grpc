@@ -141,9 +141,11 @@ public abstract class AbstractGrpcSource extends Source { //todo: one source url
         serverBuilder = NettyServerBuilder.forPort(port);
         if (keystoreFilePath != null) {
             try {
-                SslContextBuilder sslContextBuilder = getSslContextBuilder(keystoreFilePath, keystorePassword, keystoreAlgorithm);
+                SslContextBuilder sslContextBuilder = getSslContextBuilder(keystoreFilePath, keystorePassword,
+                        keystoreAlgorithm);
                 if (truststoreFilePath != null) {
-                    sslContextBuilder = addTrustStore(truststoreFilePath, truststorePassword, truststoreAlgorithm, sslContextBuilder);
+                    sslContextBuilder = addTrustStore(truststoreFilePath, truststorePassword, truststoreAlgorithm,
+                            sslContextBuilder).clientAuth(ClientAuth.REQUIRE);
                 }
                 serverBuilder.sslContext(sslContextBuilder.build());
             } catch (IOException | CertificateException | NoSuchAlgorithmException | UnrecoverableKeyException | KeyStoreException e) {
