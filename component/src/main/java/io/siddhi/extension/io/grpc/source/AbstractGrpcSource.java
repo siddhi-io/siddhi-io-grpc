@@ -20,7 +20,13 @@ package io.siddhi.extension.io.grpc.source;
 import com.google.protobuf.GeneratedMessageV3;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
+import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
+import io.grpc.netty.shaded.io.netty.handler.ssl.ClientAuth;
+import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
+import io.grpc.netty.shaded.io.netty.handler.ssl.SslContextBuilder;
 import io.siddhi.core.config.SiddhiAppContext;
+import io.siddhi.core.exception.SiddhiAppCreationException;
 import io.siddhi.core.exception.SiddhiAppRuntimeException;
 import io.siddhi.core.stream.ServiceDeploymentInfo;
 import io.siddhi.core.stream.input.source.Source;
@@ -33,9 +39,18 @@ import io.siddhi.extension.io.grpc.util.SourceServerInterceptor;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.log4j.Logger;
 
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.TrustManagerFactory;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
 import java.util.concurrent.TimeUnit;
 
 import static io.siddhi.extension.io.grpc.util.GrpcUtils.getServiceName;
@@ -52,10 +67,16 @@ public abstract class AbstractGrpcSource extends Source { //todo: one source url
     protected boolean isDefaultMode;
     private int port;
     protected SourceServerInterceptor serverInterceptor;
-    protected ServerBuilder serverBuilder;
+    protected NettyServerBuilder serverBuilder;
     protected long serverShutdownWaitingTimeInMillis = -1L;
     protected String streamID;
     private ServiceDeploymentInfo serviceDeploymentInfo;
+    private String truststoreFilePath;
+    private String truststorePassword;
+    private String keystoreFilePath;
+    private String keystorePassword;
+    private String truststoreAlgorithm;
+    private String keystoreAlgorithm;
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
@@ -100,8 +121,36 @@ public abstract class AbstractGrpcSource extends Source { //todo: one source url
         initSource(optionHolder, requestedTransportPropertyNames);
         this.serverInterceptor = new SourceServerInterceptor(this, siddhiAppContext, streamID);
 
+        if (optionHolder.isOptionExists(GrpcConstants.KEYSTORE_FILE)) {
+            this.keystoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_FILE).getValue();
+            this.keystorePassword = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_PASSWORD).getValue();
+            this.keystoreAlgorithm = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_ALGORITHM).getValue();
+        }
+
+        if (optionHolder.isOptionExists(GrpcConstants.TRUSTSTORE_FILE)) {
+            if (!optionHolder.isOptionExists(GrpcConstants.KEYSTORE_FILE)) {
+                throw new SiddhiAppCreationException(siddhiAppContext.getName() + ":" + streamID + ": Truststore " +
+                        "configurations given without keystore configurations. Please provide keystore");
+            }
+            this.truststoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_FILE).getValue();
+            this.truststorePassword = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_PASSWORD).getValue();
+            this.truststoreAlgorithm = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_ALGORITHM).getValue();
+        }
+
         //ServerBuilder parameters
-        serverBuilder = ServerBuilder.forPort(port);
+        serverBuilder = NettyServerBuilder.forPort(port);
+        if (keystoreFilePath != null) {
+            try {
+                SslContextBuilder sslContextBuilder = getSslContextBuilder(keystoreFilePath, keystorePassword, keystoreAlgorithm);
+                if (truststoreFilePath != null) {
+                    sslContextBuilder = addTrustStore(truststoreFilePath, truststorePassword, truststoreAlgorithm, sslContextBuilder);
+                }
+                serverBuilder.sslContext(sslContextBuilder.build());
+            } catch (IOException | CertificateException | NoSuchAlgorithmException | UnrecoverableKeyException | KeyStoreException e) {
+                throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " + streamID + ": Error while " +
+                        "creating SslContext. " + e.getMessage());
+            }
+        }
         serverBuilder.maxInboundMessageSize(Integer.parseInt(optionHolder.getOrCreateOption(
                 GrpcConstants.MAX_INBOUND_MESSAGE_SIZE, GrpcConstants.MAX_INBOUND_MESSAGE_SIZE_DEFAULT).getValue()));
         serverBuilder.maxInboundMetadataSize(Integer.parseInt(optionHolder.getOrCreateOption(
@@ -115,6 +164,30 @@ public abstract class AbstractGrpcSource extends Source { //todo: one source url
         }
         this.serviceDeploymentInfo = new ServiceDeploymentInfo(port, false);
         return null;
+    }
+
+    private SslContextBuilder getSslContextBuilder(String JKSPath, String password, String algorithm)
+            throws KeyStoreException, IOException, NoSuchAlgorithmException, CertificateException,
+            UnrecoverableKeyException {
+        char[] passphrase = password.toCharArray();
+        KeyStore keyStore = KeyStore.getInstance(GrpcConstants.DEFAULT_KEYSTORE_TYPE);
+        keyStore.load(new FileInputStream(JKSPath), passphrase);
+        KeyManagerFactory kmf = KeyManagerFactory.getInstance(algorithm);
+        kmf.init(keyStore, passphrase);
+        SslContextBuilder sslContextBuilder = SslContextBuilder.forServer(kmf);
+        sslContextBuilder = GrpcSslContexts.configure(sslContextBuilder);
+        return sslContextBuilder;
+    }
+
+    private SslContextBuilder addTrustStore(String JKSPath, String password, String algorithm,
+                                            SslContextBuilder sslContextBuilder) throws NoSuchAlgorithmException,
+            KeyStoreException, IOException, CertificateException {
+        char[] passphrase = password.toCharArray();
+        KeyStore keyStore = KeyStore.getInstance(GrpcConstants.DEFAULT_KEYSTORE_TYPE);
+        keyStore.load(new FileInputStream(JKSPath), passphrase);
+        TrustManagerFactory tmf = TrustManagerFactory.getInstance(algorithm);
+        tmf.init(keyStore);
+        return sslContextBuilder.trustManager(tmf).clientAuth(ClientAuth.REQUIRE);
     }
 
     public abstract void initializeGrpcServer(int port);

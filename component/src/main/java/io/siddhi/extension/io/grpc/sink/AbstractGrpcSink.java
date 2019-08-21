@@ -22,8 +22,6 @@ import io.grpc.ManagedChannelBuilder;
 import io.grpc.Metadata;
 import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
-import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
-import io.grpc.netty.shaded.io.netty.handler.ssl.SslContextBuilder;
 import io.grpc.stub.AbstractStub;
 import io.grpc.stub.MetadataUtils;
 import io.siddhi.core.config.SiddhiAppContext;
@@ -43,11 +41,8 @@ import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
 
 import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLException;
 import javax.net.ssl.TrustManagerFactory;
-import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -84,11 +79,10 @@ public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and
     protected ManagedChannelBuilder managedChannelBuilder;
     protected long channelTerminationWaitingTimeInMillis = -1L;
     protected StreamDefinition streamDefinition;
-    private boolean isTLSEnabled = false;
     private String truststoreFilePath;
-    private String truststorePasswod;
+    private String truststorePassword;
     private String keystoreFilePath;
-    private String keystorePasswod;
+    private String keystorePassword;
     private String truststoreAlgorithm;
     private String keystoreAlgorithm;
 
@@ -166,13 +160,13 @@ public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and
 
         if (optionHolder.isOptionExists(GrpcConstants.TRUSTSTORE_FILE)) {
             this.truststoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_FILE).getValue();
-            this.truststorePasswod = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_PASSWORD).getValue();
+            this.truststorePassword = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_PASSWORD).getValue();
             this.truststoreAlgorithm = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_ALGORITHM).getValue();
         }
 
         if (optionHolder.isOptionExists(GrpcConstants.KEYSTORE_FILE)) {
             this.keystoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_FILE).getValue();
-            this.keystorePasswod = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_PASSWORD).getValue();
+            this.keystorePassword = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_PASSWORD).getValue();
             this.keystoreAlgorithm = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_ALGORITHM).getValue();
         }
 
@@ -181,18 +175,18 @@ public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and
         try {
             if (truststoreFilePath != null && keystoreFilePath != null) {
                 managedChannelBuilder = ((NettyChannelBuilder) managedChannelBuilder).sslContext(GrpcSslContexts
-                        .forClient().trustManager(getTrustManagerFactory(truststoreFilePath, truststorePasswod,
+                        .forClient().trustManager(getTrustManagerFactory(truststoreFilePath, truststorePassword,
                                 truststoreAlgorithm))
-                        .keyManager(getKeyManagerFactory(keystoreFilePath, keystorePasswod, keystoreAlgorithm))
+                        .keyManager(getKeyManagerFactory(keystoreFilePath, keystorePassword, keystoreAlgorithm))
                         .build());
             } else if (truststoreFilePath != null) {
                 managedChannelBuilder = ((NettyChannelBuilder) managedChannelBuilder).sslContext(GrpcSslContexts
-                        .forClient().trustManager(getTrustManagerFactory(truststoreFilePath, truststorePasswod,
+                        .forClient().trustManager(getTrustManagerFactory(truststoreFilePath, truststorePassword,
                                 truststoreAlgorithm))
                         .build());
             } else if (keystoreFilePath != null) {
                 managedChannelBuilder = ((NettyChannelBuilder) managedChannelBuilder).sslContext(GrpcSslContexts
-                        .forClient().keyManager(getKeyManagerFactory(keystoreFilePath, keystorePasswod,
+                        .forClient().keyManager(getKeyManagerFactory(keystoreFilePath, keystorePassword,
                                 keystoreAlgorithm))
                         .build());
             } else {
