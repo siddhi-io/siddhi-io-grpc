@@ -62,12 +62,12 @@ public class TestTLSServer {
                     passphrase);
             KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
             kmf.init(keyStore, passphrase);
-            TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
-            tmf.init(keyStore);
-            SslContextBuilder sslClientContextBuilder = SslContextBuilder.forServer(kmf).trustManager(tmf);
+            SslContextBuilder sslClientContextBuilder = SslContextBuilder.forServer(kmf);
             sslClientContextBuilder = GrpcSslContexts.configure(sslClientContextBuilder);
             if (isMutualAuth) {
-                sslClientContextBuilder = sslClientContextBuilder.clientAuth(ClientAuth.REQUIRE);
+                TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
+                tmf.init(keyStore);
+                sslClientContextBuilder = sslClientContextBuilder.trustManager(tmf).clientAuth(ClientAuth.REQUIRE);
             }
             SslContext sslContext = sslClientContextBuilder.build();
             return sslContext;

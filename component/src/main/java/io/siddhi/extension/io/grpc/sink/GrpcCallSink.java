@@ -287,7 +287,7 @@ public class GrpcCallSink extends AbstractGrpcSink {
      */
     @Override
     public void connect() throws ConnectionUnavailableException {
-        this.channel = ManagedChannelBuilder.forTarget(address).usePlaintext().build();
+        this.channel = managedChannelBuilder.build();
         this.futureStub = EventServiceGrpc.newFutureStub(channel);
         logger.info(siddhiAppContext.getName() + ": gRPC service on " + streamID + " has successfully connected to "
                 + url);

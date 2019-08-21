@@ -45,6 +45,8 @@ public class GrpcConstants {
     public static final String KEYSTORE_FILE = "keystore.file";
     public static final String KEYSTORE_PASSWORD = "keystore.password";
     public static final String DEFAULT_KEYSTORE_TYPE = "JKS";
+    public static final String KEYSTORE_ALGORITHM = "keystore.algorithm";
+    public static final String TRUSTSTORE_ALGORITHM = "truststore.algorithm";
 
     public static final int PATH_SERVICE_NAME_POSITION = 0;
     public static final int PATH_METHOD_NAME_POSITION = 1;

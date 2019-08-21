@@ -65,7 +65,7 @@ public class GrpcCallSinkTestCase {
                 "sink.id= '1', @map(type='json')) "
                 + "define stream FooStream (message String);";
 
-        String stream2 = "@source(type='grpc-call-response', sequence='mySeq', sink.id= '1', @map(type='json')) " +
+        String stream2 = "@source(type='grpc-call-response', sink.id= '1', @map(type='json')) " +
                 "define stream BarStream (message String);";
         String query = "@info(name = 'query') "
                 + "from BarStream "

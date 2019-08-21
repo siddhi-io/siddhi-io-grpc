@@ -89,6 +89,8 @@ public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and
     private String truststorePasswod;
     private String keystoreFilePath;
     private String keystorePasswod;
+    private String truststoreAlgorithm;
+    private String keystoreAlgorithm;
 
     /**
      * Returns the list of classes which this sink can consume.
@@ -165,11 +167,13 @@ public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and
         if (optionHolder.isOptionExists(GrpcConstants.TRUSTSTORE_FILE)) {
             this.truststoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_FILE).getValue();
             this.truststorePasswod = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_PASSWORD).getValue();
+            this.truststoreAlgorithm = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_ALGORITHM).getValue();
         }
 
         if (optionHolder.isOptionExists(GrpcConstants.KEYSTORE_FILE)) {
             this.keystoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_FILE).getValue();
             this.keystorePasswod = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_PASSWORD).getValue();
+            this.keystoreAlgorithm = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_ALGORITHM).getValue();
         }
 
         managedChannelBuilder = NettyChannelBuilder.forTarget(address);
@@ -177,15 +181,19 @@ public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and
         try {
             if (truststoreFilePath != null && keystoreFilePath != null) {
                 managedChannelBuilder = ((NettyChannelBuilder) managedChannelBuilder).sslContext(GrpcSslContexts
-                        .forClient().trustManager(getTrustManagerFactory(truststoreFilePath, truststorePasswod))
-                        .keyManager(getKeyManagerFactory(keystoreFilePath, keystorePasswod)).build());
+                        .forClient().trustManager(getTrustManagerFactory(truststoreFilePath, truststorePasswod,
+                                truststoreAlgorithm))
+                        .keyManager(getKeyManagerFactory(keystoreFilePath, keystorePasswod, keystoreAlgorithm))
+                        .build());
             } else if (truststoreFilePath != null) {
                 managedChannelBuilder = ((NettyChannelBuilder) managedChannelBuilder).sslContext(GrpcSslContexts
-                        .forClient().trustManager(getTrustManagerFactory(truststoreFilePath, truststorePasswod))
+                        .forClient().trustManager(getTrustManagerFactory(truststoreFilePath, truststorePasswod,
+                                truststoreAlgorithm))
                         .build());
             } else if (keystoreFilePath != null) {
                 managedChannelBuilder = ((NettyChannelBuilder) managedChannelBuilder).sslContext(GrpcSslContexts
-                        .forClient().keyManager(getKeyManagerFactory(keystoreFilePath, keystorePasswod))
+                        .forClient().keyManager(getKeyManagerFactory(keystoreFilePath, keystorePasswod,
+                                keystoreAlgorithm))
                         .build());
             } else {
                 managedChannelBuilder = managedChannelBuilder.usePlaintext();
@@ -245,41 +253,26 @@ public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and
         return null;
     }
 
-    private TrustManagerFactory getTrustManagerFactory(String JKSPath, String password) throws KeyStoreException,
+    private TrustManagerFactory getTrustManagerFactory(String JKSPath, String password, String algorithm) throws KeyStoreException,
             IOException, NoSuchAlgorithmException, CertificateException {
         char[] passphrase = password.toCharArray();
         KeyStore keyStore = KeyStore.getInstance(GrpcConstants.DEFAULT_KEYSTORE_TYPE);
         keyStore.load(new FileInputStream(JKSPath),
                 passphrase);
-        TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
+        TrustManagerFactory tmf = TrustManagerFactory.getInstance(algorithm);
         tmf.init(keyStore);
         return tmf;
     }
 
-    private KeyManagerFactory getKeyManagerFactory(String JKSPath, String password) throws KeyStoreException,
+    private KeyManagerFactory getKeyManagerFactory(String JKSPath, String password, String algorithm) throws KeyStoreException,
             IOException, CertificateException, NoSuchAlgorithmException, UnrecoverableKeyException {
         KeyStore keyStore = KeyStore.getInstance(GrpcConstants.DEFAULT_KEYSTORE_TYPE);
         char[] passphrase = password.toCharArray();
         keyStore.load(new FileInputStream(JKSPath),
                 passphrase);
-        KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
+        KeyManagerFactory kmf = KeyManagerFactory.getInstance(algorithm);
         kmf.init(keyStore, passphrase);
         return kmf;
-    }
-
-    private static SslContext buildSslContext(String trustCertCollectionFilePath,
-                                              String clientCertChainFilePath,
-                                              String clientPrivateKeyFilePath) throws SSLException {
-        SslContextBuilder builder = GrpcSslContexts.forClient();
-        clientPrivateKeyFilePath = "/Users/niruhan/wso2/source_codes/siddhi-io-grpc-1/component/src/test/resources/certs/client.key";
-        clientCertChainFilePath = "/Users/niruhan/wso2/source_codes/siddhi-io-grpc-1/component/src/test/resources/certs/client.pem";
-        if (trustCertCollectionFilePath != null) {
-            builder.trustManager(new File(trustCertCollectionFilePath));
-        }
-        if (clientCertChainFilePath != null && clientPrivateKeyFilePath != null) {
-            builder.keyManager(new File(clientCertChainFilePath), new File(clientPrivateKeyFilePath));
-        }
-        return builder.build();
     }
 
     public abstract void initSink(OptionHolder optionHolder);
