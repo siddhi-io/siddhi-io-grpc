@@ -214,10 +214,6 @@ public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and
             managedChannelBuilder.keepAliveWithoutCalls(Boolean.parseBoolean(optionHolder.validateAndGetOption(
                     GrpcConstants.KEEP_ALIVE_WITHOUT_CALLS).getValue()));
         }
-        if (optionHolder.isOptionExists(GrpcConstants.MAX_HEDGED_ATTEMPTS)) {
-            managedChannelBuilder.maxHedgedAttempts(Integer.parseInt(optionHolder.validateAndGetOption( //todo: check how to disable
-                    GrpcConstants.MAX_HEDGED_ATTEMPTS).getValue()));
-        }
         if (Boolean.parseBoolean(optionHolder.getOrCreateOption(GrpcConstants.ENABLE_RETRY,
                 GrpcConstants.ENABLE_RETRY_DEFAULT).getValue())) {
             managedChannelBuilder.enableRetry();

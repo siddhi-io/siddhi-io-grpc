@@ -123,14 +123,14 @@ import java.util.concurrent.TimeUnit;
                         type = {DataType.INT},
                         optional = true,
                         defaultValue = "5"),
-                @Parameter(
-                        name = "max.hedged.attempts",
-                        description = "Sets max number of hedged attempts. The total number of hedged attempts for " +
-                                "each RPC will not exceed this number even if service config may allow a higher " +
-                                "number." ,
-                        type = {DataType.INT},
-                        optional = true,
-                        defaultValue = "5"),
+//                @Parameter(
+//                        name = "max.hedged.attempts",
+//                        description = "Sets max number of hedged attempts. The total number of hedged attempts for " +
+//                                "each RPC will not exceed this number even if service config may allow a higher " +
+//                                "number." ,
+//                        type = {DataType.INT},
+//                        optional = true,
+//                        defaultValue = "5"),
                 @Parameter(
                         name = "retry.buffer.size",
                         description = "Sets the retry buffer size in bytes. If the buffer limit is exceeded, no " +
@@ -212,7 +212,8 @@ public class GrpcSink extends AbstractGrpcSink {
                 currentAsyncStub = (EventServiceGrpc.EventServiceStub) attachMetaDataToStub(dynamicOptions,
                         currentAsyncStub);
             }
-            StreamObserver<Empty> responseObserver = new StreamObserver<Empty>() { //todo: try to send all the siddhi events using one stream observer
+            StreamObserver<Empty> responseObserver = new StreamObserver<Empty>() {
+                //try to send all the siddhi events using one stream observer - impossible without adding client side sgtreaming in protobuf definition
                 @Override
                 public void onNext(Empty event) {}
 
@@ -221,9 +222,8 @@ public class GrpcSink extends AbstractGrpcSink {
 //                    if (((StatusRuntimeException) t).getStatus().getCode().equals(Status.UNAVAILABLE)) {
 //                        throw new ConnectionUnavailableException(siddhiAppContext.getName() + ": " + streamID + ": " + t.getMessage());
 //                    }
-                    t.printStackTrace();
-//                    logger.error(siddhiAppContext.getName() + ":" + streamID + ": " + t.getMessage() + " caused by "
-//                            + t.getCause());
+                    logger.error(siddhiAppContext.getName() + ":" + streamID + ": " + t.getMessage() + " caused by "
+                            + t.getCause());
                 }
 
                 @Override

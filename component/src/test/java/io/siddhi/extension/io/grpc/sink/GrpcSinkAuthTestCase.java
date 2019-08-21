@@ -138,6 +138,42 @@ public class GrpcSinkAuthTestCase {
     }
 
     @Test
+    public void testCallSinkForServerAuthenticationFailure() throws Exception {
+        TestTLSServer server = new TestTLSServer(8888, false);
+        setCarbonHome();
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String inStreamDefinition = ""
+                + "@sink(type='grpc-call', url = 'grpc://localhost:8888/org.wso2.grpc.EventService/process'," +
+//                "truststore.file = '/Users/niruhan/wso2/source_codes/siddhi-io-grpc-1/component/src/test/resources/security/wso2carbon.jks'," +
+//                "truststore.password = 'wso2carbon', " +
+//                "truststore.algorithm = 'SunX509', " +
+                "sink.id = '1', " +
+                "@map(type='json', @payload('{{message}}'))) " +
+                "define stream FooStream (message String);";
+
+        String stream2 = "@source(type='grpc-call-response', sink.id= '1', @map(type='json')) " +
+                "define stream BarStream (message String);";
+        String query = "@info(name = 'query') "
+                + "from BarStream "
+                + "select *  "
+                + "insert into outputStream;";
+
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition + stream2 + query);
+        InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
+
+        server.start();
+        try {
+            siddhiAppRuntime.start();
+            fooStream.send(new Object[]{"Request 1"});
+            Thread.sleep(1000);
+            siddhiAppRuntime.shutdown();
+        } finally {
+            server.stop();
+        }
+    }
+
+    @Test
     public void testCallSinkForMutualAuthentication() throws Exception {
         TestTLSServer server = new TestTLSServer(8888, true);
         setCarbonHome();

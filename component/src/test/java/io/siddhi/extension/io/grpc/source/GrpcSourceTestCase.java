@@ -90,13 +90,14 @@ public class GrpcSourceTestCase {
         siddhiAppRuntime.shutdown();
     }
 
-    @Test(dependsOnMethods = "test1")
+    @Test//(dependsOnMethods = "test1")
     public void testWithMetaData() throws Exception {
         logger.info("Test case to call process");
         logger.setLevel(Level.DEBUG);
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String stream2 = "@source(type='grpc', url='grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
+//                "metadata='{{metadata}}', " +
                 "@map(type='json', @attributes(name='trp:name', age='trp:age', message='message'))) " +
                 "define stream BarStream (message String, name String, age int);";
         String query = "@info(name = 'query') "
@@ -135,10 +136,11 @@ public class GrpcSourceTestCase {
         EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
 
         Metadata header = new Metadata();
-        String headers = "'Name:John', 'Age:23'";
-        Metadata.Key<String> key =
-                Metadata.Key.of(GrpcConstants.HEADERS, Metadata.ASCII_STRING_MARSHALLER);
-        header.put(key, headers);
+//        String headers = "'Name:John', 'Age:23'";
+//        Metadata.Key<String> key =
+//                Metadata.Key.of(GrpcConstants.HEADERS, Metadata.ASCII_STRING_MARSHALLER);
+        header.put(Metadata.Key.of("Name", Metadata.ASCII_STRING_MARSHALLER), "John");
+        header.put(Metadata.Key.of("Age", Metadata.ASCII_STRING_MARSHALLER), "23");
         blockingStub = MetadataUtils.attachHeaders(blockingStub, header);
 
         siddhiAppRuntime.start();

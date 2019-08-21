@@ -25,6 +25,8 @@ import io.siddhi.core.config.SiddhiAppContext;
 import io.siddhi.extension.io.grpc.source.AbstractGrpcSource;
 import org.apache.log4j.Logger;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
@@ -34,30 +36,27 @@ import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
  */
 public class SourceServerInterceptor implements ServerInterceptor {
   private static final Logger logger = Logger.getLogger(SourceServerInterceptor.class.getName());
-  private AbstractGrpcSource associatedGrpcSource;
   private SiddhiAppContext siddhiAppContext;
   private String streamID;
 
-  public SourceServerInterceptor(AbstractGrpcSource associatedGrpcSource, SiddhiAppContext siddhiAppContext,
+  public SourceServerInterceptor(SiddhiAppContext siddhiAppContext,
                                  String streamID) {
-    this.associatedGrpcSource = associatedGrpcSource;
     this.siddhiAppContext = siddhiAppContext;
     this.streamID = streamID;
   }
-//todo: make metadata static for an rpc
+
   @Override
   public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> serverCall,
                                                                Metadata metadata,
                                                                ServerCallHandler<ReqT, RespT> serverCallHandler) {
-//    serverCall.
-//    serverCallHandler.
-//    Metadata.Key<String> headerKey = Metadata.Key.of(GrpcConstants.HEADERS, ASCII_STRING_MARSHALLER);
-//    associatedGrpcSource.populateHeaderString(metadata.get(headerKey));
-
     Set<String> metadataKeys = metadata.keys();
-
+    Map<String, String> metaDataMap = new HashMap<>();
+    for (String key: metadataKeys) {
+      metaDataMap.put(key, metadata.get(Metadata.Key.of(key, ASCII_STRING_MARSHALLER)));
+    }
+    AbstractGrpcSource.metaDataMap.set(metaDataMap);
     if (logger.isDebugEnabled()) {
-//      logger.debug(siddhiAppContext.getName() + ":" + streamID + ": Header received: " + metadata.get(headerKey));
+      logger.debug(siddhiAppContext.getName() + ":" + streamID + ": Header received: " + metaDataMap.toString());
     }
     return Contexts.interceptCall(Context.ROOT, serverCall, metadata, serverCallHandler);
   }

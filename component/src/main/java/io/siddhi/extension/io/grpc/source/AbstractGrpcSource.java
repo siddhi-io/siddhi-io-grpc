@@ -51,6 +51,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static io.siddhi.extension.io.grpc.util.GrpcUtils.getServiceName;
@@ -77,6 +78,7 @@ public abstract class AbstractGrpcSource extends Source { //todo: one source url
     private String keystorePassword;
     private String truststoreAlgorithm;
     private String keystoreAlgorithm;
+    public static ThreadLocal<Map<String, String>> metaDataMap = new ThreadLocal<>();
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
@@ -119,7 +121,7 @@ public abstract class AbstractGrpcSource extends Source { //todo: one source url
         this.serviceName = getServiceName(aURL.getPath());
         this.port = aURL.getPort();
         initSource(optionHolder, requestedTransportPropertyNames);
-        this.serverInterceptor = new SourceServerInterceptor(this, siddhiAppContext, streamID);
+        this.serverInterceptor = new SourceServerInterceptor(siddhiAppContext, streamID);
 
         if (optionHolder.isOptionExists(GrpcConstants.KEYSTORE_FILE)) {
             this.keystoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_FILE).getValue();

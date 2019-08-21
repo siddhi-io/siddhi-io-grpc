@@ -136,14 +136,14 @@ import java.util.concurrent.TimeUnit;
                         type = {DataType.INT},
                         optional = true,
                         defaultValue = "5"),
-                @Parameter(
-                        name = "max.hedged.attempts",
-                        description = "Sets max number of hedged attempts. The total number of hedged attempts for " +
-                                "each RPC will not exceed this number even if service config may allow a higher " +
-                                "number." ,
-                        type = {DataType.INT},
-                        optional = true,
-                        defaultValue = "5"),
+//                @Parameter(
+//                        name = "max.hedged.attempts",
+//                        description = "Sets max number of hedged attempts. The total number of hedged attempts for " +
+//                                "each RPC will not exceed this number even if service config may allow a higher " +
+//                                "number." ,
+//                        type = {DataType.INT},
+//                        optional = true,
+//                        defaultValue = "5"),
                 @Parameter(
                         name = "retry.buffer.size",
                         description = "Sets the retry buffer size in bytes. If the buffer limit is exceeded, no " +
@@ -259,7 +259,7 @@ public class GrpcCallSink extends AbstractGrpcSink {
                 }
 
                 @Override
-                public void onFailure(Throwable t) { //todo: simulate  auth error and check the error message
+                public void onFailure(Throwable t) {
                     logger.error(siddhiAppContext.getName() + ":" + streamID + ": " + t.getMessage());
                 }
             }, MoreExecutors.directExecutor());

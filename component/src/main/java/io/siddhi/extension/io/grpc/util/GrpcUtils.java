@@ -65,11 +65,14 @@ public class GrpcUtils {
         return urlParts.size() == 3;
     }
 
-    public static String[] extractHeaders(Map<String, String> headersMap, String[] requestedTransportPropertyNames) {
+    public static String[] extractHeaders(Map<String, String> headersMap, Map<String, String> metaDataMap, String[] requestedTransportPropertyNames) {
         String[] headersArray = new String[requestedTransportPropertyNames.length];
         for (int i = 0; i < requestedTransportPropertyNames.length; i++) {
             if (headersMap.containsKey(requestedTransportPropertyNames[i])) {
                 headersArray[i] = headersMap.get(requestedTransportPropertyNames[i]);
+            }
+            if (metaDataMap.containsKey(requestedTransportPropertyNames[i])) {
+                headersArray[i] = metaDataMap.get(requestedTransportPropertyNames[i]);
             }
         }
         return headersArray;
