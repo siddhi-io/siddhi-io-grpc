@@ -42,6 +42,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class GrpcSourceTestCase {
     private static final Logger logger = Logger.getLogger(GrpcSourceTestCase.class.getName());
     private AtomicInteger eventCount = new AtomicInteger(0);
+    private String port = "8181";
 
     @Test
     public void basicSourceTest() throws Exception {
@@ -49,7 +50,8 @@ public class GrpcSourceTestCase {
         logger.setLevel(Level.DEBUG);
         SiddhiManager siddhiManager = new SiddhiManager();
 
-        String stream2 = "@source(type='grpc', url='grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
+        String stream2 = "@source(type='grpc', url='grpc://localhost:" + port + "/org.wso2.grpc.EventService/" +
+                "consume', " +
                 "@map(type='json')) " +
                 "define stream BarStream (message String);";
         String query = "@info(name = 'query') "
@@ -82,7 +84,7 @@ public class GrpcSourceTestCase {
 
         requestBuilder.setPayload(json);
         Event sequenceCallRequest = requestBuilder.build();
-        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888").usePlaintext().build();
+        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:" + port).usePlaintext().build();
         EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
 
         siddhiAppRuntime.start();
@@ -97,7 +99,8 @@ public class GrpcSourceTestCase {
         logger.setLevel(Level.DEBUG);
         SiddhiManager siddhiManager = new SiddhiManager();
 
-        String stream2 = "@source(type='grpc', url='grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
+        String stream2 = "@source(type='grpc', url='grpc://localhost:" + port + "/org.wso2.grpc.EventService/" +
+                "consume', " +
                 "@map(type='json', @attributes(name='trp:name', age='trp:age', message='message'))) " +
                 "define stream BarStream (message String, name String, age int);";
         String query = "@info(name = 'query') "
@@ -130,7 +133,7 @@ public class GrpcSourceTestCase {
 
         requestBuilder.setPayload(json);
         Event sequenceCallRequest = requestBuilder.build();
-        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888").usePlaintext().build();
+        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:" + port).usePlaintext().build();
         EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
 
         Metadata metadata = new Metadata();
@@ -153,7 +156,8 @@ public class GrpcSourceTestCase {
         rootLogger.addAppender(appender);
         SiddhiManager siddhiManager = new SiddhiManager();
 
-        String stream2 = "@source(type='grpc', url='grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
+        String stream2 = "@source(type='grpc', url='grpc://localhost:" + port + "/org.wso2.grpc.EventService/" +
+                "consume', " +
                 "@map(type='json', @attributes(name='trp:name', age='trp:age', message='message'))) " +
                 "define stream BarStream (message String, name String, age int);";
         String query = "@info(name = 'query') "
@@ -167,7 +171,7 @@ public class GrpcSourceTestCase {
         String json = "{ \"message\": \"Hello !\"}";
         requestBuilder.setPayload(json);
         Event sequenceCallRequest = requestBuilder.build();
-        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888").usePlaintext().build();
+        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:" + port).usePlaintext().build();
         EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
 
         Metadata metadata = new Metadata();
@@ -198,7 +202,8 @@ public class GrpcSourceTestCase {
         logger.setLevel(Level.DEBUG);
         SiddhiManager siddhiManager = new SiddhiManager();
 
-        String stream2 = "@source(type='grpc', url='grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
+        String stream2 = "@source(type='grpc', url='grpc://localhost:" + port + "/org.wso2.grpc.EventService/" +
+                "consume', " +
                 "@map(type='json', @attributes(name='trp:name', age='trp:age', message='message'))) " +
                 "define stream BarStream (message String, name String, age int);";
         String query = "@info(name = 'query') "
@@ -231,7 +236,7 @@ public class GrpcSourceTestCase {
         requestBuilder.putHeaders("name", "john");
         requestBuilder.putHeaders("age", "24");
         Event sequenceCallRequest = requestBuilder.build();
-        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888").usePlaintext().build();
+        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:" + port).usePlaintext().build();
         EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
         siddhiAppRuntime.start();
         Empty emptyResponse = blockingStub.consume(sequenceCallRequest);
@@ -248,7 +253,8 @@ public class GrpcSourceTestCase {
         rootLogger.addAppender(appender);
         SiddhiManager siddhiManager = new SiddhiManager();
 
-        String stream2 = "@source(type='grpc', url='grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
+        String stream2 = "@source(type='grpc', url='grpc://localhost:" + port + "/org.wso2.grpc.EventService/" +
+                "consume', " +
                 "@map(type='json', @attributes(name='trp:name', age='trp:age', message='message'))) " +
                 "define stream BarStream (message String, name String, age int);";
         String query = "@info(name = 'query') "
@@ -263,7 +269,7 @@ public class GrpcSourceTestCase {
         requestBuilder.setPayload(json);
         requestBuilder.putHeaders("age", "24");
         Event sequenceCallRequest = requestBuilder.build();
-        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888").usePlaintext().build();
+        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:" + port).usePlaintext().build();
         EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
         siddhiAppRuntime.start();
         Empty emptyResponse = blockingStub.consume(sequenceCallRequest);

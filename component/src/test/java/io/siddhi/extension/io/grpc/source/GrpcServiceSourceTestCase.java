@@ -41,6 +41,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class GrpcServiceSourceTestCase {
     private static final Logger logger = Logger.getLogger(GrpcServiceSourceTestCase.class.getName());
     private AtomicInteger eventCount = new AtomicInteger(0);
+    private String port = "8282";
 
     @Test
     public void testToCallProcess() throws Exception {
@@ -49,12 +50,12 @@ public class GrpcServiceSourceTestCase {
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String stream1 = "@source(type='grpc-service', " +
-                "url='grpc://localhost:8888/org.wso2.grpc.EventService/process', source.id='1', " +
+                "url='grpc://localhost:" + port + "/org.wso2.grpc.EventService/process', source.id='1', " +
                 "@map(type='json', @attributes(messageId='trp:message.id', message='message'))) " +
                 "define stream FooStream (messageId String, message String);";
 
         String stream2 = "@sink(type='grpc-service-response', " +
-                "url='grpc://localhost:8888/org.wso2.grpc.EventService/process', source.id='1', " +
+                "url='grpc://localhost:" + port + "/org.wso2.grpc.EventService/process', source.id='1', " +
                 "message.id='{{messageId}}', " +
                 "@map(type='json')) " +
                 "define stream BarStream (messageId String, message String);";
@@ -90,7 +91,7 @@ public class GrpcServiceSourceTestCase {
 
                 requestBuilder.setPayload(json);
                 Event sequenceCallRequest = requestBuilder.build();
-                ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888").usePlaintext().build();
+                ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:" + port).usePlaintext().build();
                 EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
                 Event response = blockingStub.process(sequenceCallRequest);
                 Assert.assertNotNull(response);
@@ -109,13 +110,13 @@ public class GrpcServiceSourceTestCase {
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String stream1 = "@source(type='grpc-service', " +
-                "url='grpc://localhost:8888/org.wso2.grpc.EventService/process', source.id='1', " +
+                "url='grpc://localhost:" + port + "/org.wso2.grpc.EventService/process', source.id='1', " +
                 "@map(type='json', @attributes(messageId='trp:message.id', message='message', name='trp:name', " +
                 "age='trp:age'))) " +
                 "define stream FooStream (messageId String, message String, name String, age int);";
 
         String stream2 = "@sink(type='grpc-service-response', " +
-                "url='grpc://localhost:8888/org.wso2.grpc.EventService/process', source.id='1', " +
+                "url='grpc://localhost:" + port + "/org.wso2.grpc.EventService/process', source.id='1', " +
                 "message.id='{{messageId}}', " +
                 "@map(type='json')) " +
                 "define stream BarStream (messageId String, message String, name String, age int);";
@@ -151,7 +152,7 @@ public class GrpcServiceSourceTestCase {
 
                 requestBuilder.setPayload(json);
                 Event sequenceCallRequest = requestBuilder.build();
-                ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888").usePlaintext().build();
+                ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:" + port).usePlaintext().build();
                 EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
 
                 Metadata metadata = new Metadata();
@@ -179,13 +180,13 @@ public class GrpcServiceSourceTestCase {
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String stream1 = "@source(type='grpc-service', " +
-                "url='grpc://localhost:8888/org.wso2.grpc.EventService/process', source.id='1', " +
+                "url='grpc://localhost:" + port + "/org.wso2.grpc.EventService/process', source.id='1', " +
                 "@map(type='json', @attributes(messageId='trp:message.id', message='message', name='trp:name', " +
                 "age='trp:age'))) " +
                 "define stream FooStream (messageId String, message String, name String, age int);";
 
         String stream2 = "@sink(type='grpc-service-response', " +
-                "url='grpc://localhost:8888/org.wso2.grpc.EventService/process', source.id='1', " +
+                "url='grpc://localhost:" + port + "/org.wso2.grpc.EventService/process', source.id='1', " +
                 "message.id='{{messageId}}', " +
                 "@map(type='json')) " +
                 "define stream BarStream (messageId String, message String, name String, age int);";
@@ -204,7 +205,7 @@ public class GrpcServiceSourceTestCase {
 
                 requestBuilder.setPayload(json);
                 Event sequenceCallRequest = requestBuilder.build();
-                ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888").usePlaintext().build();
+                ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:" + port).usePlaintext().build();
                 EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
 
                 Metadata metadata = new Metadata();
@@ -240,13 +241,13 @@ public class GrpcServiceSourceTestCase {
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String stream1 = "@source(type='grpc-service', " +
-                "url='grpc://localhost:8888/org.wso2.grpc.EventService/process', source.id='1', " +
+                "url='grpc://localhost:" + port + "/org.wso2.grpc.EventService/process', source.id='1', " +
                 "service.timeout = '3000', " +
                 "@map(type='json', @attributes(messageId='trp:message.id', message='message'))) " +
                 "define stream FooStream (messageId String, message String);";
 
         String stream2 = "@sink(type='grpc-service-response', " +
-                "url='grpc://localhost:8888/org.wso2.grpc.EventService/process', source.id='1', " +
+                "url='grpc://localhost:" + port + "/org.wso2.grpc.EventService/process', source.id='1', " +
                 "message.id='{{messageId}}', " +
                 "@map(type='json')) " +
                 "define stream BarStream (messageId String, message String);";
@@ -282,7 +283,7 @@ public class GrpcServiceSourceTestCase {
 
                 requestBuilder.setPayload(json);
                 Event sequenceCallRequest = requestBuilder.build();
-                ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888").usePlaintext().build();
+                ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:" + port).usePlaintext().build();
                 EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
                 Event response = blockingStub.process(sequenceCallRequest);
                 Assert.assertNotNull(response);
@@ -301,13 +302,13 @@ public class GrpcServiceSourceTestCase {
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String stream1 = "@source(type='grpc-service', " +
-                "url='grpc://localhost:8888/org.wso2.grpc.EventService/process', source.id='1', " +
+                "url='grpc://localhost:" + port + "/org.wso2.grpc.EventService/process', source.id='1', " +
                 "@map(type='json', @attributes(messageId='trp:message.id', message='message', name='trp:name', " +
                 "age='trp:age'))) " +
                 "define stream FooStream (messageId String, message String, name String, age int);";
 
         String stream2 = "@sink(type='grpc-service-response', " +
-                "url='grpc://localhost:8888/org.wso2.grpc.EventService/process', source.id='1', " +
+                "url='grpc://localhost:" + port + "/org.wso2.grpc.EventService/process', source.id='1', " +
                 "message.id='{{messageId}}', " +
                 "@map(type='json')) " +
                 "define stream BarStream (messageId String, message String, name String, age int);";
@@ -345,7 +346,7 @@ public class GrpcServiceSourceTestCase {
                 requestBuilder.putHeaders("name", "john");
                 requestBuilder.putHeaders("age", "24");
                 Event sequenceCallRequest = requestBuilder.build();
-                ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888").usePlaintext().build();
+                ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:" + port).usePlaintext().build();
                 EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
 
                 Event response = blockingStub.process(sequenceCallRequest);
@@ -368,13 +369,13 @@ public class GrpcServiceSourceTestCase {
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String stream1 = "@source(type='grpc-service', " +
-                "url='grpc://localhost:8888/org.wso2.grpc.EventService/process', source.id='1', " +
+                "url='grpc://localhost:" + port + "/org.wso2.grpc.EventService/process', source.id='1', " +
                 "@map(type='json', @attributes(messageId='trp:message.id', message='message', name='trp:name', " +
                 "age='trp:age'))) " +
                 "define stream FooStream (messageId String, message String, name String, age int);";
 
         String stream2 = "@sink(type='grpc-service-response', " +
-                "url='grpc://localhost:8888/org.wso2.grpc.EventService/process', source.id='1', " +
+                "url='grpc://localhost:" + port + "/org.wso2.grpc.EventService/process', source.id='1', " +
                 "message.id='{{messageId}}', " +
                 "@map(type='json')) " +
                 "define stream BarStream (messageId String, message String, name String, age int);";
@@ -394,7 +395,7 @@ public class GrpcServiceSourceTestCase {
                 requestBuilder.setPayload(json);
                 requestBuilder.putHeaders("name", "john");
                 Event sequenceCallRequest = requestBuilder.build();
-                ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888").usePlaintext().build();
+                ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:" + port).usePlaintext().build();
                 EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
 
                 Event response = blockingStub.process(sequenceCallRequest);

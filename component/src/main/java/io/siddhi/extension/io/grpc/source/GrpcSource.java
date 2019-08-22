@@ -107,6 +107,7 @@ public class GrpcSource extends AbstractGrpcSource {
                         responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
                     } else {
                         try {
+                            logger.error("server thread is: " + Thread.currentThread().getId());
                             sourceEventListener.onEvent(request.getPayload(), extractHeaders(request.getHeadersMap(),
                                     metaDataMap.get(), requestedTransportPropertyNames));
                             metaDataMap.remove();
