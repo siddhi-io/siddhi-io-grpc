@@ -56,7 +56,10 @@ public class GrpcCallSinkTestCase {
     @Test
     public void test1() throws Exception {
         logger.info("Test case to call process sending a request");
-        logger.setLevel(Level.DEBUG);
+        final TestAppender appender = new TestAppender();
+        final Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(Level.DEBUG);
+        rootLogger.addAppender(appender);
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inStreamDefinition = ""
@@ -96,12 +99,24 @@ public class GrpcCallSinkTestCase {
         fooStream.send(new Object[]{"Request 1"});
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
+
+        final List<LoggingEvent> log = appender.getLog();
+        List<String> logMessages = new ArrayList<>();
+        for (LoggingEvent logEvent : log) {
+            String message = String.valueOf(logEvent.getMessage());
+            logMessages.add(message);
+        }
+        Assert.assertTrue(logMessages.contains("Server process hit with payload = [{\"event\":{\"message\":\"" +
+                "Request 1\"}}] and Headers = {{sequence=mySeq}}"));
     }
 
     @Test//(dependsOnMethods = "test1")
     public void testWithHeaders() throws Exception {
         logger.info("Test case to call process sending 2 requests");
-        logger.setLevel(Level.DEBUG);
+        final TestAppender appender = new TestAppender();
+        final Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(Level.DEBUG);
+        rootLogger.addAppender(appender);
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inStreamDefinition = ""
@@ -112,7 +127,7 @@ public class GrpcCallSinkTestCase {
                 "@map(type='json', @payload('{{message}}'))) "
                 + "define stream FooStream (message String, headers String);";
 
-        String stream2 = "@source(type='grpc-call-response', sink.id= '2', @map(type='json'), ) " +
+        String stream2 = "@source(type='grpc-call-response', sink.id= '2', @map(type='json')) " +
                 "define stream BarStream (message String);";
         String query = "@info(name = 'query') "
                 + "from BarStream "
@@ -143,12 +158,26 @@ public class GrpcCallSinkTestCase {
         fooStream.send(new Object[]{"Request 2", "'Name:Nash','Age:54','Content-Type:json'"});
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
+
+        final List<LoggingEvent> log = appender.getLog();
+        List<String> logMessages = new ArrayList<>();
+        for (LoggingEvent logEvent : log) {
+            String message = String.valueOf(logEvent.getMessage());
+            logMessages.add(message);
+        }
+        Assert.assertTrue(logMessages.contains("Server process hit with payload = [Request 1] and Headers = " +
+                "{{Name=John, Age=23, Content-Type=text, sequence=mySeq}}"));
+        Assert.assertTrue(logMessages.contains("Server process hit with payload = [Request 2] and Headers = " +
+                "{{Name=Nash, Age=54, Content-Type=json, sequence=mySeq}}"));
     }
 
     @Test
     public void testWithoutRelevantSource() throws Exception {
         logger.info("Test case to call process sending 2 requests");
-        logger.setLevel(Level.DEBUG);
+        final TestAppender appender = new TestAppender();
+        final Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(Level.DEBUG);
+        rootLogger.addAppender(appender);
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inStreamDefinition = ""
@@ -165,6 +194,19 @@ public class GrpcCallSinkTestCase {
         fooStream.send(new Object[]{"Request 1"});
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
+
+        final List<LoggingEvent> log = appender.getLog();
+        List<String> logMessages = new ArrayList<>();
+        for (LoggingEvent logEvent : log) {
+            String message = String.valueOf(logEvent.getMessage());
+            if (message.contains("FooStream: ")) {
+                message = message.split("FooStream: ")[1];
+            }
+            logMessages.add(message);
+        }
+        Assert.assertTrue(logMessages.contains("For grpc-call sink to work a grpc-call-response source should be " +
+                "available with the same sink.id. In this case sink.id is 1. Please provide a grpc-call-response " +
+                "source with the sink.id 1"));
     }
 
     @Test
@@ -207,10 +249,10 @@ public class GrpcCallSinkTestCase {
             String message = String.valueOf(logEvent.getMessage());
             logMessages.add(message);
         }
-//        Assert.assertTrue(logMessages.contains("Server consume hit with [Request 1]"));
-//        Assert.assertTrue(logMessages.contains("Server consume hit with [Request 2]"));
-//        Assert.assertTrue(logMessages.contains("Header received: 'Name:John','Age:23','Content-Type:text'"));
-//        Assert.assertTrue(logMessages.contains("Header received: 'Name:Nash','Age:54','Content-Type:json'"));
+        Assert.assertTrue(logMessages.contains("Server process hit with payload = [Request 1] and Headers = {{}}"));
+        Assert.assertTrue(logMessages.contains("Server process hit with payload = [Request 2] and Headers = {{}}"));
+        Assert.assertTrue(logMessages.contains("Metadata received: name: John"));
+        Assert.assertTrue(logMessages.contains("Metadata received: name: Nash"));
     }
 
     @Test
@@ -244,6 +286,7 @@ public class GrpcCallSinkTestCase {
                     switch (i) {
                         case 0:
                             Assert.assertEquals((String) inEvents[i].getData()[0], "Hello from Server!");
+                            Assert.assertEquals((String) inEvents[i].getData()[1], "Request 1");
                             break;
                         default:
                             Assert.fail();

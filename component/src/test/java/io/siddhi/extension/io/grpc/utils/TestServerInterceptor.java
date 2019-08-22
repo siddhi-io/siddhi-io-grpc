@@ -45,7 +45,7 @@ public class TestServerInterceptor implements ServerInterceptor {
     Set<String> metadataKeys = metadata.keys();
     for (String key: metadataKeys) {
       if (logger.isDebugEnabled()) {
-        logger.debug("Header received: " + key + ": " + metadata.get(Metadata.Key.of(key, ASCII_STRING_MARSHALLER)));
+        logger.debug("Metadata received: " + key + ": " + metadata.get(Metadata.Key.of(key, ASCII_STRING_MARSHALLER)));
       }
     }
 //    Metadata.Key<String> headerKey = ;

@@ -35,7 +35,6 @@ import org.testng.annotations.Test;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class GrpcSinkTestCase {
     private static final Logger log = Logger.getLogger(GrpcSinkTestCase.class.getName());

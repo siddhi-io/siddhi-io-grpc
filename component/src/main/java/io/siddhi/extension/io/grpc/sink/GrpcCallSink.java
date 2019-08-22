@@ -283,7 +283,7 @@ public class GrpcCallSink extends AbstractGrpcSink {
         logger.info(siddhiAppContext.getName() + ": gRPC service on " + streamID + " has successfully connected to "
                 + url);
         if (GrpcSourceRegistry.getInstance().getGrpcCallResponseSourceSource(sinkID) == null) {
-            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": " + streamID + " For grpc-call sink " +
+            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": " + streamID + ": For grpc-call sink " +
                     "to work a grpc-call-response source should be available with the same sink.id. In this case " +
                     "sink.id is " + sinkID + ". Please provide a grpc-call-response source with the sink.id "+ sinkID);
         }
@@ -299,7 +299,9 @@ public class GrpcCallSink extends AbstractGrpcSink {
             if (channelTerminationWaitingTimeInMillis != -1L) {
                 channel.shutdown().awaitTermination(channelTerminationWaitingTimeInMillis, TimeUnit.MILLISECONDS);
             } else {
-                channel.shutdown();
+                if (channel != null) {
+                    channel.shutdown();
+                }
             }
             channel = null;
         } catch (InterruptedException e) {
