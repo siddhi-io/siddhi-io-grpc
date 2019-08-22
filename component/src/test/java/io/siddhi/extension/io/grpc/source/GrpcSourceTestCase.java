@@ -82,9 +82,7 @@ public class GrpcSourceTestCase {
 
         requestBuilder.setPayload(json);
         Event sequenceCallRequest = requestBuilder.build();
-        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888")
-                .usePlaintext(true)
-                .build();
+        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888").usePlaintext().build();
         EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
 
         siddhiAppRuntime.start();
@@ -132,9 +130,7 @@ public class GrpcSourceTestCase {
 
         requestBuilder.setPayload(json);
         Event sequenceCallRequest = requestBuilder.build();
-        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888")
-                .usePlaintext(true)
-                .build();
+        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888").usePlaintext().build();
         EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
 
         Metadata metadata = new Metadata();
@@ -171,9 +167,7 @@ public class GrpcSourceTestCase {
         String json = "{ \"message\": \"Hello !\"}";
         requestBuilder.setPayload(json);
         Event sequenceCallRequest = requestBuilder.build();
-        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888")
-                .usePlaintext(true)
-                .build();
+        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888").usePlaintext().build();
         EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
 
         Metadata metadata = new Metadata();
@@ -237,9 +231,7 @@ public class GrpcSourceTestCase {
         requestBuilder.putHeaders("name", "john");
         requestBuilder.putHeaders("age", "24");
         Event sequenceCallRequest = requestBuilder.build();
-        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888")
-                .usePlaintext(true)
-                .build();
+        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888").usePlaintext().build();
         EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
         siddhiAppRuntime.start();
         Empty emptyResponse = blockingStub.consume(sequenceCallRequest);
@@ -271,9 +263,7 @@ public class GrpcSourceTestCase {
         requestBuilder.setPayload(json);
         requestBuilder.putHeaders("age", "24");
         Event sequenceCallRequest = requestBuilder.build();
-        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888")
-                .usePlaintext(true)
-                .build();
+        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888").usePlaintext().build();
         EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
         siddhiAppRuntime.start();
         Empty emptyResponse = blockingStub.consume(sequenceCallRequest);

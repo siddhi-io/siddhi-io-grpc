@@ -20,14 +20,19 @@ package io.siddhi.extension.io.grpc.util;
 import io.siddhi.core.exception.SiddhiAppRuntimeException;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Class to hold the static util methods needed
  */
 public class GrpcUtils {
     public static String getServiceName(String path) {
-        List<String> urlParts = new ArrayList<>(Arrays.asList(path.substring(1).split(GrpcConstants.PORT_SERVICE_SEPARATOR)));
+        List<String> urlParts = new ArrayList<>(Arrays.asList(path.substring(1).split(GrpcConstants
+                .PORT_SERVICE_SEPARATOR)));
         if (urlParts.contains(GrpcConstants.EMPTY_STRING)) {
             throw new SiddhiAppValidationException("Malformed URL. There should not be any empty parts in the URL " +
                     "between two '/'");

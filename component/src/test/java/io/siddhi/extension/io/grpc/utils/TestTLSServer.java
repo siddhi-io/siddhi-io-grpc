@@ -29,8 +29,6 @@ import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
 
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.TrustManagerFactory;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.KeyStore;
@@ -39,6 +37,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.concurrent.TimeUnit;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.TrustManagerFactory;
 
 public class TestTLSServer {
     private static final Logger logger = Logger.getLogger(TestServer.class.getName());
@@ -71,8 +71,8 @@ public class TestTLSServer {
             }
             SslContext sslContext = sslClientContextBuilder.build();
             return sslContext;
-        } catch (IOException | NoSuchAlgorithmException | CertificateException | UnrecoverableKeyException | KeyStoreException e) {
-            e.printStackTrace();
+        } catch (IOException | NoSuchAlgorithmException | CertificateException | UnrecoverableKeyException |
+                KeyStoreException e) {
         }
         return null;
     }
@@ -88,8 +88,8 @@ public class TestTLSServer {
                             public void process(Event request,
                                                 StreamObserver<Event> responseObserver) {
                                 if (logger.isDebugEnabled()) {
-                                    logger.debug("Server process hit with payload = " + request.getPayload() + " and Headers = {"
-                                            + request.getHeadersMap().toString() + "}");
+                                    logger.debug("Server process hit with payload = " + request.getPayload() +
+                                            " and Headers = {" + request.getHeadersMap().toString() + "}");
                                 }
                                 Event.Builder responseBuilder = Event.newBuilder();
                                 String json = "{ \"message\": \"Hello from Server!\"}";

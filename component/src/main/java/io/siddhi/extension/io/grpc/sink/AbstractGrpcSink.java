@@ -40,8 +40,6 @@ import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
 
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.TrustManagerFactory;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -52,6 +50,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.concurrent.TimeUnit;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.TrustManagerFactory;
 
 import static io.siddhi.extension.io.grpc.util.GrpcUtils.getMethodName;
 import static io.siddhi.extension.io.grpc.util.GrpcUtils.getSequenceName;
@@ -243,23 +243,29 @@ public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and
         return null;
     }
 
-    private TrustManagerFactory getTrustManagerFactory(String JKSPath, String password, String algorithm) throws KeyStoreException,
-            IOException, NoSuchAlgorithmException, CertificateException {
+    private TrustManagerFactory getTrustManagerFactory(String jksPath, String password, String algorithm) throws
+            KeyStoreException, NoSuchAlgorithmException, CertificateException {
         char[] passphrase = password.toCharArray();
         KeyStore keyStore = KeyStore.getInstance(GrpcConstants.DEFAULT_KEYSTORE_TYPE);
-        keyStore.load(new FileInputStream(JKSPath),
-                passphrase);
+        try (FileInputStream fis = new FileInputStream(jksPath)) {
+            keyStore.load(fis, passphrase);
+        } catch (IOException e) {
+            throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " + streamID + ": " + e.getMessage());
+        }
         TrustManagerFactory tmf = TrustManagerFactory.getInstance(algorithm);
         tmf.init(keyStore);
         return tmf;
     }
 
-    private KeyManagerFactory getKeyManagerFactory(String JKSPath, String password, String algorithm) throws KeyStoreException,
-            IOException, CertificateException, NoSuchAlgorithmException, UnrecoverableKeyException {
+    private KeyManagerFactory getKeyManagerFactory(String jksPath, String password, String algorithm) throws
+            KeyStoreException, CertificateException, NoSuchAlgorithmException, UnrecoverableKeyException {
         KeyStore keyStore = KeyStore.getInstance(GrpcConstants.DEFAULT_KEYSTORE_TYPE);
         char[] passphrase = password.toCharArray();
-        keyStore.load(new FileInputStream(JKSPath),
-                passphrase);
+        try (FileInputStream fis = new FileInputStream(jksPath)) {
+            keyStore.load(fis, passphrase);
+        } catch (IOException e) {
+            throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " + streamID + ": " + e.getMessage());
+        }
         KeyManagerFactory kmf = KeyManagerFactory.getInstance(algorithm);
         kmf.init(keyStore, passphrase);
         return kmf;
@@ -300,7 +306,8 @@ public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and
         String[] metadataArray = metadataString.split(",");
         for (String metadataKeyValue: metadataArray) {
             String[] headerKeyValueArray = metadataKeyValue.split(":");
-            metadata.put(Metadata.Key.of(headerKeyValueArray[0], Metadata.ASCII_STRING_MARSHALLER), headerKeyValueArray[1]);
+            metadata.put(Metadata.Key.of(headerKeyValueArray[0], Metadata.ASCII_STRING_MARSHALLER),
+                    headerKeyValueArray[1]);
         }
 
         return MetadataUtils.attachHeaders(stub, metadata);

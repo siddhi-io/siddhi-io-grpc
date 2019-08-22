@@ -33,8 +33,6 @@ import org.testng.annotations.Test;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
 
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.TrustManagerFactory;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.KeyStore;
@@ -43,6 +41,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.concurrent.atomic.AtomicInteger;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.TrustManagerFactory;
 
 public class GrpcSourceAuthTestCase {
     private static final Logger logger = Logger.getLogger(GrpcSourceAuthTestCase.class.getName());
@@ -55,7 +55,7 @@ public class GrpcSourceAuthTestCase {
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String stream2 = "@source(type='grpc', url='grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
-                "keystore.file = '/Users/niruhan/wso2/source_codes/siddhi-io-grpc-1/component/src/test/resources/security/wso2carbon.jks'," +
+                "keystore.file = 'src/test/resources/security/wso2carbon.jks'," +
                 "keystore.password = 'wso2carbon', " +
                 "keystore.algorithm = 'SunX509', " +
                 "@map(type='json')) " +
@@ -88,7 +88,7 @@ public class GrpcSourceAuthTestCase {
 
         String json = "{ \"message\": \"Benjamin Watson\"}";
 
-        String truststoreFilePath = "/Users/niruhan/wso2/source_codes/siddhi-io-grpc-1/component/src/test/resources/security/wso2carbon.jks";
+        String truststoreFilePath = "src/test/resources/security/wso2carbon.jks";
         String truststorePassword = "wso2carbon";
         String truststoreAlgorithm = "SunX509";
 
@@ -112,10 +112,10 @@ public class GrpcSourceAuthTestCase {
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String stream2 = "@source(type='grpc', url='grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
-                "keystore.file = '/Users/niruhan/wso2/source_codes/siddhi-io-grpc-1/component/src/test/resources/security/wso2carbon.jks'," +
+                "keystore.file = 'src/test/resources/security/wso2carbon.jks'," +
                 "keystore.password = 'wso2carbon', " +
                 "keystore.algorithm = 'SunX509', " +
-                "truststore.file = '/Users/niruhan/wso2/source_codes/siddhi-io-grpc-1/component/src/test/resources/security/wso2carbon.jks'," +
+                "truststore.file = 'src/test/resources/security/wso2carbon.jks'," +
                 "truststore.password = 'wso2carbon', " +
                 "truststore.algorithm = 'SunX509', " +
                 "@map(type='json')) " +
@@ -148,7 +148,7 @@ public class GrpcSourceAuthTestCase {
 
         String json = "{ \"message\": \"Benjamin Watson\"}";
 
-        String truststoreFilePath = "/Users/niruhan/wso2/source_codes/siddhi-io-grpc-1/component/src/test/resources/security/wso2carbon.jks";
+        String truststoreFilePath = "src/test/resources/security/wso2carbon.jks";
         String truststorePassword = "wso2carbon";
         String truststoreAlgorithm = "SunX509";
 
@@ -175,7 +175,7 @@ public class GrpcSourceAuthTestCase {
 
         String stream1 = "@source(type='grpc-service', " +
                 "url='grpc://localhost:8888/org.wso2.grpc.EventService/process', source.id='1', " +
-                "keystore.file = '/Users/niruhan/wso2/source_codes/siddhi-io-grpc-1/component/src/test/resources/security/wso2carbon.jks'," +
+                "keystore.file = 'src/test/resources/security/wso2carbon.jks'," +
                 "keystore.password = 'wso2carbon', " +
                 "keystore.algorithm = 'SunX509', " +
                 "@map(type='json', @attributes(messageId='trp:message.id', message='message'))) " +
@@ -214,7 +214,7 @@ public class GrpcSourceAuthTestCase {
             public void run() {
                 Event.Builder requestBuilder = Event.newBuilder();
                 String json = "{ \"message\": \"Benjamin Watson\"}";
-                String truststoreFilePath = "/Users/niruhan/wso2/source_codes/siddhi-io-grpc-1/component/src/test/resources/security/wso2carbon.jks";
+                String truststoreFilePath = "src/test/resources/security/wso2carbon.jks";
                 String truststorePassword = "wso2carbon";
                 String truststoreAlgorithm = "SunX509";
 
@@ -226,15 +226,10 @@ public class GrpcSourceAuthTestCase {
                             .forClient().trustManager(getTrustManagerFactory(truststoreFilePath, truststorePassword,
                                     truststoreAlgorithm)).build()).build();
                 } catch (KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException e) {
-                    e.printStackTrace();
                 }
                 EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
-                try {
-                    Event response = blockingStub.process(sequenceCallRequest);
-                    Assert.assertNotNull(response);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                Event response = blockingStub.process(sequenceCallRequest);
+                Assert.assertNotNull(response);
             }
         };
         siddhiAppRuntime.start();
@@ -251,10 +246,10 @@ public class GrpcSourceAuthTestCase {
 
         String stream1 = "@source(type='grpc-service', " +
                 "url='grpc://localhost:8888/org.wso2.grpc.EventService/process', source.id='1', " +
-                "keystore.file = '/Users/niruhan/wso2/source_codes/siddhi-io-grpc-1/component/src/test/resources/security/wso2carbon.jks'," +
+                "keystore.file = 'src/test/resources/security/wso2carbon.jks'," +
                 "keystore.password = 'wso2carbon', " +
                 "keystore.algorithm = 'SunX509', " +
-                "truststore.file = '/Users/niruhan/wso2/source_codes/siddhi-io-grpc-1/component/src/test/resources/security/wso2carbon.jks'," +
+                "truststore.file = 'src/test/resources/security/wso2carbon.jks'," +
                 "truststore.password = 'wso2carbon', " +
                 "truststore.algorithm = 'SunX509', " +
                 "@map(type='json', @attributes(messageId='trp:message.id', message='message'))) " +
@@ -293,7 +288,7 @@ public class GrpcSourceAuthTestCase {
             public void run() {
                 Event.Builder requestBuilder = Event.newBuilder();
                 String json = "{ \"message\": \"Benjamin Watson\"}";
-                String truststoreFilePath = "/Users/niruhan/wso2/source_codes/siddhi-io-grpc-1/component/src/test/resources/security/wso2carbon.jks";
+                String truststoreFilePath = "src/test/resources/security/wso2carbon.jks";
                 String truststorePassword = "wso2carbon";
                 String truststoreAlgorithm = "SunX509";
 
@@ -304,17 +299,17 @@ public class GrpcSourceAuthTestCase {
                     channel = NettyChannelBuilder.forTarget("localhost:8888").sslContext(GrpcSslContexts
                             .forClient().trustManager(getTrustManagerFactory(truststoreFilePath, truststorePassword,
                                     truststoreAlgorithm))
-                            .keyManager(getKeyManagerFactory(truststoreFilePath, truststorePassword, truststoreAlgorithm))
+                            .keyManager(getKeyManagerFactory(truststoreFilePath, truststorePassword,
+                                    truststoreAlgorithm))
                             .build()).build();
-                } catch (KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException | UnrecoverableKeyException e) {
-                    e.printStackTrace();
+                } catch (KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException |
+                        UnrecoverableKeyException e) {
                 }
                 EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
                 try {
                     Event response = blockingStub.process(sequenceCallRequest);
                     Assert.assertNotNull(response);
                 } catch (Exception e) {
-                    e.printStackTrace();
                 }
             }
         };
@@ -324,22 +319,22 @@ public class GrpcSourceAuthTestCase {
         siddhiAppRuntime.shutdown();
     }
 
-    private TrustManagerFactory getTrustManagerFactory(String JKSPath, String password, String algorithm) throws KeyStoreException,
-            IOException, NoSuchAlgorithmException, CertificateException {
+    private TrustManagerFactory getTrustManagerFactory(String jksPath, String password, String algorithm)
+            throws KeyStoreException, IOException, NoSuchAlgorithmException, CertificateException {
         char[] passphrase = password.toCharArray();
         KeyStore keyStore = KeyStore.getInstance(GrpcConstants.DEFAULT_KEYSTORE_TYPE);
-        keyStore.load(new FileInputStream(JKSPath),
+        keyStore.load(new FileInputStream(jksPath),
                 passphrase);
         TrustManagerFactory tmf = TrustManagerFactory.getInstance(algorithm);
         tmf.init(keyStore);
         return tmf;
     }
 
-    private KeyManagerFactory getKeyManagerFactory(String JKSPath, String password, String algorithm) throws KeyStoreException,
-            IOException, CertificateException, NoSuchAlgorithmException, UnrecoverableKeyException {
+    private KeyManagerFactory getKeyManagerFactory(String jksPath, String password, String algorithm) throws
+            KeyStoreException, IOException, CertificateException, NoSuchAlgorithmException, UnrecoverableKeyException {
         KeyStore keyStore = KeyStore.getInstance(GrpcConstants.DEFAULT_KEYSTORE_TYPE);
         char[] passphrase = password.toCharArray();
-        keyStore.load(new FileInputStream(JKSPath),
+        keyStore.load(new FileInputStream(jksPath),
                 passphrase);
         KeyManagerFactory kmf = KeyManagerFactory.getInstance(algorithm);
         kmf.init(keyStore, passphrase);

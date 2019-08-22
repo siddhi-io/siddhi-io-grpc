@@ -285,7 +285,7 @@ public class GrpcCallSink extends AbstractGrpcSink {
         if (GrpcSourceRegistry.getInstance().getGrpcCallResponseSourceSource(sinkID) == null) {
             throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": " + streamID + ": For grpc-call sink " +
                     "to work a grpc-call-response source should be available with the same sink.id. In this case " +
-                    "sink.id is " + sinkID + ". Please provide a grpc-call-response source with the sink.id "+ sinkID);
+                    "sink.id is " + sinkID + ". Please provide a grpc-call-response source with the sink.id " + sinkID);
         }
     }
 

@@ -90,9 +90,7 @@ public class GrpcServiceSourceTestCase {
 
                 requestBuilder.setPayload(json);
                 Event sequenceCallRequest = requestBuilder.build();
-                ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888")
-                        .usePlaintext()
-                        .build();
+                ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888").usePlaintext().build();
                 EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
                 Event response = blockingStub.process(sequenceCallRequest);
                 Assert.assertNotNull(response);
@@ -153,9 +151,7 @@ public class GrpcServiceSourceTestCase {
 
                 requestBuilder.setPayload(json);
                 Event sequenceCallRequest = requestBuilder.build();
-                ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888")
-                        .usePlaintext(true)
-                        .build();
+                ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888").usePlaintext().build();
                 EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
 
                 Metadata metadata = new Metadata();
@@ -208,9 +204,7 @@ public class GrpcServiceSourceTestCase {
 
                 requestBuilder.setPayload(json);
                 Event sequenceCallRequest = requestBuilder.build();
-                ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888")
-                        .usePlaintext()
-                        .build();
+                ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888").usePlaintext().build();
                 EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
 
                 Metadata metadata = new Metadata();
@@ -288,9 +282,7 @@ public class GrpcServiceSourceTestCase {
 
                 requestBuilder.setPayload(json);
                 Event sequenceCallRequest = requestBuilder.build();
-                ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888")
-                        .usePlaintext()
-                        .build();
+                ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888").usePlaintext().build();
                 EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
                 Event response = blockingStub.process(sequenceCallRequest);
                 Assert.assertNotNull(response);
@@ -353,9 +345,7 @@ public class GrpcServiceSourceTestCase {
                 requestBuilder.putHeaders("name", "john");
                 requestBuilder.putHeaders("age", "24");
                 Event sequenceCallRequest = requestBuilder.build();
-                ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888")
-                        .usePlaintext(true)
-                        .build();
+                ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888").usePlaintext().build();
                 EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
 
                 Event response = blockingStub.process(sequenceCallRequest);
@@ -404,9 +394,7 @@ public class GrpcServiceSourceTestCase {
                 requestBuilder.setPayload(json);
                 requestBuilder.putHeaders("name", "john");
                 Event sequenceCallRequest = requestBuilder.build();
-                ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888")
-                        .usePlaintext(true)
-                        .build();
+                ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888").usePlaintext().build();
                 EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
 
                 Event response = blockingStub.process(sequenceCallRequest);

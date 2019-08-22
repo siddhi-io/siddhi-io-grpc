@@ -42,9 +42,9 @@ import java.util.Map;
  */
 
 @Extension(name = "grpc-call-response", namespace = "source", description = "This grpc source receives responses " +
-        "received from gRPC server for requests sent from a grpc-call sink. The source will receive responses for sink " +
-        "with the same sink.id. For example if you have a gRPC sink with sink.id 15 then we need to set the sink.id " +
-        "as 15 in the source to receives responses. Sinks and sources have 1:1 mapping",
+        "received from gRPC server for requests sent from a grpc-call sink. The source will receive responses for " +
+        "sink with the same sink.id. For example if you have a gRPC sink with sink.id 15 then we need to set the " +
+        "sink.id as 15 in the source to receives responses. Sinks and sources have 1:1 mapping",
         parameters = {
                 @Parameter(
                         name = "sink.id",
@@ -87,17 +87,19 @@ public class GrpcCallResponseSource extends Source {
                              String[] requestedTransportPropertyNames, ConfigReader configReader,
                              SiddhiAppContext siddhiAppContext) {
         this.sourceEventListener = sourceEventListener;
-        this.requestedTransportPropertyNames = requestedTransportPropertyNames;
+        this.requestedTransportPropertyNames = requestedTransportPropertyNames.clone();
         sinkID = optionHolder.validateAndGetOption("sink.id").getValue();
         GrpcSourceRegistry.getInstance().putGrpcCallResponseSource(sinkID, this);
         return null;
     }
 
     public void onResponse(Event response, Map<String, String> siddhiRequestEventData) {
-        sourceEventListener.onEvent(response.getPayload(), getTransportProperties(response.getHeadersMap(), siddhiRequestEventData));
+        sourceEventListener.onEvent(response.getPayload(), getTransportProperties(response.getHeadersMap(),
+                siddhiRequestEventData));
     }
 
-    private String[] getTransportProperties(Map<String, String> headersMap, Map<String, String> siddhiRequestEventData) {
+    private String[] getTransportProperties(Map<String, String> headersMap,
+                                            Map<String, String> siddhiRequestEventData) {
         siddhiRequestEventData.putAll(headersMap);
         String[] transportProperties = new String[requestedTransportPropertyNames.length];
         for (int i = 0; i < requestedTransportPropertyNames.length; i++) {

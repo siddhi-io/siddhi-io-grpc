@@ -37,8 +37,6 @@ import io.siddhi.extension.io.grpc.util.SourceServerInterceptor;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.log4j.Logger;
 
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.TrustManagerFactory;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -50,6 +48,8 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.TrustManagerFactory;
 
 import static io.siddhi.extension.io.grpc.util.GrpcUtils.getServiceName;
 
@@ -57,7 +57,7 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getServiceName;
  * This is an abstract class extended by GrpcSource and GrpcServiceSource. This provides most of initialization
  * implementations common for both sources
  */
-public abstract class AbstractGrpcSource extends Source { //todo: one source url for multiple streams by keeping a map of dummy sources
+public abstract class AbstractGrpcSource extends Source {
     protected SiddhiAppContext siddhiAppContext;
     protected SourceEventListener sourceEventListener;
     private String url;
@@ -147,7 +147,8 @@ public abstract class AbstractGrpcSource extends Source { //todo: one source url
                             sslContextBuilder).clientAuth(ClientAuth.REQUIRE);
                 }
                 serverBuilder.sslContext(sslContextBuilder.build());
-            } catch (IOException | CertificateException | NoSuchAlgorithmException | UnrecoverableKeyException | KeyStoreException e) {
+            } catch (IOException | CertificateException | NoSuchAlgorithmException | UnrecoverableKeyException |
+                    KeyStoreException e) {
                 throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " + streamID + ": Error while " +
                         "creating SslContext. " + e.getMessage());
             }
@@ -167,12 +168,16 @@ public abstract class AbstractGrpcSource extends Source { //todo: one source url
         return null;
     }
 
-    private SslContextBuilder getSslContextBuilder(String JKSPath, String password, String algorithm)
-            throws KeyStoreException, IOException, NoSuchAlgorithmException, CertificateException,
+    private SslContextBuilder getSslContextBuilder(String jksPath, String password, String algorithm)
+            throws KeyStoreException, NoSuchAlgorithmException, CertificateException,
             UnrecoverableKeyException {
         char[] passphrase = password.toCharArray();
         KeyStore keyStore = KeyStore.getInstance(GrpcConstants.DEFAULT_KEYSTORE_TYPE);
-        keyStore.load(new FileInputStream(JKSPath), passphrase);
+        try (FileInputStream fis = new FileInputStream(jksPath)) {
+            keyStore.load(fis, passphrase);
+        } catch (IOException e) {
+            throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " + streamID + ": " + e.getMessage());
+        }
         KeyManagerFactory kmf = KeyManagerFactory.getInstance(algorithm);
         kmf.init(keyStore, passphrase);
         SslContextBuilder sslContextBuilder = SslContextBuilder.forServer(kmf);
@@ -180,12 +185,16 @@ public abstract class AbstractGrpcSource extends Source { //todo: one source url
         return sslContextBuilder;
     }
 
-    private SslContextBuilder addTrustStore(String JKSPath, String password, String algorithm,
+    private SslContextBuilder addTrustStore(String jksPath, String password, String algorithm,
                                             SslContextBuilder sslContextBuilder) throws NoSuchAlgorithmException,
-            KeyStoreException, IOException, CertificateException {
+            KeyStoreException, CertificateException {
         char[] passphrase = password.toCharArray();
         KeyStore keyStore = KeyStore.getInstance(GrpcConstants.DEFAULT_KEYSTORE_TYPE);
-        keyStore.load(new FileInputStream(JKSPath), passphrase);
+        try (FileInputStream fis = new FileInputStream(jksPath)) {
+            keyStore.load(fis, passphrase);
+        } catch (IOException e) {
+            throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " + streamID + ": " + e.getMessage());
+        }
         TrustManagerFactory tmf = TrustManagerFactory.getInstance(algorithm);
         tmf.init(keyStore);
         return sslContextBuilder.trustManager(tmf).clientAuth(ClientAuth.REQUIRE);
