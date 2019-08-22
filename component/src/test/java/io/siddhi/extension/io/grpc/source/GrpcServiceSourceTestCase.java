@@ -25,14 +25,17 @@ import io.siddhi.core.SiddhiAppRuntime;
 import io.siddhi.core.SiddhiManager;
 import io.siddhi.core.query.output.callback.QueryCallback;
 import io.siddhi.core.util.EventPrinter;
-import io.siddhi.extension.io.grpc.util.GrpcConstants;
+import io.siddhi.extension.io.grpc.utils.TestAppender;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.apache.log4j.spi.LoggingEvent;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class GrpcServiceSourceTestCase {
@@ -101,7 +104,7 @@ public class GrpcServiceSourceTestCase {
         siddhiAppRuntime.shutdown();
     }
 
-    @Test(dependsOnMethods = "testToCallProcess")
+    @Test
     public void testWithMetaData() throws Exception {
         logger.info("Test case to call process");
         logger.setLevel(Level.DEBUG);
@@ -155,12 +158,10 @@ public class GrpcServiceSourceTestCase {
                         .build();
                 EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
 
-                Metadata header = new Metadata();
-                String headers = "'Name:John', 'Age:23'";
-                Metadata.Key<String> key =
-                        Metadata.Key.of(GrpcConstants.HEADERS, Metadata.ASCII_STRING_MARSHALLER);
-                header.put(key, headers);
-                blockingStub = MetadataUtils.attachHeaders(blockingStub, header);
+                Metadata metadata = new Metadata();
+                metadata.put(Metadata.Key.of("Name", Metadata.ASCII_STRING_MARSHALLER), "John");
+                metadata.put(Metadata.Key.of("Age", Metadata.ASCII_STRING_MARSHALLER), "23");
+                blockingStub = MetadataUtils.attachHeaders(blockingStub, metadata);
 
                 Event response = blockingStub.process(sequenceCallRequest);
                 Assert.assertNotNull(response);
@@ -172,78 +173,73 @@ public class GrpcServiceSourceTestCase {
         siddhiAppRuntime.shutdown();
     }
 
-//    @Test(dependsOnMethods = "testWithHeader")
-//    public void testWithIncompleteHeader() throws Exception {
-//        logger.info("Test case to call process");
-//        logger.setLevel(Level.DEBUG);
-//        SiddhiManager siddhiManager = new SiddhiManager();
-//
-//        String stream1 = "@source(type='grpc-service', " +
-//                "url='grpc://localhost:8888/org.wso2.grpc.EventService/process', source.id='1', " +
-//                "@map(type='json', @attributes(messageId='trp:message.id', message='message', name='trp:name', " +
-//                "age='trp:age'))) " +
-//                "define stream FooStream (messageId String, message String, name String, age int);";
-//
-//        String stream2 = "@sink(type='grpc-service-response', " +
-//                "url='grpc://localhost:8888/org.wso2.grpc.EventService/process', source.id='1', " +
-//                "message.id='{{messageId}}', " +
-//                "@map(type='json')) " +
-//                "define stream BarStream (messageId String, message String, name String, age int);";
-//        String query = "@info(name = 'query') "
-//                + "from FooStream "
-//                + "select *  "
-//                + "insert into BarStream;";
-//
-//        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(stream1 + stream2 + query);
-//        siddhiAppRuntime.addCallback("query", new QueryCallback() {
-//            @Override
-//            public void receive(long timeStamp, io.siddhi.core.event.Event[] inEvents,
-//                                io.siddhi.core.event.Event[] removeEvents) {
-//                EventPrinter.print(timeStamp, inEvents, removeEvents);
-//                for (int i = 0; i < inEvents.length; i++) {
-//                    eventCount.incrementAndGet();
-//                    switch (i) {
-//                        case 0:
-//                            Assert.assertEquals((String) inEvents[i].getData()[1], "Benjamin Watson");
-//                            break;
-//                        default:
-//                            Assert.fail();
-//                    }
-//                }
-//            }
-//        });
-//
-//        Thread client = new Thread() {
-//            public void run() {
-//                Event.Builder requestBuilder = Event.newBuilder();
-//
-//                String json = "{ \"message\": \"Benjamin Watson\"}";
-//
-//                requestBuilder.setPayload(json);
-//                Event sequenceCallRequest = requestBuilder.build();
-//                ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888")
-//                        .usePlaintext(true)
-//                        .build();
-//                EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
-//
-//                Metadata header = new Metadata();
-//                String headers = "'Name:John'";
-//                Metadata.Key<String> key =
-//                        Metadata.Key.of(GrpcConstants.HEADERS, Metadata.ASCII_STRING_MARSHALLER);
-//                header.put(key, headers);
-//                blockingStub = MetadataUtils.attachHeaders(blockingStub, header);
-//
-//                Event response = blockingStub.process(sequenceCallRequest);
-//                Assert.assertNotNull(response);
-//            }
-//        };
-//        siddhiAppRuntime.start();
-//        client.start();
-//        Thread.sleep(1000);
-//        siddhiAppRuntime.shutdown();
-//    }
+    @Test
+    public void testWithIncompleteMetaData() throws Exception {
+        logger.info("Test case to call process");
+        final TestAppender appender = new TestAppender();
+        final Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(Level.DEBUG);
+        rootLogger.addAppender(appender);
+        SiddhiManager siddhiManager = new SiddhiManager();
 
-    @Test(dependsOnMethods = "testWithIncompleteHeader")
+        String stream1 = "@source(type='grpc-service', " +
+                "url='grpc://localhost:8888/org.wso2.grpc.EventService/process', source.id='1', " +
+                "@map(type='json', @attributes(messageId='trp:message.id', message='message', name='trp:name', " +
+                "age='trp:age'))) " +
+                "define stream FooStream (messageId String, message String, name String, age int);";
+
+        String stream2 = "@sink(type='grpc-service-response', " +
+                "url='grpc://localhost:8888/org.wso2.grpc.EventService/process', source.id='1', " +
+                "message.id='{{messageId}}', " +
+                "@map(type='json')) " +
+                "define stream BarStream (messageId String, message String, name String, age int);";
+        String query = "@info(name = 'query') "
+                + "from FooStream "
+                + "select *  "
+                + "insert into BarStream;";
+
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(stream1 + stream2 + query);
+
+        Thread client = new Thread() {
+            public void run() {
+                Event.Builder requestBuilder = Event.newBuilder();
+
+                String json = "{ \"message\": \"Benjamin Watson\"}";
+
+                requestBuilder.setPayload(json);
+                Event sequenceCallRequest = requestBuilder.build();
+                ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888")
+                        .usePlaintext()
+                        .build();
+                EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
+
+                Metadata metadata = new Metadata();
+                metadata.put(Metadata.Key.of("Age", Metadata.ASCII_STRING_MARSHALLER), "23");
+                blockingStub = MetadataUtils.attachHeaders(blockingStub, metadata);
+
+                Event response = blockingStub.process(sequenceCallRequest);
+                Assert.assertNotNull(response);
+            }
+        };
+        siddhiAppRuntime.start();
+        client.start();
+        Thread.sleep(1000);
+        siddhiAppRuntime.shutdown();
+
+        final List<LoggingEvent> log = appender.getLog();
+        List<String> logMessages = new ArrayList<>();
+        for (LoggingEvent logEvent : log) {
+            String message = String.valueOf(logEvent.getMessage());
+            if (message.contains("FooStream: ")) {
+                message = message.split("FooStream: ")[1];
+            }
+            logMessages.add(message);
+        }
+        Assert.assertTrue(logMessages.contains("Dropping request. Requested transport property 'name' not present in " +
+                "received event"));
+    }
+
+    @Test
     public void testCaseForServiceTimeout() throws Exception {
         logger.info("Test case to call process");
         logger.setLevel(Level.DEBUG);
@@ -306,7 +302,7 @@ public class GrpcServiceSourceTestCase {
         siddhiAppRuntime.shutdown();
     }
 
-    @Test//(dependsOnMethods = "testToCallProcess")
+    @Test
     public void testWithHeaders() throws Exception {
         logger.info("Test case to call process");
         logger.setLevel(Level.DEBUG);
@@ -370,5 +366,68 @@ public class GrpcServiceSourceTestCase {
         client.start();
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
+    }
+
+    @Test
+    public void testWithIncompleteHeaders() throws Exception {
+        logger.info("Test case to call process");
+        final TestAppender appender = new TestAppender();
+        final Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(Level.DEBUG);
+        rootLogger.addAppender(appender);
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String stream1 = "@source(type='grpc-service', " +
+                "url='grpc://localhost:8888/org.wso2.grpc.EventService/process', source.id='1', " +
+                "@map(type='json', @attributes(messageId='trp:message.id', message='message', name='trp:name', " +
+                "age='trp:age'))) " +
+                "define stream FooStream (messageId String, message String, name String, age int);";
+
+        String stream2 = "@sink(type='grpc-service-response', " +
+                "url='grpc://localhost:8888/org.wso2.grpc.EventService/process', source.id='1', " +
+                "message.id='{{messageId}}', " +
+                "@map(type='json')) " +
+                "define stream BarStream (messageId String, message String, name String, age int);";
+        String query = "@info(name = 'query') "
+                + "from FooStream "
+                + "select *  "
+                + "insert into BarStream;";
+
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(stream1 + stream2 + query);
+
+        Thread client = new Thread() {
+            public void run() {
+                Event.Builder requestBuilder = Event.newBuilder();
+
+                String json = "{ \"message\": \"Benjamin Watson\"}";
+
+                requestBuilder.setPayload(json);
+                requestBuilder.putHeaders("name", "john");
+                Event sequenceCallRequest = requestBuilder.build();
+                ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888")
+                        .usePlaintext(true)
+                        .build();
+                EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
+
+                Event response = blockingStub.process(sequenceCallRequest);
+                Assert.assertNotNull(response);
+            }
+        };
+        siddhiAppRuntime.start();
+        client.start();
+        Thread.sleep(1000);
+        siddhiAppRuntime.shutdown();
+
+        final List<LoggingEvent> log = appender.getLog();
+        List<String> logMessages = new ArrayList<>();
+        for (LoggingEvent logEvent : log) {
+            String message = String.valueOf(logEvent.getMessage());
+            if (message.contains("FooStream: ")) {
+                message = message.split("FooStream: ")[1];
+            }
+            logMessages.add(message);
+        }
+        Assert.assertTrue(logMessages.contains("Dropping request. Requested transport property 'age' not present in " +
+                "received event"));
     }
 }

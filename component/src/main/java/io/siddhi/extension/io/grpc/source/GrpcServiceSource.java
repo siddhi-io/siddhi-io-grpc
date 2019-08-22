@@ -155,9 +155,14 @@ public class GrpcServiceSource extends AbstractGrpcSource {
                         Map<String, String> transportPropertyMap = new HashMap<>();
                         transportPropertyMap.put(GrpcConstants.MESSAGE_ID, messageId);
                         transportPropertyMap.putAll(request.getHeadersMap());
-                        sourceEventListener.onEvent(request.getPayload(), extractHeaders(transportPropertyMap,
-                                metaDataMap.get(), requestedTransportPropertyNames));
-                        metaDataMap.remove();
+                        try {
+                            sourceEventListener.onEvent(request.getPayload(), extractHeaders(transportPropertyMap,
+                                    metaDataMap.get(), requestedTransportPropertyNames));
+                            metaDataMap.remove();
+                        } catch (SiddhiAppRuntimeException e) {
+                            logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request. " +
+                                    e.getMessage());
+                        }
                         streamObserverMap.put(messageId, responseObserver);
                         timer.schedule(new ServiceSourceTimeoutChecker(messageId,
                                 siddhiAppContext.getTimestampGenerator().currentTime()), serviceTimeout);
