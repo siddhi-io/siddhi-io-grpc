@@ -65,7 +65,8 @@ public class GrpcUtils {
         return urlParts.size() == 3;
     }
 
-    public static String[] extractHeaders(Map<String, String> headersMap, Map<String, String> metaDataMap, String[] requestedTransportPropertyNames) {
+    public static String[] extractHeaders(Map<String, String> headersMap, Map<String, String> metaDataMap,
+                                          String[] requestedTransportPropertyNames) {
         String[] headersArray = new String[requestedTransportPropertyNames.length];
         for (int i = 0; i < requestedTransportPropertyNames.length; i++) {
             if (headersMap.containsKey(requestedTransportPropertyNames[i])) {
@@ -74,6 +75,11 @@ public class GrpcUtils {
             if (metaDataMap.containsKey(requestedTransportPropertyNames[i])) {
                 headersArray[i] = metaDataMap.get(requestedTransportPropertyNames[i]);
             }
+        }
+        List headersArrayList = Arrays.asList(headersArray);
+        if (headersArrayList.contains(null)) {
+            throw new SiddhiAppRuntimeException("Requested transport property '" +
+                requestedTransportPropertyNames[headersArrayList.indexOf(null)] + "' not present in received event");
         }
         return headersArray;
     }

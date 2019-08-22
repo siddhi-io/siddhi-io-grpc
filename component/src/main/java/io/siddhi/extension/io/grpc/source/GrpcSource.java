@@ -96,13 +96,11 @@ public class GrpcSource extends AbstractGrpcSource {
     @Override
     public void initializeGrpcServer(int port) {
         if (isDefaultMode) {
-            System.out.println(Thread.currentThread().getId());
             this.server = serverBuilder.addService(ServerInterceptors.intercept(
                     new EventServiceGrpc.EventServiceImplBase() {
                 @Override
                 public void consume(Event request,
                                     StreamObserver<Empty> responseObserver) {
-                    System.out.println(Thread.currentThread().getId());
                     if (request.getPayload() == null) {
                         logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request due to " +
                                 "missing payload ");
