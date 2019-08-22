@@ -20,13 +20,19 @@ package io.siddhi.extension.io.grpc.sink;
 import io.siddhi.core.SiddhiAppRuntime;
 import io.siddhi.core.SiddhiManager;
 import io.siddhi.core.stream.input.InputHandler;
+import io.siddhi.extension.io.grpc.utils.TestAppender;
 import io.siddhi.extension.io.grpc.utils.TestTLSServer;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.apache.log4j.spi.LoggingEvent;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyStoreException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class GrpcSinkAuthTestCase {
     private static final Logger log = Logger.getLogger(GrpcSinkTestCase.class.getName());
@@ -50,7 +56,7 @@ public class GrpcSinkAuthTestCase {
 
         String inStreamDefinition = ""
                 + "@sink(type='grpc', url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume'," +
-                "truststore.file = '/Users/niruhan/wso2/source_codes/siddhi-io-grpc-1/component/src/test/resources/security/wso2carbon.jks'," +
+                "truststore.file = 'src/test/resources/security/wso2carbon.jks'," +
                 "truststore.password = 'wso2carbon', " +
                 "truststore.algorithm = 'SunX509', " +
                 "@map(type='json', @payload('{{message}}'))) " +
@@ -78,10 +84,10 @@ public class GrpcSinkAuthTestCase {
 
         String inStreamDefinition = ""
                 + "@sink(type='grpc', url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume'," +
-                "truststore.file = '/Users/niruhan/wso2/source_codes/siddhi-io-grpc-1/component/src/test/resources/security/wso2carbon.jks'," +
+                "truststore.file = 'src/test/resources/security/wso2carbon.jks'," +
                 "truststore.password = 'wso2carbon', " +
                 "truststore.algorithm = 'SunX509', " +
-                "keystore.file = '/Users/niruhan/wso2/source_codes/siddhi-io-grpc-1/component/src/test/resources/security/wso2carbon.jks', " +
+                "keystore.file = 'src/test/resources/security/wso2carbon.jks', " +
                 "keystore.password = 'wso2carbon', " +
                 "keystore.algorithm = 'SunX509', " +
                 "@map(type='json', @payload('{{message}}'))) " +
@@ -109,7 +115,7 @@ public class GrpcSinkAuthTestCase {
 
         String inStreamDefinition = ""
                 + "@sink(type='grpc-call', url = 'grpc://localhost:8888/org.wso2.grpc.EventService/process'," +
-                "truststore.file = '/Users/niruhan/wso2/source_codes/siddhi-io-grpc-1/component/src/test/resources/security/wso2carbon.jks'," +
+                "truststore.file = 'src/test/resources/security/wso2carbon.jks'," +
                 "truststore.password = 'wso2carbon', " +
                 "truststore.algorithm = 'SunX509', " +
                 "sink.id = '1', " +
@@ -140,14 +146,15 @@ public class GrpcSinkAuthTestCase {
     @Test
     public void testCallSinkForServerAuthenticationFailure() throws Exception {
         TestTLSServer server = new TestTLSServer(8888, false);
+        final TestAppender appender = new TestAppender();
+        final Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(Level.DEBUG);
+        rootLogger.addAppender(appender);
         setCarbonHome();
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inStreamDefinition = ""
                 + "@sink(type='grpc-call', url = 'grpc://localhost:8888/org.wso2.grpc.EventService/process'," +
-//                "truststore.file = '/Users/niruhan/wso2/source_codes/siddhi-io-grpc-1/component/src/test/resources/security/wso2carbon.jks'," +
-//                "truststore.password = 'wso2carbon', " +
-//                "truststore.algorithm = 'SunX509', " +
                 "sink.id = '1', " +
                 "@map(type='json', @payload('{{message}}'))) " +
                 "define stream FooStream (message String);";
@@ -171,6 +178,16 @@ public class GrpcSinkAuthTestCase {
         } finally {
             server.stop();
         }
+        final List<LoggingEvent> log = appender.getLog();
+        List<String> logMessages = new ArrayList<>();
+        for (LoggingEvent logEvent : log) {
+            String message = String.valueOf(logEvent.getMessage());
+            if (message.contains("FooStream: ")) {
+                message = message.split("FooStream: ")[1];
+            }
+            logMessages.add(message);
+        }
+        Assert.assertTrue(logMessages.contains("UNAVAILABLE: Network closed for unknown reason"));
     }
 
     @Test
@@ -181,10 +198,10 @@ public class GrpcSinkAuthTestCase {
 
         String inStreamDefinition = ""
                 + "@sink(type='grpc-call', url = 'grpc://localhost:8888/org.wso2.grpc.EventService/process'," +
-                "truststore.file = '/Users/niruhan/wso2/source_codes/siddhi-io-grpc-1/component/src/test/resources/security/wso2carbon.jks'," +
+                "truststore.file = 'src/test/resources/security/wso2carbon.jks'," +
                 "truststore.password = 'wso2carbon', " +
                 "truststore.algorithm = 'SunX509', " +
-                "keystore.file = '/Users/niruhan/wso2/source_codes/siddhi-io-grpc-1/component/src/test/resources/security/wso2carbon.jks', " +
+                "keystore.file = 'src/test/resources/security/wso2carbon.jks', " +
                 "keystore.password = 'wso2carbon', " +
                 "keystore.algorithm = 'SunX509', " +
                 "sink.id = '1', " +

@@ -34,10 +34,6 @@ import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
 public class TestServerInterceptor implements ServerInterceptor {
   private static final Logger logger = Logger.getLogger(TestServer.class.getName());
 
-  public TestServerInterceptor() {
-    System.out.println("sdf");
-  }
-
   @Override
   public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> serverCall,
                                                                Metadata metadata,
@@ -48,12 +44,6 @@ public class TestServerInterceptor implements ServerInterceptor {
         logger.debug("Metadata received: " + key + ": " + metadata.get(Metadata.Key.of(key, ASCII_STRING_MARSHALLER)));
       }
     }
-//    Metadata.Key<String> headerKey = ;
-//    String headers = metadata.get(headerKey);
-//    metadata.removeAll(headerKey);
-//    if (logger.isDebugEnabled() && headers != null) {
-//      logger.debug("Header received: " + headers);
-//    }
     return Contexts.interceptCall(Context.ROOT, serverCall, metadata, serverCallHandler);
   }
 }

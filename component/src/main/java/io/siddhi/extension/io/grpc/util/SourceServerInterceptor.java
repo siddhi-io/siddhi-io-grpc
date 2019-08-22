@@ -54,7 +54,7 @@ public class SourceServerInterceptor implements ServerInterceptor {
     }
     AbstractGrpcSource.metaDataMap.set(metaDataMap);
     if (logger.isDebugEnabled()) {
-      logger.debug(siddhiAppContext.getName() + ":" + streamID + ": Header received: " + metaDataMap.toString());
+      logger.debug(siddhiAppContext.getName() + ":" + streamID + ": Metadata received: " + metaDataMap.toString());
     }
     return Contexts.interceptCall(Context.ROOT, serverCall, metadata, serverCallHandler);
   }

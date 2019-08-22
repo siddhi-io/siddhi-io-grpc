@@ -327,10 +327,10 @@ public class GrpcSinkTestCase {
         }
         Assert.assertTrue(logMessages.contains("Server consume hit with payload = [Request 1] and Headers = {{}}"));
         Assert.assertTrue(logMessages.contains("Server consume hit with payload = [Request 2] and Headers = {{}}"));
-        Assert.assertTrue(logMessages.contains("Header received: name: John"));
-        Assert.assertTrue(logMessages.contains("Header received: age: 23"));
-        Assert.assertTrue(logMessages.contains("Header received: name: Nash"));
-        Assert.assertTrue(logMessages.contains("Header received: age: 54"));
+        Assert.assertTrue(logMessages.contains("Metadata received: name: John"));
+        Assert.assertTrue(logMessages.contains("Metadata received: age: 23"));
+        Assert.assertTrue(logMessages.contains("Metadata received: name: Nash"));
+        Assert.assertTrue(logMessages.contains("Metadata received: age: 54"));
     }
 
     @Test
