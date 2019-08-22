@@ -18,8 +18,6 @@
 package io.siddhi.extension.io.grpc.sink;
 
 import com.google.protobuf.Empty;
-import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
@@ -123,14 +121,6 @@ import java.util.concurrent.TimeUnit;
                         type = {DataType.INT},
                         optional = true,
                         defaultValue = "5"),
-//                @Parameter(
-//                        name = "max.hedged.attempts",
-//                        description = "Sets max number of hedged attempts. The total number of hedged attempts for " +
-//                                "each RPC will not exceed this number even if service config may allow a higher " +
-//                                "number." ,
-//                        type = {DataType.INT},
-//                        optional = true,
-//                        defaultValue = "5"),
                 @Parameter(
                         name = "retry.buffer.size",
                         description = "Sets the retry buffer size in bytes. If the buffer limit is exceeded, no " +
@@ -213,7 +203,8 @@ public class GrpcSink extends AbstractGrpcSink {
                         currentAsyncStub);
             }
             StreamObserver<Empty> responseObserver = new StreamObserver<Empty>() {
-                //try to send all the siddhi events using one stream observer - impossible without adding client side sgtreaming in protobuf definition
+                //try to send all the siddhi events using one stream observer - impossible without adding client
+                // side streaming in protobuf definition
                 @Override
                 public void onNext(Empty event) {}
 
@@ -228,7 +219,6 @@ public class GrpcSink extends AbstractGrpcSink {
 
                 @Override
                 public void onCompleted() {
-                    System.out.println(Thread.currentThread().getId());
                 }
             };
             currentAsyncStub.consume(eventBuilder.build(), responseObserver);

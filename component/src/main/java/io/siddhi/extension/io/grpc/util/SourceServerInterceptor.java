@@ -29,8 +29,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
-
 /**
  * Server interceptor to receive headers
  */
@@ -52,7 +50,7 @@ public class SourceServerInterceptor implements ServerInterceptor {
     Set<String> metadataKeys = metadata.keys();
     Map<String, String> metaDataMap = new HashMap<>();
     for (String key: metadataKeys) {
-      metaDataMap.put(key, metadata.get(Metadata.Key.of(key, ASCII_STRING_MARSHALLER)));
+      metaDataMap.put(key, metadata.get(Metadata.Key.of(key, io.grpc.Metadata.ASCII_STRING_MARSHALLER)));
     }
     AbstractGrpcSource.metaDataMap.set(metaDataMap);
     if (logger.isDebugEnabled()) {

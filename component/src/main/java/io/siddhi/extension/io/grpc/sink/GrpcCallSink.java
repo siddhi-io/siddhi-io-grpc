@@ -21,7 +21,6 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
-import io.grpc.ManagedChannelBuilder;
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
 import io.siddhi.annotation.Parameter;
@@ -136,14 +135,6 @@ import java.util.concurrent.TimeUnit;
                         type = {DataType.INT},
                         optional = true,
                         defaultValue = "5"),
-//                @Parameter(
-//                        name = "max.hedged.attempts",
-//                        description = "Sets max number of hedged attempts. The total number of hedged attempts for " +
-//                                "each RPC will not exceed this number even if service config may allow a higher " +
-//                                "number." ,
-//                        type = {DataType.INT},
-//                        optional = true,
-//                        defaultValue = "5"),
                 @Parameter(
                         name = "retry.buffer.size",
                         description = "Sets the retry buffer size in bytes. If the buffer limit is exceeded, no " +

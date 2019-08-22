@@ -18,7 +18,6 @@
 package io.siddhi.extension.io.grpc.source;
 
 import io.grpc.Server;
-import io.grpc.ServerBuilder;
 import io.grpc.ServerInterceptors;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;

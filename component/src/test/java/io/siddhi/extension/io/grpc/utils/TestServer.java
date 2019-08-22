@@ -56,7 +56,8 @@ public class TestServer {
         public void consume(Event request,
                             StreamObserver<Empty> responseObserver) {
             if (logger.isDebugEnabled()) {
-                logger.debug("Server consume hit with " + request.getPayload());
+                logger.debug("Server consume hit with payload = " + request.getPayload() + " and Headers = {"
+                        + request.getHeadersMap().toString() + "}");
             }
             responseObserver.onNext(Empty.getDefaultInstance());
             responseObserver.onCompleted();
@@ -74,7 +75,7 @@ public class TestServer {
         server = ServerBuilder
                 .forPort(port)
                 .addService(
-                        ServerInterceptors.intercept(myService, testInterceptor)).addService(myService).build();
+                        ServerInterceptors.intercept(myService, testInterceptor)).build();
         server.start();
         if (logger.isDebugEnabled()) {
             logger.debug("Server started");

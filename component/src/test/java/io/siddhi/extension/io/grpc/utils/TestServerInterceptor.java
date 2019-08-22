@@ -34,6 +34,10 @@ import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
 public class TestServerInterceptor implements ServerInterceptor {
   private static final Logger logger = Logger.getLogger(TestServer.class.getName());
 
+  public TestServerInterceptor() {
+    System.out.println("sdf");
+  }
+
   @Override
   public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> serverCall,
                                                                Metadata metadata,

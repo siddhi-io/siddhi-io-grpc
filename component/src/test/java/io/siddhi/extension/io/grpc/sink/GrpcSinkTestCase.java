@@ -40,17 +40,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class GrpcSinkTestCase {
     private static final Logger log = Logger.getLogger(GrpcSinkTestCase.class.getName());
     private TestServer server = new TestServer(8888);
-    private AtomicInteger eventCount = new AtomicInteger(0);
 
-//    @BeforeTest
-//    public void init() throws IOException {
-//        server.start();
-//    }
-//
-//    @AfterTest
-//    public void stop() throws InterruptedException {
-//        server.stop();
-//    }
+    @BeforeTest
+    public void init() throws IOException {
+        server.start();
+    }
+
+    @AfterTest
+    public void stop() throws InterruptedException {
+        server.stop();
+    }
 
     @Test
     public void testCaseToCallConsumeWithSimpleRequest() throws Exception {
@@ -80,7 +79,7 @@ public class GrpcSinkTestCase {
             String message = String.valueOf(logEvent.getMessage());
             logMessages.add(message);
         }
-        Assert.assertTrue(logMessages.contains("Server consume hit with [Request 1]"));
+        Assert.assertTrue(logMessages.contains("Server consume hit with payload = [Request 1] and Headers = {{}}"));
     }
 
     @Test
@@ -112,8 +111,8 @@ public class GrpcSinkTestCase {
             String message = String.valueOf(logEvent.getMessage());
             logMessages.add(message);
         }
-        Assert.assertTrue(logMessages.contains("Server consume hit with [Request 1]"));
-        Assert.assertTrue(logMessages.contains("Server consume hit with [Request 2]"));
+        Assert.assertTrue(logMessages.contains("Server consume hit with payload = [Request 1] and Headers = {{}}"));
+        Assert.assertTrue(logMessages.contains("Server consume hit with payload = [Request 2] and Headers = {{}}"));
     }
 
     @Test
@@ -147,10 +146,10 @@ public class GrpcSinkTestCase {
             String message = String.valueOf(logEvent.getMessage());
             logMessages.add(message);
         }
-        Assert.assertTrue(logMessages.contains("Server consume hit with [Request 1]"));
-        Assert.assertTrue(logMessages.contains("Server consume hit with [Request 2]"));
-        Assert.assertTrue(logMessages.contains("Header received: 'Name:John','Age:23','Content-Type:text'"));
-        Assert.assertTrue(logMessages.contains("Header received: 'Name:Nash','Age:54','Content-Type:json'"));
+        Assert.assertTrue(logMessages.contains("Server consume hit with payload = [Request 1] and Headers = " +
+                "{{Name=John, Age=23, Content-Type=text}}"));
+        Assert.assertTrue(logMessages.contains("Server consume hit with payload = [Request 2] and Headers = " +
+                "{{Name=Nash, Age=54, Content-Type=json}}"));
     }
 
     @Test
@@ -191,8 +190,8 @@ public class GrpcSinkTestCase {
         try {
             SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
         } catch (SiddhiAppValidationException e) {
-            Assert.assertTrue(e.getMessage().contains("Malformed URL. After port number atleast two sections " +
-                    "should be available seperated by '/' as in 'grpc://<host>:<port>/<ServiceName>/<MethodName>'"));
+            Assert.assertTrue(e.getMessage().contains("Malformed URL. After port number at least two sections should " +
+                    "be available separated by '/' as in 'grpc://<host>:<port>/<ServiceName>/<MethodName>'"));
         }
     }
 
@@ -224,7 +223,7 @@ public class GrpcSinkTestCase {
             String message = String.valueOf(logEvent.getMessage());
             logMessages.add(message);
         }
-        Assert.assertTrue(logMessages.contains("Server consume hit with Request 1"));
+        Assert.assertTrue(logMessages.contains("Server consume hit with payload = Request 1 and Headers = {{}}"));
     }
 
     @Test
@@ -255,7 +254,8 @@ public class GrpcSinkTestCase {
             String message = String.valueOf(logEvent.getMessage());
             logMessages.add(message);
         }
-        Assert.assertTrue(logMessages.contains("Server consume hit with Request 1"));
+        Assert.assertTrue(logMessages.contains("Server consume hit with payload = Request 1 and Headers = " +
+                "{{sequence=mySeq}}"));
     }
 
     @Test
@@ -289,12 +289,10 @@ public class GrpcSinkTestCase {
             String message = String.valueOf(logEvent.getMessage());
             logMessages.add(message);
         }
-        Assert.assertTrue(logMessages.contains("Server consume hit with [Request 1]"));
-        Assert.assertTrue(logMessages.contains("Server consume hit with [Request 2]"));
-        Assert.assertTrue(logMessages.contains("Header received: 'sequence:mySeq','Name:John','Age:23'," +
-                "'Content-Type:text'"));
-        Assert.assertTrue(logMessages.contains("Header received: 'sequence:mySeq','Name:Nash','Age:54'," +
-                "'Content-Type:json'"));
+        Assert.assertTrue(logMessages.contains("Server consume hit with payload = [Request 1] and Headers = " +
+                "{{Name=John, Age=23, Content-Type=text, sequence=mySeq}}"));
+        Assert.assertTrue(logMessages.contains("Server consume hit with payload = [Request 2] and Headers = " +
+                "{{Name=Nash, Age=54, Content-Type=json, sequence=mySeq}}"));
     }
 
     @Test
@@ -322,16 +320,18 @@ public class GrpcSinkTestCase {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
-//        final List<LoggingEvent> log = appender.getLog();
-//        List<String> logMessages = new ArrayList<>();
-//        for (LoggingEvent logEvent : log) {
-//            String message = String.valueOf(logEvent.getMessage());
-//            logMessages.add(message);
-//        }
-//        Assert.assertTrue(logMessages.contains("Server consume hit with [Request 1]"));
-//        Assert.assertTrue(logMessages.contains("Server consume hit with [Request 2]"));
-//        Assert.assertTrue(logMessages.contains("Header received: 'Name:John','Age:23','Content-Type:text'"));
-//        Assert.assertTrue(logMessages.contains("Header received: 'Name:Nash','Age:54','Content-Type:json'"));
+        final List<LoggingEvent> log = appender.getLog();
+        List<String> logMessages = new ArrayList<>();
+        for (LoggingEvent logEvent : log) {
+            String message = String.valueOf(logEvent.getMessage());
+            logMessages.add(message);
+        }
+        Assert.assertTrue(logMessages.contains("Server consume hit with payload = [Request 1] and Headers = {{}}"));
+        Assert.assertTrue(logMessages.contains("Server consume hit with payload = [Request 2] and Headers = {{}}"));
+        Assert.assertTrue(logMessages.contains("Header received: name: John"));
+        Assert.assertTrue(logMessages.contains("Header received: age: 23"));
+        Assert.assertTrue(logMessages.contains("Header received: name: Nash"));
+        Assert.assertTrue(logMessages.contains("Header received: age: 54"));
     }
 
     @Test
@@ -362,9 +362,14 @@ public class GrpcSinkTestCase {
         List<String> logMessages = new ArrayList<>();
         for (LoggingEvent logEvent : log) {
             String message = String.valueOf(logEvent.getMessage());
+            if (message.contains("FooStream: ")) {
+                message = message.split("FooStream: ")[1];
+            }
             logMessages.add(message);
         }
-        Assert.assertTrue(logMessages.contains("Server consume hit with [Request 1]"));
+        Assert.assertTrue(logMessages.contains("UNAVAILABLE: io exception caused by io.grpc.netty.shaded.io.netty" +
+                ".channel.AbstractChannel$AnnotatedConnectException: Connection refused: localhost/0:0:0:0:0:0:0:1" +
+                ":8888"));
     }
 
     @Test
@@ -408,7 +413,7 @@ public class GrpcSinkTestCase {
             String message = String.valueOf(logEvent.getMessage());
             logMessages.add(message);
         }
-        Assert.assertTrue(logMessages.contains("Server consume hit with [Request 1]"));
-        Assert.assertTrue(logMessages.contains("Server consume hit with [Request 2]"));
+        Assert.assertTrue(logMessages.contains("Server consume hit with payload = [Request 1] and Headers = {{}}"));
+        Assert.assertTrue(logMessages.contains("Server consume hit with payload = [Request 2] and Headers = {{}}"));
     }
 }
