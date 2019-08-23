@@ -46,35 +46,16 @@ import java.util.concurrent.TimeUnit;
 /**
  * {@code GrpcCallSink} Handle the gRPC publishing tasks and injects response into grpc-call-response source.
  */
-@Extension(name = "grpc-call", namespace = "sink", description = "This extension publishes event data encoded into " +
-        "GRPC Classes as defined in the user input jar. This extension has a default gRPC service classes jar " +
-        "added. The default service is called \"EventService\". Please find the following protobuf definition. \n\n" +
-        "-------------EventService.proto--------------\n" +
-        "syntax = \"proto3\";\n" +
-        "\n" +
-        "option java_multiple_files = true;\n" +
-        "option java_package = \"org.wso2.grpc\";\n" +
-        "\n" +
-        "package org.wso2.grpc.eventservice;\n" +
-        "\n" +
-        "import \"google/protobuf/empty.proto\";\n" +
-        "\n" +
-        "service EventService {\n" +
-        "    rpc process(Event) returns (Event) {}\n" +
-        "\n" +
-        "    rpc consume(Event) returns (google.protobuf.Empty) {}\n" +
-        "}\n" +
-        "\n" +
-        "message Event {\n" +
-        "    string payload = 1;\n" +
-        "}\n" +
-        "----------------------------------------------\n\n" +
-        "This grpc-call sink is used for scenarios where we send a request out and expect a response back. In " +
-        "default mode this will use EventService process method. grpc-call-response source is used to receive the " +
-        "responses. A unique sink.id is used to correlate between the sink and its corresponding source.",
+@Extension(name = "grpc-call", namespace = "sink",
+        description = "This extension publishes event data encoded into GRPC Classes as defined in the user input " +
+                "jar. This extension has a default gRPC service classes jar added. The default service is called " +
+                "\"EventService\". Please find the protobuf definition here. This grpc-call sink is used for " +
+                "scenarios where we send a request out and expect a response back. In default mode this will use " +
+                "EventService process method. grpc-call-response source is used to receive the responses. A unique " +
+                "sink.id is used to correlate between the sink and its corresponding source.",
         parameters = {
                 @Parameter(
-                        name = "url",
+                        name = "publisherurl",
                         description = "The url to which the outgoing events should be published via this extension. " +
                                 "This url should consist the host address, port, service name, method name in the " +
                                 "following format. `grpc://0.0.0.0:9763/<serviceName>/<methodName>`" ,
@@ -92,7 +73,7 @@ import java.util.concurrent.TimeUnit;
                                 "If header parameter is not provided just the payload is sent" ,
                         type = {DataType.STRING},
                         optional = true,
-                        defaultValue = "null"),
+                        defaultValue = "-"),
                 @Parameter(
                         name = "idle.timeout",
                         description = "Set the duration in seconds without ongoing RPCs before going to idle mode." ,
@@ -173,7 +154,7 @@ import java.util.concurrent.TimeUnit;
         examples = {
                 @Example(syntax = "" +
                         "@sink(type='grpc-call',\n" +
-                        "      url = 'grpc://194.23.98.100:8080/EventService/process',\n" +
+                        "      publisher.url = 'grpc://194.23.98.100:8080/EventService/process',\n" +
                         "      sink.id= '1', @map(type='json'))\n" +
                         "define stream FooStream (message String);\n",
                         description = "" +
@@ -185,7 +166,7 @@ import java.util.concurrent.TimeUnit;
                 ),
                 @Example(syntax = "" +
                         "@sink(type='grpc-call',\n" +
-                        "      url = 'grpc://194.23.98.100:8080/EventService/process',\n" +
+                        "      publisher.url = 'grpc://194.23.98.100:8080/EventService/process',\n" +
                         "      sink.id= '1', @map(type='json'))\n" +
                         "define stream FooStream (message String);\n" +
                         "\n" +

@@ -60,7 +60,7 @@ public class GrpcSinkTestCase {
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inStreamDefinition = ""
-                + "@sink(type='grpc', url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
+                + "@sink(type='grpc', publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
                 "@map(type='json', @payload('{{message}}'))) " +
                 "define stream FooStream (message String);";
 
@@ -91,7 +91,7 @@ public class GrpcSinkTestCase {
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inStreamDefinition = ""
-                + "@sink(type='grpc', url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
+                + "@sink(type='grpc', publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
                 "@map(type='json', @payload('{{message}}'))) " +
                 "define stream FooStream (message String);";
 
@@ -125,7 +125,7 @@ public class GrpcSinkTestCase {
 
         String inStreamDefinition = ""
                 + "@sink(type='grpc', " +
-                "url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
+                "publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
                 "headers='{{headers}}', " +
                 "@map(type='json', @payload('{{message}}'))) " +
                 "define stream FooStream (message String, headers String);";
@@ -161,7 +161,7 @@ public class GrpcSinkTestCase {
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inStreamDefinition = ""
-                + "@sink(type='grpc', url = 'grc://localhost:8888/org.wso2.grpc.EventService/consume', " +
+                + "@sink(type='grpc', publisher.url = 'grc://localhost:8888/org.wso2.grpc.EventService/consume', " +
                 "@map(type='json', @payload('{{message}}'))) " +
                 "define stream FooStream (message String);";
 
@@ -182,7 +182,7 @@ public class GrpcSinkTestCase {
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inStreamDefinition = ""
-                + "@sink(type='grpc', url = 'grpc:dfasf', " +
+                + "@sink(type='grpc', publisher.url = 'grpc:dfasf', " +
                 "@map(type='json', @payload('{{message}}'))) " +
                 "define stream FooStream (message String);";
 
@@ -204,7 +204,7 @@ public class GrpcSinkTestCase {
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inStreamDefinition = ""
-                + "@sink(type='grpc', url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
+                + "@sink(type='grpc', publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
                 "@map(type='xml', @payload('{{message}}'))) " +
                 "define stream FooStream (message String);";
 
@@ -235,7 +235,7 @@ public class GrpcSinkTestCase {
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inStreamDefinition = ""
-                + "@sink(type='grpc', url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume/mySeq', " +
+                + "@sink(type='grpc', publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume/mySeq', " +
                 "@map(type='xml', @payload('{{message}}'))) " +
                 "define stream FooStream (message String);";
 
@@ -268,7 +268,7 @@ public class GrpcSinkTestCase {
 
         String inStreamDefinition = ""
                 + "@sink(type='grpc', " +
-                "url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume/mySeq', " +
+                "publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume/mySeq', " +
                 "headers='{{headers}}', " +
                 "@map(type='json', @payload('{{message}}'))) " +
                 "define stream FooStream (message String, headers String);";
@@ -305,7 +305,7 @@ public class GrpcSinkTestCase {
 
         String inStreamDefinition = ""
                 + "@sink(type='grpc', " +
-                "url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
+                "publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
                 "metadata='{{metadata}}', " +
                 "@map(type='json', @payload('{{message}}'))) " +
                 "define stream FooStream (message String, metadata String);";
@@ -344,7 +344,7 @@ public class GrpcSinkTestCase {
         server.stop();
 
         String inStreamDefinition = ""
-                + "@sink(type='grpc', url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
+                + "@sink(type='grpc', publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
                 "@map(type='json', @payload('{{message}}'))) " +
                 "define stream FooStream (message String);";
 
@@ -382,7 +382,7 @@ public class GrpcSinkTestCase {
         siddhiManager.setPersistenceStore(new InMemoryPersistenceStore());
 
         String inStreamDefinition = ""
-                + "@sink(type='grpc', url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
+                + "@sink(type='grpc', publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
                 "@map(type='json', @payload('{{message}}'))) " +
                 "define stream FooStream (message String);";
 

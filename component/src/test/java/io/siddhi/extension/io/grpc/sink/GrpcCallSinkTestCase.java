@@ -64,7 +64,7 @@ public class GrpcCallSinkTestCase {
 
         String inStreamDefinition = ""
                 + "@sink(type='grpc-call', " +
-                "url = 'grpc://localhost:8889/org.wso2.grpc.EventService/process/mySeq', " +
+                "publisher.url = 'grpc://localhost:8889/org.wso2.grpc.EventService/process/mySeq', " +
                 "sink.id= '1', @map(type='json')) "
                 + "define stream FooStream (message String);";
 
@@ -121,7 +121,7 @@ public class GrpcCallSinkTestCase {
 
         String inStreamDefinition = ""
                 + "@sink(type='grpc-call', " +
-                "url = 'grpc://localhost:8889/org.wso2.grpc.EventService/process/mySeq', " +
+                "publisher.url = 'grpc://localhost:8889/org.wso2.grpc.EventService/process/mySeq', " +
                 "sink.id= '2', " +
                 "headers='{{headers}}', " +
                 "@map(type='json', @payload('{{message}}'))) "
@@ -182,7 +182,7 @@ public class GrpcCallSinkTestCase {
 
         String inStreamDefinition = ""
                 + "@sink(type='grpc-call', " +
-                "url = 'grpc://localhost:8889/org.wso2.grpc.EventService/process/mySeq', " +
+                "publisher.url = 'grpc://localhost:8889/org.wso2.grpc.EventService/process/mySeq', " +
                 "sink.id= '1', @map(type='json')) "
                 + "define stream FooStream (message String);";
 
@@ -219,7 +219,7 @@ public class GrpcCallSinkTestCase {
 
         String inStreamDefinition = ""
                 + "@sink(type='grpc-call', " +
-                "url = 'grpc://localhost:8889/org.wso2.grpc.EventService/process', " +
+                "publisher.url = 'grpc://localhost:8889/org.wso2.grpc.EventService/process', " +
                 "sink.id = '1', " +
                 "metadata='{{metadata}}', " +
                 "@map(type='json', @payload('{{message}}'))) " +
@@ -261,7 +261,7 @@ public class GrpcCallSinkTestCase {
 
         String inStreamDefinition = ""
                 + "@sink(type='grpc-call', " +
-                "url = 'grpc://localhost:8889/org.wso2.grpc.EventService/process/mySeq', " +
+                "publisher.url = 'grpc://localhost:8889/org.wso2.grpc.EventService/process/mySeq', " +
                 "sink.id= '1', @map(type='json')) "
                 + "define stream FooStream (requestMessage String);";
 

@@ -55,7 +55,7 @@ public class GrpcSinkAuthTestCase {
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inStreamDefinition = ""
-                + "@sink(type='grpc', url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume'," +
+                + "@sink(type='grpc', publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume'," +
                 "truststore.file = 'src/test/resources/security/wso2carbon.jks'," +
                 "truststore.password = 'wso2carbon', " +
                 "truststore.algorithm = 'SunX509', " +
@@ -83,7 +83,7 @@ public class GrpcSinkAuthTestCase {
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inStreamDefinition = ""
-                + "@sink(type='grpc', url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume'," +
+                + "@sink(type='grpc', publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume'," +
                 "truststore.file = 'src/test/resources/security/wso2carbon.jks'," +
                 "truststore.password = 'wso2carbon', " +
                 "truststore.algorithm = 'SunX509', " +
@@ -114,7 +114,7 @@ public class GrpcSinkAuthTestCase {
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inStreamDefinition = ""
-                + "@sink(type='grpc-call', url = 'grpc://localhost:8888/org.wso2.grpc.EventService/process'," +
+                + "@sink(type='grpc-call', publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/process'," +
                 "truststore.file = 'src/test/resources/security/wso2carbon.jks'," +
                 "truststore.password = 'wso2carbon', " +
                 "truststore.algorithm = 'SunX509', " +
@@ -154,7 +154,7 @@ public class GrpcSinkAuthTestCase {
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inStreamDefinition = ""
-                + "@sink(type='grpc-call', url = 'grpc://localhost:8888/org.wso2.grpc.EventService/process'," +
+                + "@sink(type='grpc-call', publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/process'," +
                 "sink.id = '1', " +
                 "@map(type='json', @payload('{{message}}'))) " +
                 "define stream FooStream (message String);";
@@ -197,7 +197,7 @@ public class GrpcSinkAuthTestCase {
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inStreamDefinition = ""
-                + "@sink(type='grpc-call', url = 'grpc://localhost:8888/org.wso2.grpc.EventService/process'," +
+                + "@sink(type='grpc-call', publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/process'," +
                 "truststore.file = 'src/test/resources/security/wso2carbon.jks'," +
                 "truststore.password = 'wso2carbon', " +
                 "truststore.algorithm = 'SunX509', " +

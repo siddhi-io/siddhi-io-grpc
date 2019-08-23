@@ -41,16 +41,10 @@ import org.apache.log4j.Logger;
 /**
  * {@code GrpcServiceResponseSink} Handle sending responses for requests received via grpc-service source.
  */
-@Extension(name = "grpc-service-response", namespace = "sink", description = "This extension is used to send " +
-        "responses back to a gRPC client after receiving requests through grpc-service source. This correlates with " +
-        "the particular source using a unique source.id",
+@Extension(name = "grpc-service-response", namespace = "sink",
+        description = "This extension is used to send responses back to a gRPC client after receiving requests " +
+                "through grpc-service source. This correlates with the particular source using a unique source.id",
         parameters = {
-                @Parameter(
-                        name = "url",
-                        description = "The url to which the outgoing events should be published via this extension. " +
-                                "This url should consist the host address, port, service name, method name in the " +
-                                "following format. `grpc://0.0.0.0:9763/<serviceName>/<methodName>`" ,
-                        type = {DataType.STRING}),
                 @Parameter(
                         name = "source.id",
                         description = "A unique id to identify the correct source to which this sink is mapped. " +
@@ -60,7 +54,6 @@ import org.apache.log4j.Logger;
         examples = {
                 @Example(syntax = "" +
                         "@sink(type='grpc-service-response',\n" +
-                        "      url = 'grpc://134.23.43.35:8080/org.wso2.grpc.EventService/consume',\n" +
                         "      source.id='1',\n" +
                         "      @map(type='json'))\n" +
                         "define stream BarStream (messageId String, message String);\n" +
@@ -91,11 +84,6 @@ public class GrpcServiceResponseSink extends Sink {
     protected StateFactory init(StreamDefinition outputStreamDefinition, OptionHolder optionHolder,
                                 ConfigReader sinkConfigReader, SiddhiAppContext siddhiAppContext) {
         String streamID = outputStreamDefinition.getId();
-        String url = optionHolder.validateAndGetOption(GrpcConstants.PUBLISHER_URL).getValue();
-        if (!url.substring(0, 4).equalsIgnoreCase(GrpcConstants.GRPC_PROTOCOL_NAME)) {
-            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID + "The url must " +
-                    "begin with \"" + GrpcConstants.GRPC_PROTOCOL_NAME + "\" for all grpc sinks");
-        }
         if (optionHolder.isOptionExists(GrpcConstants.SOURCE_ID)) {
             this.sourceId = optionHolder.validateAndGetOption(GrpcConstants.SOURCE_ID).getValue();
         } else {

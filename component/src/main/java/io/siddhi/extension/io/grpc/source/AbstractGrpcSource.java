@@ -102,7 +102,7 @@ public abstract class AbstractGrpcSource extends Source {
             this.serverShutdownWaitingTimeInMillis = Long.parseLong(optionHolder.validateAndGetOption(
                     GrpcConstants.SERVER_SHUTDOWN_WAITING_TIME).getValue());
         }
-        this.url = optionHolder.validateAndGetOption(GrpcConstants.PUBLISHER_URL).getValue();
+        this.url = optionHolder.validateAndGetOption(GrpcConstants.RECEIVER_URL).getValue();
         if (!url.substring(0, 4).equalsIgnoreCase(GrpcConstants.GRPC_PROTOCOL_NAME)) {
             throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID + ": The url must " +
                     "begin with \"" + GrpcConstants.GRPC_PROTOCOL_NAME + "\" for all grpc sinks");

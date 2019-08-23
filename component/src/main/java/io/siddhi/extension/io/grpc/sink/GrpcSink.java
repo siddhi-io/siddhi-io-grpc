@@ -39,35 +39,16 @@ import java.util.concurrent.TimeUnit;
 /**
  * {@code GrpcSink} Handle the gRPC publishing tasks.
  */
-@Extension(name = "grpc", namespace = "sink", description = "This extension publishes event data encoded into GRPC " +
-        "Classes as defined in the user input jar. This extension has a default gRPC service classes added. The " +
-        "default service is called " +
-        "\"EventService\". Please find the following protobuf definition. \n\n" +
-        "-------------EventService.proto--------------\n" + //if thids doesnt owk=rk on s=website provide url
-        "syntax = \"proto3\";\n" +
-        "\n" +
-        "option java_multiple_files = true;\n" +
-        "option java_package = \"org.wso2.grpc\";\n" +
-        "\n" +
-        "package org.wso2.grpc.eventservice;\n" +
-        "\n" +
-        "import \"google/protobuf/empty.proto\";\n" +
-        "\n" +
-        "service EventService {\n" +
-        "    rpc process(Event) returns (Event) {}\n" +
-        "\n" +
-        "    rpc consume(Event) returns (google.protobuf.Empty) {}\n" +
-        "}\n" +
-        "\n" +
-        "message Event {\n" +
-        "    string payload = 1;\n" +
-        "}\n" +
-        "----------------------------------------------\n\n" +
-        "This grpc sink is used for scenarios where we send a request and don't expect a response back. I.e " +
-        "getting a google.protobuf.Empty response back.",
+@Extension(name = "grpc", namespace = "sink",
+        description = "" +
+                "This extension publishes event data encoded into GRPC Classes as defined in the user input " +
+                "jar. This extension has a default gRPC service classes added. The default service is called " +
+                "\"EventService\". Please find the protobuf definition here. This grpc sink is used for scenarios " + //todo: provide url
+                "where we send a request and don't expect a response back. I.e getting a google.protobuf.Empty " +
+                "response back.",
         parameters = {
                 @Parameter(
-                        name = "url",
+                        name = "publisher.url",
                         description = "The url to which the outgoing events should be published via this extension. " +
                                 "This url should consist the host address, port, service name, method name in the " +
                                 "following format. `grpc://0.0.0.0:9763/<serviceName>/<methodName>`" ,
@@ -78,7 +59,7 @@ import java.util.concurrent.TimeUnit;
                                 "If header parameter is not provided just the payload is sent" ,
                         type = {DataType.STRING},
                         optional = true,
-                        defaultValue = "null"), //todo: follow http -
+                        defaultValue = "-"),
                 @Parameter(
                         name = "idle.timeout",
                         description = "Set the duration in seconds without ongoing RPCs before going to idle mode." ,
@@ -109,7 +90,7 @@ import java.util.concurrent.TimeUnit;
                         defaultValue = "false"),
                 @Parameter(
                         name = "enable.retry",
-                        description = "Enables the retry and hedging mechanism provided by the gRPC library." ,
+                        description = "Enables the retry mechanism provided by the gRPC library." ,
                         type = {DataType.BOOL},
                         optional = true,
                         defaultValue = "false"),
@@ -147,7 +128,7 @@ import java.util.concurrent.TimeUnit;
         examples = {
                 @Example(syntax = "" +
                         "@sink(type='grpc',\n" +
-                        "      url = 'grpc://134.23.43.35:8080/org.wso2.grpc.EventService/consume',\n" +
+                        "      publisher.url = 'grpc://134.23.43.35:8080/org.wso2.grpc.EventService/consume',\n" +
                         "      @map(type='json'))\n" +
                         "define stream FooStream (message String);",
                         description = "Here a stream named FooStream is defined with grpc sink. A grpc server " +
@@ -158,7 +139,7 @@ import java.util.concurrent.TimeUnit;
                 ),
                 @Example(syntax = "" +
                         "@sink(type='grpc',\n" +
-                        "      url = 'grpc://134.23.43.35:8080/org.wso2.grpc.EventService/consume',\n" +
+                        "      publisher.url = 'grpc://134.23.43.35:8080/org.wso2.grpc.EventService/consume',\n" +
                         "      headers='{{headers}}',\n" +
                         "      @map(type='json'),\n" +
                         "           @payload('{{message}}'))\n" +

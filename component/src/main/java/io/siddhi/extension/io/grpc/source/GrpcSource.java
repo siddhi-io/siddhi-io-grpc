@@ -39,13 +39,14 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.extractHeaders;
 /**
  * This handles receiving requests from grpc clients and populating the stream
  */
-@Extension(name = "grpc", namespace = "source", description = "This extension starts a grpc server during " +
-        "initialization time. The server listens to requests from grpc stubs. This source has a default mode of " +
-        "operation and custom user defined grpc service mode. In the default mode this source will use EventService " +
-        "consume method. This method will receive requests and injects them into stream through a mapper.",
+@Extension(name = "grpc", namespace = "source",
+        description = "This extension starts a grpc server during initialization time. The server listens to " +
+                "requests from grpc stubs. This source has a default mode of operation and custom user defined grpc " +
+                "service mode. In the default mode this source will use EventService consume method. This method " +
+                "will receive requests and injects them into stream through a mapper.",
         parameters = {
                 @Parameter(
-                        name = "url",
+                        name = "receiver.url",
                         description = "The url which can be used by a client to access the grpc server in this " +
                                 "extension. This url should consist the host address, port, service name, method " +
                                 "name in the following format. `grpc://0.0.0.0:9763/<serviceName>/<methodName>`" ,
@@ -71,20 +72,23 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.extractHeaders;
                         defaultValue = "5"),
         },
         examples = {
-                @Example(syntax = "@source(type='grpc', " +
-                        "url='grpc://locanhost:8888/org.wso2.grpc.EventService/consume', @map(type='json')) " +
+                @Example(syntax = "" +
+                        "@source(type='grpc', " +
+                        "       receiver.url='grpc://locanhost:8888/org.wso2.grpc.EventService/consume', " +
+                        "       @map(type='json')) " +
                         "define stream BarStream (message String);",
                         description = "Here the port is given as 8888. So a grpc server will be started on port 8888 " +
-                        "and the server will expose EventService. This is the default service packed with the source." +
-                        " In EventService the consume method is"
+                                "and the server will expose EventService. This is the default service packed with " +
+                                "the source. In EventService the consume method is"
                 ),
-                @Example(syntax = "@source(type='grpc', " +
-                        "url='grpc://locanhost:8888/org.wso2.grpc.EventService/consume', " +
-                        "@map(type='json', @attributes(name='trp:name', age='trp:age', message='message'))) " +
+                @Example(syntax = "" +
+                        "@source(type='grpc', " +
+                        "       receiver.url='grpc://locanhost:8888/org.wso2.grpc.EventService/consume', " +
+                        "       @map(type='json', @attributes(name='trp:name', age='trp:age', message='message'))) " +
                         "define stream BarStream (message String, name String, age int);",
                         description = "Here we are getting headers sent with the request as transport properties and " +
-                        "injecting them into the stream. With each request a header will be sent in MetaData in the " +
-                        "following format: 'Name:John', 'Age:23'"
+                                "injecting them into the stream. With each request a header will be sent in MetaData " +
+                                "in the following format: 'Name:John', 'Age:23'"
                 )
         }
 )

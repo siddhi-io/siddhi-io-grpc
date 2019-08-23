@@ -22,7 +22,8 @@ package io.siddhi.extension.io.grpc.util;
  */
 public class GrpcConstants {
     public static final String PORT_HOST_SEPARATOR = ":";
-    public static final String PUBLISHER_URL = "url";
+    public static final String PUBLISHER_URL = "publisher.url";
+    public static final String RECEIVER_URL = "receiver.url";
     public static final String PORT_SERVICE_SEPARATOR = "/";
     public static final String SINK_ID = "sink.id";
     public static final String DEFAULT_METHOD_NAME_WITH_RESPONSE = "process";
