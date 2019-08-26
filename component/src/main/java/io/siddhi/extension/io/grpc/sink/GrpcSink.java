@@ -153,7 +153,7 @@ import java.util.concurrent.TimeUnit;
 
 public class GrpcSink extends AbstractGrpcSink {
     private static final Logger logger = Logger.getLogger(GrpcSink.class.getName());
-    private EventServiceGrpc.EventServiceStub asyncStub;
+    private EventServiceGrpc.EventServiceStub asyncStub; // todo: declare as abstract type
 
     @Override
     public void initSink(OptionHolder optionHolder) {

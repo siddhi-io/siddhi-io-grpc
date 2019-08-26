@@ -128,7 +128,7 @@ public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and
     @Override
     protected StateFactory init(StreamDefinition streamDefinition, OptionHolder optionHolder, ConfigReader configReader,
                                 SiddhiAppContext siddhiAppContext) {
-        this.siddhiAppContext = siddhiAppContext;
+        this.siddhiAppContext = siddhiAppContext; //todo: just store app name
         this.streamDefinition = streamDefinition;
         this.url = optionHolder.validateAndGetOption(GrpcConstants.PUBLISHER_URL).getValue().trim();
         this.streamID = streamDefinition.getId();
@@ -138,7 +138,7 @@ public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and
         if (optionHolder.isOptionExists("metadata")) {
             this.metadataOption = optionHolder.validateAndGetOption("metadata");
         }
-        if (!url.substring(0, 4).equalsIgnoreCase(GrpcConstants.GRPC_PROTOCOL_NAME)) {
+        if (!url.substring(0, 4).equalsIgnoreCase(GrpcConstants.GRPC_PROTOCOL_NAME)) { //todo: string.startswith
             throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID +
                     ": The url must begin with \"" + GrpcConstants.GRPC_PROTOCOL_NAME + "\" for all grpc sinks");
         }

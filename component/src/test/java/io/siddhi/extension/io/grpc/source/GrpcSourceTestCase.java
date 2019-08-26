@@ -288,4 +288,57 @@ public class GrpcSourceTestCase {
         Assert.assertTrue(logMessages.contains("Dropping request. Requested transport property 'name' not present in " +
                 "received event"));
     }
+
+    @Test
+    public void bindExceptionTest() throws Exception {
+        logger.info("Test case to call process");
+        logger.setLevel(Level.DEBUG);
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String stream1 = "@source(type='grpc', receiver.url = 'grpc://localhost:" + port + "/org.wso2.grpc.EventService/" +
+                "consume', " +
+                "@map(type='json')) " +
+                "define stream BarStream (message String);";
+        String stream2 = "@source(type='grpc', receiver.url = 'grpc://localhost:" + port + "/org.wso2.grpc.EventService/" +
+                "consume', " +
+                "@map(type='json')) " +
+                "define stream FooStream (message String);";
+        String query = "@info(name = 'query') "
+                + "from BarStream "
+                + "select *  "
+                + "insert into outputStream;";
+
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(stream1 + stream2 + query);
+        siddhiAppRuntime.addCallback("query", new QueryCallback() {
+            @Override
+            public void receive(long timeStamp, io.siddhi.core.event.Event[] inEvents,
+                                io.siddhi.core.event.Event[] removeEvents) {
+                EventPrinter.print(timeStamp, inEvents, removeEvents);
+                for (int i = 0; i < inEvents.length; i++) {
+                    eventCount.incrementAndGet();
+                    switch (i) {
+                        case 0:
+                            Assert.assertEquals((String) inEvents[i].getData()[0], "Benjamin Watson");
+                            break;
+                        default:
+                            Assert.fail();
+                    }
+                }
+            }
+        });
+
+        Event.Builder requestBuilder = Event.newBuilder();
+
+        String json = "{ \"message\": \"Benjamin Watson\"}";
+
+        requestBuilder.setPayload(json);
+        Event sequenceCallRequest = requestBuilder.build();
+        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:" + port).usePlaintext().build();
+        EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
+
+        siddhiAppRuntime.start();
+        Empty emptyResponse = blockingStub.consume(sequenceCallRequest);
+        Thread.sleep(1000);
+        siddhiAppRuntime.shutdown();
+    }
 }

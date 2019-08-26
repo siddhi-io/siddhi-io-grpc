@@ -109,16 +109,13 @@ public class GrpcSource extends AbstractGrpcSource {
                         logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request due to " +
                                 "missing payload ");
                         responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
+
+                        //todo sourceEventListener.onError ??
                     } else {
-                        try {
-                            logger.error("server thread is: " + Thread.currentThread().getId());
-                            sourceEventListener.onEvent(request.getPayload(), extractHeaders(request.getHeadersMap(),
-                                    metaDataMap.get(), requestedTransportPropertyNames));
-                            metaDataMap.remove();
-                        } catch (SiddhiAppRuntimeException e) {
-                            logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request. " +
-                                    e.getMessage());
-                        }
+                        logger.error("server thread is: " + Thread.currentThread().getId());
+                        sourceEventListener.onEvent(request.getPayload(), extractHeaders(request.getHeadersMap(),
+                                metaDataMap.get(), requestedTransportPropertyNames));
+                        metaDataMap.remove();
                         responseObserver.onNext(Empty.getDefaultInstance());
                         responseObserver.onCompleted();
                     }

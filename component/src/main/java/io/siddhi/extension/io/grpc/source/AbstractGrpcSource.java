@@ -39,6 +39,7 @@ import org.apache.log4j.Logger;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.BindException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.KeyStore;
@@ -57,7 +58,7 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getServiceName;
  * This is an abstract class extended by GrpcSource and GrpcServiceSource. This provides most of initialization
  * implementations common for both sources
  */
-public abstract class AbstractGrpcSource extends Source {
+public abstract class AbstractGrpcSource extends Source { //todo: if 2 services are started on the same port throw a proper error.
     protected SiddhiAppContext siddhiAppContext;
     protected SourceEventListener sourceEventListener;
     private String url;
@@ -103,7 +104,7 @@ public abstract class AbstractGrpcSource extends Source {
                     GrpcConstants.SERVER_SHUTDOWN_WAITING_TIME).getValue());
         }
         this.url = optionHolder.validateAndGetOption(GrpcConstants.RECEIVER_URL).getValue();
-        if (!url.substring(0, 4).equalsIgnoreCase(GrpcConstants.GRPC_PROTOCOL_NAME)) {
+        if (!url.substring(0, 4).equalsIgnoreCase(GrpcConstants.GRPC_PROTOCOL_NAME)) {  //todo: string.startswith
             throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID + ": The url must " +
                     "begin with \"" + GrpcConstants.GRPC_PROTOCOL_NAME + "\" for all grpc sinks");
         }
@@ -246,6 +247,10 @@ public abstract class AbstractGrpcSource extends Source {
                 logger.debug(siddhiAppContext.getName() + ":" + streamID + ": gRPC Server started");
             }
         } catch (IOException e) {
+            if (e.getCause() instanceof BindException) {
+                throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ":" + streamID + ": Another server " +
+                        "is already running on the port " + port + ". Please provide a different port");
+            }
             throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ":" + streamID + ": ", e);
         }
     }

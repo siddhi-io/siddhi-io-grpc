@@ -225,7 +225,7 @@ public class GrpcCallSink extends AbstractGrpcSink {
                 Map<String, String> siddhiRequestEventData = getRequestEventDataMap(dynamicOptions);
                 @Override
                 public void onSuccess(Event result) {
-                    GrpcSourceRegistry.getInstance().getGrpcCallResponseSourceSource(sinkID).onResponse(result,
+                    GrpcSourceRegistry.getInstance().getGrpcCallResponseSource(sinkID).onResponse(result,
                             siddhiRequestEventData);
                 }
 
@@ -262,7 +262,7 @@ public class GrpcCallSink extends AbstractGrpcSink {
         this.futureStub = EventServiceGrpc.newFutureStub(channel);
         logger.info(siddhiAppContext.getName() + ": gRPC service on " + streamID + " has successfully connected to "
                 + url);
-        if (GrpcSourceRegistry.getInstance().getGrpcCallResponseSourceSource(sinkID) == null) {
+        if (GrpcSourceRegistry.getInstance().getGrpcCallResponseSource(sinkID) == null) {
             throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": " + streamID + ": For grpc-call sink " +
                     "to work a grpc-call-response source should be available with the same sink.id. In this case " +
                     "sink.id is " + sinkID + ". Please provide a grpc-call-response source with the sink.id " + sinkID);

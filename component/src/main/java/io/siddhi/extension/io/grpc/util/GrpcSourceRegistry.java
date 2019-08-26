@@ -50,7 +50,7 @@ public class GrpcSourceRegistry {
         grpcServiceSourceHashMap.put(key, source);
     }
 
-    public GrpcCallResponseSource getGrpcCallResponseSourceSource(String key) {
+    public GrpcCallResponseSource getGrpcCallResponseSource(String key) {
         return grpcCallResponseSourceHashMap.get(key);
     }
 
