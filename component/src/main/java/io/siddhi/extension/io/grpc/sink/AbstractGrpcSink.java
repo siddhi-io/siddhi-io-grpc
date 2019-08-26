@@ -148,7 +148,7 @@ public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and
         } catch (MalformedURLException e) {
             throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID +
                     ": Error in URL format. Expected format is `grpc://0.0.0.0:9763/<serviceName>/<methodName>` but " +
-                    "the provided url is " + url + ". " + e.getMessage());
+                    "the provided url is " + url + ". ", e);
         }
         String serviceName = getServiceName(aURL.getPath());
         this.methodName = getMethodName(aURL.getPath());
@@ -195,7 +195,7 @@ public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and
         } catch (KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException |
                 UnrecoverableKeyException e) {
             throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " + streamID + ": Error while " +
-                    "creating gRPC channel. " + e.getMessage());
+                    "creating gRPC channel. ", e);
         }
 
         if (optionHolder.isOptionExists(GrpcConstants.IDLE_TIMEOUT_MILLIS)) {
@@ -250,7 +250,7 @@ public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and
         try (FileInputStream fis = new FileInputStream(jksPath)) {
             keyStore.load(fis, passphrase);
         } catch (IOException e) {
-            throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " + streamID + ": " + e.getMessage());
+            throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " + streamID + ": ", e);
         }
         TrustManagerFactory tmf = TrustManagerFactory.getInstance(algorithm);
         tmf.init(keyStore);
@@ -264,7 +264,7 @@ public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and
         try (FileInputStream fis = new FileInputStream(jksPath)) {
             keyStore.load(fis, passphrase);
         } catch (IOException e) {
-            throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " + streamID + ": " + e.getMessage());
+            throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " + streamID + ": ", e);
         }
         KeyManagerFactory kmf = KeyManagerFactory.getInstance(algorithm);
         kmf.init(keyStore, passphrase);

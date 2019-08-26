@@ -190,8 +190,7 @@ public class GrpcServiceSource extends AbstractGrpcSource {
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
-                    throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": " + streamID + ": "
-                            + e.getMessage());
+                    throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": " + streamID + ": ", e);
                 }
             }
             StreamObserver streamObserver = streamObserverMap.remove(messageId);

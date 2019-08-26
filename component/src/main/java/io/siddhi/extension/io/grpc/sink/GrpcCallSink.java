@@ -220,8 +220,7 @@ public class GrpcCallSink extends AbstractGrpcSink {
                         currentFutureStub);
             }
 
-            ListenableFuture<Event> futureResponse =
-                    currentFutureStub.process(eventBuilder.build());
+            ListenableFuture<Event> futureResponse = currentFutureStub.process(eventBuilder.build());
             Futures.addCallback(futureResponse, new FutureCallback<Event>() {
                 Map<String, String> siddhiRequestEventData = getRequestEventDataMap(dynamicOptions);
                 @Override
@@ -287,7 +286,7 @@ public class GrpcCallSink extends AbstractGrpcSink {
             channel = null;
         } catch (InterruptedException e) {
             throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ":" + streamID + ": Error in shutting " +
-                    "down the channel. " + e.getMessage());
+                    "down the channel. ", e);
         }
     }
 }
