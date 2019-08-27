@@ -44,10 +44,10 @@ import java.util.concurrent.TimeUnit;
         description = "" +
                 "This extension publishes event data encoded into GRPC Classes as defined in the user input " +
                 "jar. This extension has a default gRPC service classes added. The default service is called " +
-                "\"EventService\". Please find the protobuf definition here. This grpc sink is used for scenarios " +
-                //todo: provide url for protobuf
-                "where we send a request and don't expect a response back. I.e getting a google.protobuf.Empty " +
-                "response back.",
+                "\"EventService\". Please find the protobuf definition [here](https://github.com/siddhi-io/" +
+                "siddhi-io-grpc/tree/master/component/src/main/resources/EventService.proto). This grpc sink is " +
+                "used for scenarios where we send a request and don't expect a response back. I.e getting a " +
+                "google.protobuf.Empty response back.",
         parameters = {
                 @Parameter(
                         name = "publisher.url",

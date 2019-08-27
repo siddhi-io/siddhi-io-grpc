@@ -51,9 +51,11 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.extractHeaders;
         description = "This extension implements a grpc server for receiving and responding to requests. During " +
                 "initialization time a grpc server is started on the user specified port exposing the required " +
                 "service as given in the url. This source also has a default mode and a user defined grpc service " +
-                "mode. In the default mode this will use the EventService process method. This accepts grpc message " +
-                "class Event as defined in the EventService proto. This uses GrpcServiceResponse sink to send " +
-                "reponses back in the same Event message format.",
+                "mode. By default this uses EventService. Please find the proto definition [here](https://github.com/" +
+                "siddhi-io/siddhi-io-grpc/tree/master/component/src/main/resources/EventService.proto) In the default" +
+                " mode this will use the EventService process method. This accepts grpc message class Event as " +
+                "defined in the EventService proto. This uses GrpcServiceResponse sink to send reponses back in the " +
+                "same Event message format.",
         parameters = {
                 @Parameter(
                         name = "receiver.url",
@@ -259,7 +261,7 @@ public class GrpcServiceSource extends AbstractGrpcSource {
 
     @Override
     public void connect(ConnectionCallback connectionCallback, State state) throws ConnectionUnavailableException {
-        connectGrpcServer(server, logger);
+        connectGrpcServer(server, logger, connectionCallback);
     }
 
     /**

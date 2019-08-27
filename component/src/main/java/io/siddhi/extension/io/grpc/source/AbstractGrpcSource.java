@@ -24,6 +24,7 @@ import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 import io.grpc.netty.shaded.io.netty.handler.ssl.ClientAuth;
 import io.grpc.netty.shaded.io.netty.handler.ssl.SslContextBuilder;
 import io.siddhi.core.config.SiddhiAppContext;
+import io.siddhi.core.exception.ConnectionUnavailableException;
 import io.siddhi.core.exception.SiddhiAppCreationException;
 import io.siddhi.core.exception.SiddhiAppRuntimeException;
 import io.siddhi.core.stream.ServiceDeploymentInfo;
@@ -248,7 +249,7 @@ public abstract class AbstractGrpcSource extends Source {
 
     }
 
-    public void connectGrpcServer(Server server, Logger logger) {
+    public void connectGrpcServer(Server server, Logger logger, ConnectionCallback connectionCallback) {
         try {
             server.start();
             if (logger.isDebugEnabled()) {
@@ -256,8 +257,11 @@ public abstract class AbstractGrpcSource extends Source {
             }
         } catch (IOException e) {
             if (e.getCause() instanceof BindException) {
-                throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ":" + streamID + ": Another server " +
-                        "is already running on the port " + port + ". Please provide a different port");
+                throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID + ": Another " +
+                        "server is already running on the port " + port + ". Please provide a different port");
+            } else {
+                connectionCallback.onError(new ConnectionUnavailableException(siddhiAppContext.getName() + ":" +
+                        streamID + ": Error when starting the server. ", e));
             }
             throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ":" + streamID + ": ", e);
         }

@@ -62,7 +62,7 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.isSequenceNamePresent;
  * This provides most of the initialization implementations
  */
 
-public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and generate site and check
+public abstract class AbstractGrpcSink extends Sink {
     private static final Logger logger = Logger.getLogger(AbstractGrpcSink.class.getName());
     protected String siddhiAppName;
     protected ManagedChannel channel;

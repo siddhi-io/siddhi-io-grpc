@@ -42,8 +42,10 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.extractHeaders;
 @Extension(name = "grpc", namespace = "source",
         description = "This extension starts a grpc server during initialization time. The server listens to " +
                 "requests from grpc stubs. This source has a default mode of operation and custom user defined grpc " +
-                "service mode. In the default mode this source will use EventService consume method. This method " +
-                "will receive requests and injects them into stream through a mapper.",
+                "service mode. By default this uses EventService. Please find the proto definition [here]" +
+                "(https://github.com/siddhi-io/siddhi-io-grpc/tree/master/component/src/main/resources/" +
+                "EventService.proto) In the default mode this source will use EventService consume method. This " +
+                "method will receive requests and injects them into stream through a mapper.",
         parameters = {
                 @Parameter(
                         name = "receiver.url",
@@ -155,7 +157,6 @@ public class GrpcSource extends AbstractGrpcSource {
                                 "missing payload ");
                         responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
 
-                        //todo connectionCallback.onError ??
                     } else {
                         logger.error("server thread is: " + Thread.currentThread().getId());
                         try {
@@ -184,7 +185,7 @@ public class GrpcSource extends AbstractGrpcSource {
 
     @Override
     public void connect(ConnectionCallback connectionCallback, State state) throws ConnectionUnavailableException {
-        connectGrpcServer(server, logger);
+        connectGrpcServer(server, logger, connectionCallback);
     }
 
     /**
