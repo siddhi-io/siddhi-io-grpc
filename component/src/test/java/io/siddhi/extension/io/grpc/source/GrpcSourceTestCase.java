@@ -50,8 +50,8 @@ public class GrpcSourceTestCase {
         logger.setLevel(Level.DEBUG);
         SiddhiManager siddhiManager = new SiddhiManager();
 
-        String stream2 = "@source(type='grpc', receiver.url = 'grpc://localhost:" + port + "/org.wso2.grpc.EventService/" +
-                "consume', " +
+        String stream2 = "@source(type='grpc', receiver.url = 'grpc://localhost:" + port +
+                "/org.wso2.grpc.EventService/consume', " +
                 "@map(type='json')) " +
                 "define stream BarStream (message String);";
         String query = "@info(name = 'query') "
@@ -99,8 +99,8 @@ public class GrpcSourceTestCase {
         logger.setLevel(Level.DEBUG);
         SiddhiManager siddhiManager = new SiddhiManager();
 
-        String stream2 = "@source(type='grpc', receiver.url = 'grpc://localhost:" + port + "/org.wso2.grpc.EventService/" +
-                "consume', " +
+        String stream2 = "@source(type='grpc', receiver.url = 'grpc://localhost:" + port +
+                "/org.wso2.grpc.EventService/consume', " +
                 "@map(type='json', @attributes(name='trp:name', age='trp:age', message='message'))) " +
                 "define stream BarStream (message String, name String, age int);";
         String query = "@info(name = 'query') "
@@ -202,8 +202,8 @@ public class GrpcSourceTestCase {
         logger.setLevel(Level.DEBUG);
         SiddhiManager siddhiManager = new SiddhiManager();
 
-        String stream2 = "@source(type='grpc', receiver.url = 'grpc://localhost:" + port + "/org.wso2.grpc.EventService/" +
-                "consume', " +
+        String stream2 = "@source(type='grpc', receiver.url = 'grpc://localhost:" + port +
+                "/org.wso2.grpc.EventService/consume', " +
                 "@map(type='json', @attributes(name='trp:name', age='trp:age', message='message'))) " +
                 "define stream BarStream (message String, name String, age int);";
         String query = "@info(name = 'query') "
@@ -253,8 +253,8 @@ public class GrpcSourceTestCase {
         rootLogger.addAppender(appender);
         SiddhiManager siddhiManager = new SiddhiManager();
 
-        String stream2 = "@source(type='grpc', receiver.url = 'grpc://localhost:" + port + "/org.wso2.grpc.EventService/" +
-                "consume', " +
+        String stream2 = "@source(type='grpc', receiver.url = 'grpc://localhost:" + port +
+                "/org.wso2.grpc.EventService/consume', " +
                 "@map(type='json', @attributes(name='trp:name', age='trp:age', message='message'))) " +
                 "define stream BarStream (message String, name String, age int);";
         String query = "@info(name = 'query') "
@@ -295,12 +295,12 @@ public class GrpcSourceTestCase {
         logger.setLevel(Level.DEBUG);
         SiddhiManager siddhiManager = new SiddhiManager();
 
-        String stream1 = "@source(type='grpc', receiver.url = 'grpc://localhost:" + port + "/org.wso2.grpc.EventService/" +
-                "consume', " +
+        String stream1 = "@source(type='grpc', receiver.url = 'grpc://localhost:" + port +
+                "/org.wso2.grpc.EventService/consume', " +
                 "@map(type='json')) " +
                 "define stream BarStream (message String);";
-        String stream2 = "@source(type='grpc', receiver.url = 'grpc://localhost:" + port + "/org.wso2.grpc.EventService/" +
-                "consume', " +
+        String stream2 = "@source(type='grpc', receiver.url = 'grpc://localhost:" + port +
+                "/org.wso2.grpc.EventService/consume', " +
                 "@map(type='json')) " +
                 "define stream FooStream (message String);";
         String query = "@info(name = 'query') "

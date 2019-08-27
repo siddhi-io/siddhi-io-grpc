@@ -38,7 +38,6 @@ import io.siddhi.query.api.definition.StreamDefinition;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
-import org.wso2.grpc.EventServiceGrpc;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -65,7 +64,7 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.isSequenceNamePresent;
 
 public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and generate site and check
     private static final Logger logger = Logger.getLogger(AbstractGrpcSink.class.getName());
-    protected SiddhiAppContext siddhiAppContext;
+    protected String siddhiAppName;
     protected ManagedChannel channel;
     protected String methodName;
     protected String sequenceName;
@@ -73,18 +72,11 @@ public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and
     protected String url;
     protected String streamID;
     protected String address;
-    protected EventServiceGrpc.EventServiceFutureStub futureStub;
     protected Option headersOption;
     protected Option metadataOption;
     protected ManagedChannelBuilder managedChannelBuilder;
     protected long channelTerminationWaitingTimeInMillis = -1L;
     protected StreamDefinition streamDefinition;
-    private String truststoreFilePath;
-    private String truststorePassword;
-    private String keystoreFilePath;
-    private String keystorePassword;
-    private String truststoreAlgorithm;
-    private String keystoreAlgorithm;
 
     /**
      * Returns the list of classes which this sink can consume.
@@ -128,7 +120,7 @@ public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and
     @Override
     protected StateFactory init(StreamDefinition streamDefinition, OptionHolder optionHolder, ConfigReader configReader,
                                 SiddhiAppContext siddhiAppContext) {
-        this.siddhiAppContext = siddhiAppContext; //todo: just store app name
+        this.siddhiAppName = siddhiAppContext.getName();
         this.streamDefinition = streamDefinition;
         this.url = optionHolder.validateAndGetOption(GrpcConstants.PUBLISHER_URL).getValue().trim();
         this.streamID = streamDefinition.getId();
@@ -138,7 +130,7 @@ public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and
         if (optionHolder.isOptionExists("metadata")) {
             this.metadataOption = optionHolder.validateAndGetOption("metadata");
         }
-        if (!url.substring(0, 4).equalsIgnoreCase(GrpcConstants.GRPC_PROTOCOL_NAME)) { //todo: string.startswith
+        if (!url.startsWith(GrpcConstants.GRPC_PROTOCOL_NAME)) {
             throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID +
                     ": The url must begin with \"" + GrpcConstants.GRPC_PROTOCOL_NAME + "\" for all grpc sinks");
         }
@@ -158,16 +150,30 @@ public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and
                     GrpcConstants.CHANNEL_TERMINATION_WAITING_TIME_MILLIS).getValue());
         }
 
+        String truststoreFilePath = null;
+        String truststorePassword = null;
+        String keystoreFilePath = null;
+        String keystorePassword = null;
+        String truststoreAlgorithm = null;
+        String keystoreAlgorithm = null;
+        String tlsStoreType = null;
+
         if (optionHolder.isOptionExists(GrpcConstants.TRUSTSTORE_FILE)) {
-            this.truststoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_FILE).getValue();
-            this.truststorePassword = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_PASSWORD).getValue();
-            this.truststoreAlgorithm = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_ALGORITHM).getValue();
+            truststoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_FILE).getValue();
+            if (optionHolder.isOptionExists(GrpcConstants.TRUSTSTORE_PASSWORD)) {
+                truststorePassword = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_PASSWORD).getValue();
+            }
+            truststoreAlgorithm = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_ALGORITHM).getValue();
+            tlsStoreType = optionHolder.getOrCreateOption(GrpcConstants.TLS_STORE_TYPE,
+                    GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
         }
 
         if (optionHolder.isOptionExists(GrpcConstants.KEYSTORE_FILE)) {
-            this.keystoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_FILE).getValue();
-            this.keystorePassword = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_PASSWORD).getValue();
-            this.keystoreAlgorithm = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_ALGORITHM).getValue();
+            keystoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_FILE).getValue();
+            keystorePassword = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_PASSWORD).getValue();
+            keystoreAlgorithm = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_ALGORITHM).getValue();
+            tlsStoreType = optionHolder.getOrCreateOption(GrpcConstants.TLS_STORE_TYPE,
+                    GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
         }
 
         managedChannelBuilder = NettyChannelBuilder.forTarget(address);
@@ -176,18 +182,19 @@ public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and
             if (truststoreFilePath != null && keystoreFilePath != null) {
                 managedChannelBuilder = ((NettyChannelBuilder) managedChannelBuilder).sslContext(GrpcSslContexts
                         .forClient().trustManager(getTrustManagerFactory(truststoreFilePath, truststorePassword,
-                                truststoreAlgorithm))
-                        .keyManager(getKeyManagerFactory(keystoreFilePath, keystorePassword, keystoreAlgorithm))
+                                truststoreAlgorithm, tlsStoreType))
+                        .keyManager(getKeyManagerFactory(keystoreFilePath, keystorePassword, keystoreAlgorithm,
+                                tlsStoreType))
                         .build());
             } else if (truststoreFilePath != null) {
                 managedChannelBuilder = ((NettyChannelBuilder) managedChannelBuilder).sslContext(GrpcSslContexts
                         .forClient().trustManager(getTrustManagerFactory(truststoreFilePath, truststorePassword,
-                                truststoreAlgorithm))
+                                truststoreAlgorithm, tlsStoreType))
                         .build());
             } else if (keystoreFilePath != null) {
                 managedChannelBuilder = ((NettyChannelBuilder) managedChannelBuilder).sslContext(GrpcSslContexts
                         .forClient().keyManager(getKeyManagerFactory(keystoreFilePath, keystorePassword,
-                                keystoreAlgorithm))
+                                keystoreAlgorithm, tlsStoreType))
                         .build());
             } else {
                 managedChannelBuilder = managedChannelBuilder.usePlaintext();
@@ -243,28 +250,30 @@ public abstract class AbstractGrpcSink extends Sink { //todo: install mkdocs and
         return null;
     }
 
-    private TrustManagerFactory getTrustManagerFactory(String jksPath, String password, String algorithm) throws
+    private TrustManagerFactory getTrustManagerFactory(String filePath, String password, String algorithm,
+                                                       String storeType) throws
             KeyStoreException, NoSuchAlgorithmException, CertificateException {
         char[] passphrase = password.toCharArray();
-        KeyStore keyStore = KeyStore.getInstance(GrpcConstants.DEFAULT_KEYSTORE_TYPE);
-        try (FileInputStream fis = new FileInputStream(jksPath)) {
+        KeyStore keyStore = KeyStore.getInstance(storeType);
+        try (FileInputStream fis = new FileInputStream(filePath)) {
             keyStore.load(fis, passphrase);
         } catch (IOException e) {
-            throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " + streamID + ": ", e);
+            throw new SiddhiAppCreationException(siddhiAppName + ": " + streamID + ": ", e);
         }
         TrustManagerFactory tmf = TrustManagerFactory.getInstance(algorithm);
         tmf.init(keyStore);
         return tmf;
     }
 
-    private KeyManagerFactory getKeyManagerFactory(String jksPath, String password, String algorithm) throws
+    private KeyManagerFactory getKeyManagerFactory(String filePath, String password, String algorithm,
+                                                   String storeType) throws
             KeyStoreException, CertificateException, NoSuchAlgorithmException, UnrecoverableKeyException {
-        KeyStore keyStore = KeyStore.getInstance(GrpcConstants.DEFAULT_KEYSTORE_TYPE);
+        KeyStore keyStore = KeyStore.getInstance(storeType);
         char[] passphrase = password.toCharArray();
-        try (FileInputStream fis = new FileInputStream(jksPath)) {
+        try (FileInputStream fis = new FileInputStream(filePath)) {
             keyStore.load(fis, passphrase);
         } catch (IOException e) {
-            throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " + streamID + ": ", e);
+            throw new SiddhiAppCreationException(siddhiAppName + ": " + streamID + ": ", e);
         }
         KeyManagerFactory kmf = KeyManagerFactory.getInstance(algorithm);
         kmf.init(keyStore, passphrase);

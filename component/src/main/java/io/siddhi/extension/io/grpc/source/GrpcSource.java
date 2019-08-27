@@ -110,7 +110,7 @@ public class GrpcSource extends AbstractGrpcSource {
                                 "missing payload ");
                         responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
 
-                        //todo sourceEventListener.onError ??
+                        //todo connectionCallback.onError ??
                     } else {
                         logger.error("server thread is: " + Thread.currentThread().getId());
                         sourceEventListener.onEvent(request.getPayload(), extractHeaders(request.getHeadersMap(),

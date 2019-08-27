@@ -21,6 +21,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
+import io.grpc.stub.AbstractStub;
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
 import io.siddhi.annotation.Parameter;
@@ -181,6 +182,7 @@ import java.util.concurrent.TimeUnit;
 public class GrpcCallSink extends AbstractGrpcSink {
     private static final Logger logger = Logger.getLogger(GrpcCallSink.class.getName());
     protected String sinkID;
+    protected AbstractStub futureStub;
 
     @Override
     public void initSink(OptionHolder optionHolder) {
@@ -188,7 +190,7 @@ public class GrpcCallSink extends AbstractGrpcSink {
             if (methodName == null) {
                 methodName = GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE;
             } else if (!methodName.equalsIgnoreCase(GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE)) {
-                throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": " + streamID + ": In default " +
+                throw new SiddhiAppValidationException(siddhiAppName + ": " + streamID + ": In default " +
                         "mode grpc-call-sink when using EventService the method name should be '" +
                         GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE + "' but given " + methodName);
             }
@@ -209,7 +211,8 @@ public class GrpcCallSink extends AbstractGrpcSink {
             throws ConnectionUnavailableException {
         if (isDefaultMode) {
             Event.Builder eventBuilder = Event.newBuilder().setPayload(payload.toString());
-            EventServiceGrpc.EventServiceFutureStub currentFutureStub = futureStub;
+            EventServiceGrpc.EventServiceFutureStub currentFutureStub = (EventServiceGrpc.EventServiceFutureStub)
+                    futureStub;
 
             if (headersOption != null || sequenceName != null) {
                 eventBuilder = addHeadersToEventBuilder(dynamicOptions, eventBuilder);
@@ -231,7 +234,7 @@ public class GrpcCallSink extends AbstractGrpcSink {
 
                 @Override
                 public void onFailure(Throwable t) {
-                    logger.error(siddhiAppContext.getName() + ":" + streamID + ": " + t.getMessage());
+                    logger.error(siddhiAppName + ":" + streamID + ": " + t.getMessage());
                 }
             }, MoreExecutors.directExecutor());
         } else {
@@ -260,10 +263,10 @@ public class GrpcCallSink extends AbstractGrpcSink {
     public void connect() throws ConnectionUnavailableException {
         this.channel = managedChannelBuilder.build();
         this.futureStub = EventServiceGrpc.newFutureStub(channel);
-        logger.info(siddhiAppContext.getName() + ": gRPC service on " + streamID + " has successfully connected to "
+        logger.info(siddhiAppName + ": gRPC service on " + streamID + " has successfully connected to "
                 + url);
         if (GrpcSourceRegistry.getInstance().getGrpcCallResponseSource(sinkID) == null) {
-            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": " + streamID + ": For grpc-call sink " +
+            throw new SiddhiAppRuntimeException(siddhiAppName + ": " + streamID + ": For grpc-call sink " +
                     "to work a grpc-call-response source should be available with the same sink.id. In this case " +
                     "sink.id is " + sinkID + ". Please provide a grpc-call-response source with the sink.id " + sinkID);
         }
@@ -285,7 +288,7 @@ public class GrpcCallSink extends AbstractGrpcSink {
             }
             channel = null;
         } catch (InterruptedException e) {
-            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ":" + streamID + ": Error in shutting " +
+            throw new SiddhiAppRuntimeException(siddhiAppName + ":" + streamID + ": Error in shutting " +
                     "down the channel. ", e);
         }
     }

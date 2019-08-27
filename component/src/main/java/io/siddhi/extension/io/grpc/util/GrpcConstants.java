@@ -45,7 +45,8 @@ public class GrpcConstants {
     public static final String TRUSTSTORE_PASSWORD = "truststore.password";
     public static final String KEYSTORE_FILE = "keystore.file";
     public static final String KEYSTORE_PASSWORD = "keystore.password";
-    public static final String DEFAULT_KEYSTORE_TYPE = "JKS";
+    public static final String TLS_STORE_TYPE = "tls.store.type";
+    public static final String DEFAULT_TLS_STORE_TYPE = "JKS";
     public static final String KEYSTORE_ALGORITHM = "keystore.algorithm";
     public static final String TRUSTSTORE_ALGORITHM = "truststore.algorithm";
 

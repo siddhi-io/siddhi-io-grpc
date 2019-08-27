@@ -18,6 +18,7 @@
 package io.siddhi.extension.io.grpc.sink;
 
 import com.google.protobuf.Empty;
+import io.grpc.stub.AbstractStub;
 import io.grpc.stub.StreamObserver;
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
@@ -124,6 +125,32 @@ import java.util.concurrent.TimeUnit;
                         type = {DataType.LONG},
                         optional = true,
                         defaultValue = "5"),
+                @Parameter(
+                        name = "truststore.file",
+                        description = "the file path of truststore. If this is provided then server authentication " +
+                                "is enabled" ,
+                        type = {DataType.STRING},
+                        optional = true,
+                        defaultValue = "-"),
+                @Parameter(
+                        name = "truststore.password",
+                        description = "the password of truststore. If this is provided then the integrity of the " +
+                                "keystore is checked" ,
+                        type = {DataType.STRING},
+                        optional = true,
+                        defaultValue = "-"),
+                @Parameter(
+                        name = "truststore.algorithm",
+                        description = "the encryption algorithm to be used for server authentication" ,
+                        type = {DataType.STRING},
+                        optional = true,
+                        defaultValue = "-"),
+                @Parameter(
+                        name = "tls.store.type",
+                        description = "TLS store type" ,
+                        type = {DataType.STRING},
+                        optional = true,
+                        defaultValue = "-"),
         },
         examples = {
                 @Example(syntax = "" +
@@ -153,7 +180,7 @@ import java.util.concurrent.TimeUnit;
 
 public class GrpcSink extends AbstractGrpcSink {
     private static final Logger logger = Logger.getLogger(GrpcSink.class.getName());
-    private EventServiceGrpc.EventServiceStub asyncStub; // todo: declare as abstract type
+    private AbstractStub asyncStub;
 
     @Override
     public void initSink(OptionHolder optionHolder) {
@@ -161,7 +188,7 @@ public class GrpcSink extends AbstractGrpcSink {
             if (methodName == null) {
                 methodName = GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE;
             } else if (!methodName.equalsIgnoreCase(GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE)) {
-                throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": " + streamID + ": In default " +
+                throw new SiddhiAppValidationException(siddhiAppName + ": " + streamID + ": In default " +
                         "mode grpc-sink when using EventService the method name should be '" +
                         GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE + "' but given " + methodName);
             }
@@ -173,7 +200,7 @@ public class GrpcSink extends AbstractGrpcSink {
             throws ConnectionUnavailableException {
         if (isDefaultMode) {
             Event.Builder eventBuilder = Event.newBuilder().setPayload(payload.toString());
-            EventServiceGrpc.EventServiceStub currentAsyncStub = asyncStub;
+            EventServiceGrpc.EventServiceStub currentAsyncStub = (EventServiceGrpc.EventServiceStub) asyncStub;
 
             if (headersOption != null || sequenceName != null) {
                 eventBuilder = addHeadersToEventBuilder(dynamicOptions, eventBuilder);
@@ -189,14 +216,14 @@ public class GrpcSink extends AbstractGrpcSink {
                 @Override
                 public void onNext(Empty event) {}
 
-                @Override
+                @Override //todo latch based error???
                 public void onError(Throwable t) { //parent method doest have error in its signature. so cant throw
                     // from here
 //                    if (((StatusRuntimeException) t).getStatus().getCode().equals(Status.UNAVAILABLE)) {
-//                        throw new ConnectionUnavailableException(siddhiAppContext.getName() + ": " + streamID + ": "
+//                        throw new ConnectionUnavailableException(siddhiAppName.getName() + ": " + streamID + ": "
 //                        + t.getMessage());
 //                    }
-                    logger.error(siddhiAppContext.getName() + ":" + streamID + ": " + t.getMessage() + " caused by "
+                    logger.error(siddhiAppName + ":" + streamID + ": " + t.getMessage() + " caused by "
                             + t.getCause());
                 }
 
@@ -221,7 +248,7 @@ public class GrpcSink extends AbstractGrpcSink {
         this.channel = managedChannelBuilder.build();
         this.asyncStub = EventServiceGrpc.newStub(channel);
         if (!channel.isShutdown()) {
-            logger.info(siddhiAppContext.getName() + ": gRPC service on " + streamID + " has successfully connected to "
+            logger.info(siddhiAppName + ": gRPC service on " + streamID + " has successfully connected to "
                     + url);
         }
     }
@@ -240,7 +267,7 @@ public class GrpcSink extends AbstractGrpcSink {
             }
             channel = null;
         } catch (InterruptedException e) {
-            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ":" + streamID + ": Error in shutting " +
+            throw new SiddhiAppRuntimeException(siddhiAppName + ":" + streamID + ": Error in shutting " +
                     "down the channel. ", e);
         }
     }

@@ -322,7 +322,7 @@ public class GrpcSourceAuthTestCase {
     private TrustManagerFactory getTrustManagerFactory(String jksPath, String password, String algorithm)
             throws KeyStoreException, IOException, NoSuchAlgorithmException, CertificateException {
         char[] passphrase = password.toCharArray();
-        KeyStore keyStore = KeyStore.getInstance(GrpcConstants.DEFAULT_KEYSTORE_TYPE);
+        KeyStore keyStore = KeyStore.getInstance(GrpcConstants.DEFAULT_TLS_STORE_TYPE);
         keyStore.load(new FileInputStream(jksPath),
                 passphrase);
         TrustManagerFactory tmf = TrustManagerFactory.getInstance(algorithm);
@@ -332,7 +332,7 @@ public class GrpcSourceAuthTestCase {
 
     private KeyManagerFactory getKeyManagerFactory(String jksPath, String password, String algorithm) throws
             KeyStoreException, IOException, CertificateException, NoSuchAlgorithmException, UnrecoverableKeyException {
-        KeyStore keyStore = KeyStore.getInstance(GrpcConstants.DEFAULT_KEYSTORE_TYPE);
+        KeyStore keyStore = KeyStore.getInstance(GrpcConstants.DEFAULT_TLS_STORE_TYPE);
         char[] passphrase = password.toCharArray();
         keyStore.load(new FileInputStream(jksPath),
                 passphrase);

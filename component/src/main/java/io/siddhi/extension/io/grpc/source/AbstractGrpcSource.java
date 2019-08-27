@@ -58,7 +58,7 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getServiceName;
  * This is an abstract class extended by GrpcSource and GrpcServiceSource. This provides most of initialization
  * implementations common for both sources
  */
-public abstract class AbstractGrpcSource extends Source { //todo: if 2 services are started on the same port throw a proper error.
+public abstract class AbstractGrpcSource extends Source {
     protected SiddhiAppContext siddhiAppContext;
     protected SourceEventListener sourceEventListener;
     private String url;
@@ -70,12 +70,6 @@ public abstract class AbstractGrpcSource extends Source { //todo: if 2 services 
     protected long serverShutdownWaitingTimeInMillis = -1L;
     protected String streamID;
     private ServiceDeploymentInfo serviceDeploymentInfo;
-    private String truststoreFilePath;
-    private String truststorePassword;
-    private String keystoreFilePath;
-    private String keystorePassword;
-    private String truststoreAlgorithm;
-    private String keystoreAlgorithm;
     public static ThreadLocal<Map<String, String>> metaDataMap = new ThreadLocal<>();
 
     @Override
@@ -104,7 +98,7 @@ public abstract class AbstractGrpcSource extends Source { //todo: if 2 services 
                     GrpcConstants.SERVER_SHUTDOWN_WAITING_TIME).getValue());
         }
         this.url = optionHolder.validateAndGetOption(GrpcConstants.RECEIVER_URL).getValue();
-        if (!url.substring(0, 4).equalsIgnoreCase(GrpcConstants.GRPC_PROTOCOL_NAME)) {  //todo: string.startswith
+        if (!url.startsWith(GrpcConstants.GRPC_PROTOCOL_NAME)) {
             throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID + ": The url must " +
                     "begin with \"" + GrpcConstants.GRPC_PROTOCOL_NAME + "\" for all grpc sinks");
         }
@@ -121,10 +115,20 @@ public abstract class AbstractGrpcSource extends Source { //todo: if 2 services 
         initSource(optionHolder, requestedTransportPropertyNames);
         this.serverInterceptor = new SourceServerInterceptor(siddhiAppContext, streamID);
 
+        String truststoreFilePath = null;
+        String truststorePassword = null;
+        String keystoreFilePath = null;
+        String keystorePassword = null;
+        String truststoreAlgorithm = null;
+        String keystoreAlgorithm = null;
+        String tlsStoreType = null;
+
         if (optionHolder.isOptionExists(GrpcConstants.KEYSTORE_FILE)) {
-            this.keystoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_FILE).getValue();
-            this.keystorePassword = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_PASSWORD).getValue();
-            this.keystoreAlgorithm = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_ALGORITHM).getValue();
+            keystoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_FILE).getValue();
+            keystorePassword = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_PASSWORD).getValue();
+            keystoreAlgorithm = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_ALGORITHM).getValue();
+            tlsStoreType = optionHolder.getOrCreateOption(GrpcConstants.TLS_STORE_TYPE,
+                    GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
         }
 
         if (optionHolder.isOptionExists(GrpcConstants.TRUSTSTORE_FILE)) {
@@ -132,9 +136,13 @@ public abstract class AbstractGrpcSource extends Source { //todo: if 2 services 
                 throw new SiddhiAppCreationException(siddhiAppContext.getName() + ":" + streamID + ": Truststore " +
                         "configurations given without keystore configurations. Please provide keystore");
             }
-            this.truststoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_FILE).getValue();
-            this.truststorePassword = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_PASSWORD).getValue();
-            this.truststoreAlgorithm = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_ALGORITHM).getValue();
+            truststoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_FILE).getValue();
+            if (optionHolder.isOptionExists(GrpcConstants.TRUSTSTORE_PASSWORD)) {
+                truststorePassword = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_PASSWORD).getValue();
+            }
+            truststoreAlgorithm = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_ALGORITHM).getValue();
+            tlsStoreType = optionHolder.getOrCreateOption(GrpcConstants.TLS_STORE_TYPE,
+                    GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
         }
 
         //ServerBuilder parameters
@@ -142,10 +150,10 @@ public abstract class AbstractGrpcSource extends Source { //todo: if 2 services 
         if (keystoreFilePath != null) {
             try {
                 SslContextBuilder sslContextBuilder = getSslContextBuilder(keystoreFilePath, keystorePassword,
-                        keystoreAlgorithm);
+                        keystoreAlgorithm, tlsStoreType);
                 if (truststoreFilePath != null) {
                     sslContextBuilder = addTrustStore(truststoreFilePath, truststorePassword, truststoreAlgorithm,
-                            sslContextBuilder).clientAuth(ClientAuth.REQUIRE);
+                            sslContextBuilder, tlsStoreType).clientAuth(ClientAuth.REQUIRE);
                 }
                 serverBuilder.sslContext(sslContextBuilder.build());
             } catch (IOException | CertificateException | NoSuchAlgorithmException | UnrecoverableKeyException |
@@ -169,12 +177,12 @@ public abstract class AbstractGrpcSource extends Source { //todo: if 2 services 
         return null;
     }
 
-    private SslContextBuilder getSslContextBuilder(String jksPath, String password, String algorithm)
+    private SslContextBuilder getSslContextBuilder(String filePath, String password, String algorithm, String storeType)
             throws KeyStoreException, NoSuchAlgorithmException, CertificateException,
             UnrecoverableKeyException {
         char[] passphrase = password.toCharArray();
-        KeyStore keyStore = KeyStore.getInstance(GrpcConstants.DEFAULT_KEYSTORE_TYPE);
-        try (FileInputStream fis = new FileInputStream(jksPath)) {
+        KeyStore keyStore = KeyStore.getInstance(storeType);
+        try (FileInputStream fis = new FileInputStream(filePath)) {
             keyStore.load(fis, passphrase);
         } catch (IOException e) {
             throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " + streamID + ": ", e);
@@ -186,12 +194,12 @@ public abstract class AbstractGrpcSource extends Source { //todo: if 2 services 
         return sslContextBuilder;
     }
 
-    private SslContextBuilder addTrustStore(String jksPath, String password, String algorithm,
-                                            SslContextBuilder sslContextBuilder) throws NoSuchAlgorithmException,
-            KeyStoreException, CertificateException {
+    private SslContextBuilder addTrustStore(String filePath, String password, String algorithm,
+                                            SslContextBuilder sslContextBuilder, String storeType)
+            throws NoSuchAlgorithmException, KeyStoreException, CertificateException {
         char[] passphrase = password.toCharArray();
-        KeyStore keyStore = KeyStore.getInstance(GrpcConstants.DEFAULT_KEYSTORE_TYPE);
-        try (FileInputStream fis = new FileInputStream(jksPath)) {
+        KeyStore keyStore = KeyStore.getInstance(storeType);
+        try (FileInputStream fis = new FileInputStream(filePath)) {
             keyStore.load(fis, passphrase);
         } catch (IOException e) {
             throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " + streamID + ": ", e);
