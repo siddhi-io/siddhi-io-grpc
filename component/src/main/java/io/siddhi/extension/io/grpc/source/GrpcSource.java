@@ -118,18 +118,18 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.extractHeaders;
         },
         examples = {
                 @Example(syntax = "" +
-                        "@source(type='grpc', " +
-                        "       receiver.url='grpc://locanhost:8888/org.wso2.grpc.EventService/consume', " +
-                        "       @map(type='json')) " +
+                        "@source(type='grpc',\n" +
+                        "       receiver.url='grpc://locanhost:8888/org.wso2.grpc.EventService/consume',\n" +
+                        "       @map(type='json'))\n" +
                         "define stream BarStream (message String);",
                         description = "Here the port is given as 8888. So a grpc server will be started on port 8888 " +
                                 "and the server will expose EventService. This is the default service packed with " +
                                 "the source. In EventService the consume method is"
                 ),
                 @Example(syntax = "" +
-                        "@source(type='grpc', " +
-                        "       receiver.url='grpc://locanhost:8888/org.wso2.grpc.EventService/consume', " +
-                        "       @map(type='json', @attributes(name='trp:name', age='trp:age', message='message'))) " +
+                        "@source(type='grpc',\n" +
+                        "       receiver.url='grpc://locanhost:8888/org.wso2.grpc.EventService/consume',\n" +
+                        "       @map(type='json', @attributes(name='trp:name', age='trp:age', message='message')))\n" +
                         "define stream BarStream (message String, name String, age int);",
                         description = "Here we are getting headers sent with the request as transport properties and " +
                                 "injecting them into the stream. With each request a header will be sent in MetaData " +
@@ -158,11 +158,17 @@ public class GrpcSource extends AbstractGrpcSource {
                         //todo connectionCallback.onError ??
                     } else {
                         logger.error("server thread is: " + Thread.currentThread().getId());
-                        sourceEventListener.onEvent(request.getPayload(), extractHeaders(request.getHeadersMap(),
-                                metaDataMap.get(), requestedTransportPropertyNames));
-                        metaDataMap.remove();
-                        responseObserver.onNext(Empty.getDefaultInstance());
-                        responseObserver.onCompleted();
+                        try {
+                            sourceEventListener.onEvent(request.getPayload(), extractHeaders(request.getHeadersMap(),
+                                    metaDataMap.get(), requestedTransportPropertyNames));
+                            metaDataMap.remove();
+                            responseObserver.onNext(Empty.getDefaultInstance());
+                            responseObserver.onCompleted();
+                        } catch (SiddhiAppRuntimeException e) {
+                            logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request. "
+                                    + e.getMessage());
+                            responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
+                        }
                     }
                 }
             }, serverInterceptor)).build();

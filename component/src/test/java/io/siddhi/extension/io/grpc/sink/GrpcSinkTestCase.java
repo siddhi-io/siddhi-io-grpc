@@ -235,7 +235,8 @@ public class GrpcSinkTestCase {
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inStreamDefinition = ""
-                + "@sink(type='grpc', publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume/mySeq', " +
+                + "@sink(type='grpc', " +
+                "publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume/mySeq', " +
                 "@map(type='xml', @payload('{{message}}'))) " +
                 "define stream FooStream (message String);";
 

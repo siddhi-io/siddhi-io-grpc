@@ -21,6 +21,7 @@ import com.google.protobuf.Empty;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.Metadata;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.MetadataUtils;
 import io.siddhi.core.SiddhiAppRuntime;
 import io.siddhi.core.SiddhiManager;
@@ -156,8 +157,8 @@ public class GrpcSourceTestCase {
         rootLogger.addAppender(appender);
         SiddhiManager siddhiManager = new SiddhiManager();
 
-        String stream2 = "@source(type='grpc', receiver.url = 'grpc://localhost:" + port + "/org.wso2.grpc.EventService/" +
-                "consume', " +
+        String stream2 = "@source(type='grpc', receiver.url = 'grpc://localhost:" + port +
+                "/org.wso2.grpc.EventService/consume', " +
                 "@map(type='json', @attributes(name='trp:name', age='trp:age', message='message'))) " +
                 "define stream BarStream (message String, name String, age int);";
         String query = "@info(name = 'query') "
@@ -179,7 +180,11 @@ public class GrpcSourceTestCase {
         blockingStub = MetadataUtils.attachHeaders(blockingStub, metadata);
 
         siddhiAppRuntime.start();
-        Empty emptyResponse = blockingStub.consume(sequenceCallRequest);
+        try {
+            Empty emptyResponse = blockingStub.consume(sequenceCallRequest);
+        } catch (StatusRuntimeException e) {
+            Assert.assertEquals(e.getStatus().getCode().toString(), "DATA_LOSS");
+        }
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
@@ -272,7 +277,11 @@ public class GrpcSourceTestCase {
         ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:" + port).usePlaintext().build();
         EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
         siddhiAppRuntime.start();
-        Empty emptyResponse = blockingStub.consume(sequenceCallRequest);
+        try {
+            Empty emptyResponse = blockingStub.consume(sequenceCallRequest);
+        } catch (StatusRuntimeException e) {
+            Assert.assertEquals(e.getStatus().getCode().toString(), "DATA_LOSS");
+        }
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
@@ -309,36 +318,6 @@ public class GrpcSourceTestCase {
                 + "insert into outputStream;";
 
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(stream1 + stream2 + query);
-        siddhiAppRuntime.addCallback("query", new QueryCallback() {
-            @Override
-            public void receive(long timeStamp, io.siddhi.core.event.Event[] inEvents,
-                                io.siddhi.core.event.Event[] removeEvents) {
-                EventPrinter.print(timeStamp, inEvents, removeEvents);
-                for (int i = 0; i < inEvents.length; i++) {
-                    eventCount.incrementAndGet();
-                    switch (i) {
-                        case 0:
-                            Assert.assertEquals((String) inEvents[i].getData()[0], "Benjamin Watson");
-                            break;
-                        default:
-                            Assert.fail();
-                    }
-                }
-            }
-        });
-
-        Event.Builder requestBuilder = Event.newBuilder();
-
-        String json = "{ \"message\": \"Benjamin Watson\"}";
-
-        requestBuilder.setPayload(json);
-        Event sequenceCallRequest = requestBuilder.build();
-        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:" + port).usePlaintext().build();
-        EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
-
         siddhiAppRuntime.start();
-        Empty emptyResponse = blockingStub.consume(sequenceCallRequest);
-        Thread.sleep(1000);
-        siddhiAppRuntime.shutdown();
     }
 }

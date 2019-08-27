@@ -28,9 +28,7 @@ google_analytics:
   - UA-103065-28
   - auto
 markdown_extensions:
-  - admonition
-  - toc(permalink=true)
-  - codehilite(guess_lang=false)
+  - markdown.extensions.admonition
 pages:
   - Information : index.md
   - API Docs:

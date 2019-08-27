@@ -54,7 +54,8 @@ public class GrpcSourceAuthTestCase {
         logger.setLevel(Level.DEBUG);
         SiddhiManager siddhiManager = new SiddhiManager();
 
-        String stream2 = "@source(type='grpc', receiver.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
+        String stream2 = "@source(type='grpc', " +
+                "receiver.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
                 "keystore.file = 'src/test/resources/security/wso2carbon.jks'," +
                 "keystore.password = 'wso2carbon', " +
                 "keystore.algorithm = 'SunX509', " +
@@ -111,7 +112,8 @@ public class GrpcSourceAuthTestCase {
         logger.setLevel(Level.DEBUG);
         SiddhiManager siddhiManager = new SiddhiManager();
 
-        String stream2 = "@source(type='grpc', receiver.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
+        String stream2 = "@source(type='grpc', " +
+                "receiver.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
                 "keystore.file = 'src/test/resources/security/wso2carbon.jks'," +
                 "keystore.password = 'wso2carbon', " +
                 "keystore.algorithm = 'SunX509', " +

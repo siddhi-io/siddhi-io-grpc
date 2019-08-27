@@ -137,9 +137,9 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.extractHeaders;
         examples = {
                 @Example(syntax = "" +
                         "@source(type='grpc-service',\n" +
-                        "       receiver.url='grpc://localhost:8888/org.wso2.grpc.EventService/process', " +
-                        "       source.id='1', " +
-                        "       @map(type='json', @attributes(messageId='trp:messageId', message='message'))) " +
+                        "       receiver.url='grpc://localhost:8888/org.wso2.grpc.EventService/process',\n" +
+                        "       source.id='1',\n" +
+                        "       @map(type='json', @attributes(messageId='trp:messageId', message='message')))\n" +
                         "define stream FooStream (messageId String, message String);",
                         description = "Here a grpc server will be started at port 8888. The process method of " +
                                 "EventService will be exposed for clients. source.id is set as 1. So a " +
@@ -148,19 +148,19 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.extractHeaders;
                                 "messageId since we need to correlate the request message with the response."
                 ),
                 @Example(syntax = "" +
-                        "@sink(type='grpc-service-response', " +
-                        "      source.id='1', " +
-                        "      @map(type='json')) " +
-                        "define stream BarStream (messageId String, message String);" +
-                        "" +
-                        "@source(type='grpc-service', " +
-                        "       receiver.url='grpc://134.23.43.35:8080/org.wso2.grpc.EventService/process', " +
-                        "       source.id='1', " +
-                        "       @map(type='json', @attributes(messageId='trp:messageId', message='message'))) " +
-                        "define stream FooStream (messageId String, message String);" +
-                        "" +
-                        "from FooStream " +
-                        "select *  " +
+                        "@sink(type='grpc-service-response',\n" +
+                        "      source.id='1',\n" +
+                        "      @map(type='json'))\n" +
+                        "define stream BarStream (messageId String, message String);\n" +
+                        "\n" +
+                        "@source(type='grpc-service',\n" +
+                        "       receiver.url='grpc://134.23.43.35:8080/org.wso2.grpc.EventService/process',\n" +
+                        "       source.id='1',\n" +
+                        "       @map(type='json', @attributes(messageId='trp:messageId', message='message')))\n" +
+                        "define stream FooStream (messageId String, message String);\n" +
+                        "\n" +
+                        "from FooStream\n" +
+                        "select * \n" +
                         "insert into BarStream;",
                         description = "The grpc requests are received through the grpc-service sink. Each received " +
                                 "event is sent back through grpc-service-source. This is just a passthrough through " +
@@ -203,12 +203,18 @@ public class GrpcServiceSource extends AbstractGrpcSource {
                         Map<String, String> transportPropertyMap = new HashMap<>();
                         transportPropertyMap.put(GrpcConstants.MESSAGE_ID, messageId);
                         transportPropertyMap.putAll(request.getHeadersMap());
-                        sourceEventListener.onEvent(request.getPayload(), extractHeaders(transportPropertyMap,
-                                metaDataMap.get(), requestedTransportPropertyNames));
-                        metaDataMap.remove();
-                        streamObserverMap.put(messageId, responseObserver);
-                        timer.schedule(new ServiceSourceTimeoutChecker(messageId,
-                                siddhiAppContext.getTimestampGenerator().currentTime()), serviceTimeout);
+                        try {
+                            sourceEventListener.onEvent(request.getPayload(), extractHeaders(transportPropertyMap,
+                                    metaDataMap.get(), requestedTransportPropertyNames));
+                            metaDataMap.remove();
+                            streamObserverMap.put(messageId, responseObserver);
+                            timer.schedule(new ServiceSourceTimeoutChecker(messageId,
+                                    siddhiAppContext.getTimestampGenerator().currentTime()), serviceTimeout);
+                        } catch (SiddhiAppRuntimeException e) {
+                        logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request. "
+                                + e.getMessage());
+                        responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
+                        }
                     }
                 }
             }, serverInterceptor)).build();
