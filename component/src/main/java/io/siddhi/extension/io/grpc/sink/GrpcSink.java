@@ -151,6 +151,25 @@ import java.util.concurrent.TimeUnit;
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "-"),
+                @Parameter(
+                        name = "keystore.file",
+                        description = "the file path of keystore. If this is provided then client authentication " +
+                                "is enabled" ,
+                        type = {DataType.STRING},
+                        optional = true,
+                        defaultValue = "-"),
+                @Parameter(
+                        name = "keystore.password",
+                        description = "the password of keystore" ,
+                        type = {DataType.STRING},
+                        optional = true,
+                        defaultValue = "-"),
+                @Parameter(
+                        name = "keystore.algorithm",
+                        description = "the encryption algorithm to be used for client authentication" ,
+                        type = {DataType.STRING},
+                        optional = true,
+                        defaultValue = "-"),
         },
         examples = {
                 @Example(syntax = "" +

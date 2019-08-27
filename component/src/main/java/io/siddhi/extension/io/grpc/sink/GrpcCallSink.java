@@ -151,6 +151,51 @@ import java.util.concurrent.TimeUnit;
                         type = {DataType.LONG},
                         optional = true,
                         defaultValue = "8192"),
+                @Parameter(
+                        name = "truststore.file",
+                        description = "the file path of truststore. If this is provided then server authentication " +
+                                "is enabled" ,
+                        type = {DataType.STRING},
+                        optional = true,
+                        defaultValue = "-"),
+                @Parameter(
+                        name = "truststore.password",
+                        description = "the password of truststore. If this is provided then the integrity of the " +
+                                "keystore is checked" ,
+                        type = {DataType.STRING},
+                        optional = true,
+                        defaultValue = "-"),
+                @Parameter(
+                        name = "truststore.algorithm",
+                        description = "the encryption algorithm to be used for server authentication" ,
+                        type = {DataType.STRING},
+                        optional = true,
+                        defaultValue = "-"),
+                @Parameter(
+                        name = "tls.store.type",
+                        description = "TLS store type" ,
+                        type = {DataType.STRING},
+                        optional = true,
+                        defaultValue = "-"),
+                @Parameter(
+                        name = "keystore.file",
+                        description = "the file path of keystore. If this is provided then client authentication " +
+                                "is enabled" ,
+                        type = {DataType.STRING},
+                        optional = true,
+                        defaultValue = "-"),
+                @Parameter(
+                        name = "keystore.password",
+                        description = "the password of keystore" ,
+                        type = {DataType.STRING},
+                        optional = true,
+                        defaultValue = "-"),
+                @Parameter(
+                        name = "keystore.algorithm",
+                        description = "the encryption algorithm to be used for client authentication" ,
+                        type = {DataType.STRING},
+                        optional = true,
+                        defaultValue = "-"),
         },
         examples = {
                 @Example(syntax = "" +
