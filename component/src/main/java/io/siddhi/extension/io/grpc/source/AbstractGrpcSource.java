@@ -263,7 +263,7 @@ public abstract class AbstractGrpcSource extends Source {
                 connectionCallback.onError(new ConnectionUnavailableException(siddhiAppContext.getName() + ":" +
                         streamID + ": Error when starting the server. ", e));
             }
-            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ":" + streamID + ": ", e);
+            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": " + streamID + ": ", e);
         }
     }
 
@@ -280,7 +280,7 @@ public abstract class AbstractGrpcSource extends Source {
             if (serverShutdownWaitingTimeInMillis != -1L) {
                 if (server.awaitTermination(serverShutdownWaitingTimeInMillis, TimeUnit.MILLISECONDS)) {
                     if (logger.isDebugEnabled()) {
-                        logger.debug(siddhiAppContext.getName() + ":" + streamID + ": Server stopped");
+                        logger.debug(siddhiAppContext.getName() + ": " + streamID + ": Server stopped");
                     }
                     return;
                 }
@@ -292,7 +292,7 @@ public abstract class AbstractGrpcSource extends Source {
                         "shutdown server");
             }
         } catch (InterruptedException e) {
-            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ":" + streamID + ": ", e);
+            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": " + streamID + ": ", e);
         }
     }
 }

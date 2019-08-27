@@ -21,7 +21,7 @@ package io.siddhi.extension.io.grpc.util;
  * Class to hold the constants used by gRPC sources and sinks
  */
 public class GrpcConstants {
-    public static final String PORT_HOST_SEPARATOR = ":";
+    public static final String SEMI_COLON_STRING = ":";
     public static final String PUBLISHER_URL = "publisher.url";
     public static final String RECEIVER_URL = "receiver.url";
     public static final String PORT_SERVICE_SEPARATOR = "/";
@@ -29,9 +29,9 @@ public class GrpcConstants {
     public static final String DEFAULT_METHOD_NAME_WITH_RESPONSE = "process";
     public static final String DEFAULT_METHOD_NAME_WITHOUT_RESPONSE = "consume";
     public static final String EMPTY_STRING = "";
-    public static final String STRING_SPACE = " ";
-    public static final String STRING_COMMA = ",";
-    public static final String STRING_INVERTED_COMMA = "'";
+    public static final String SPACE_STRING = " ";
+    public static final String COMMA_STRING = ",";
+    public static final String INVERTED_COMMA_STRING = "'";
     public static final String GRPC_PROTOCOL_NAME = "grpc";
     public static final String DUMMY_PROTOCOL_NAME = "http";
     public static final String DEFAULT_SERVICE_NAME = "EventService";
@@ -49,6 +49,8 @@ public class GrpcConstants {
     public static final String DEFAULT_TLS_STORE_TYPE = "JKS";
     public static final String KEYSTORE_ALGORITHM = "keystore.algorithm";
     public static final String TRUSTSTORE_ALGORITHM = "truststore.algorithm";
+    public static final String SEQUENCE_HEADER_KEY = "sequence";
+    public static final String METADATA = "metadata";
 
     public static final int PATH_SERVICE_NAME_POSITION = 0;
     public static final int PATH_METHOD_NAME_POSITION = 1;

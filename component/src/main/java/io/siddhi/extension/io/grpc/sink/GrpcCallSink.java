@@ -57,7 +57,7 @@ import java.util.concurrent.TimeUnit;
                 "A unique sink.id is used to correlate between the sink and its corresponding source.",
         parameters = {
                 @Parameter(
-                        name = "publisherurl",
+                        name = "publisher.url",
                         description = "The url to which the outgoing events should be published via this extension. " +
                                 "This url should consist the host address, port, service name, method name in the " +
                                 "following format. `grpc://0.0.0.0:9763/<serviceName>/<methodName>`" ,

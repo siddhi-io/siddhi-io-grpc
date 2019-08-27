@@ -31,6 +31,7 @@ import io.siddhi.core.util.config.ConfigReader;
 import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.core.util.transport.OptionHolder;
+import io.siddhi.extension.io.grpc.util.GrpcConstants;
 import io.siddhi.extension.io.grpc.util.GrpcSourceRegistry;
 import org.wso2.grpc.Event;
 
@@ -88,7 +89,7 @@ public class GrpcCallResponseSource extends Source {
                              SiddhiAppContext siddhiAppContext) {
         this.sourceEventListener = sourceEventListener;
         this.requestedTransportPropertyNames = requestedTransportPropertyNames.clone();
-        sinkID = optionHolder.validateAndGetOption("sink.id").getValue();
+        sinkID = optionHolder.validateAndGetOption(GrpcConstants.SINK_ID).getValue();
         GrpcSourceRegistry.getInstance().putGrpcCallResponseSource(sinkID, this);
         return null;
     }

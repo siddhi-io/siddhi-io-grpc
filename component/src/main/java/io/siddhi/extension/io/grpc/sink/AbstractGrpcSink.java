@@ -61,7 +61,6 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.isSequenceNamePresent;
  * {@code AbstractGrpcSink} is a super class extended by GrpcCallSink, and GrpcSink.
  * This provides most of the initialization implementations
  */
-
 public abstract class AbstractGrpcSink extends Sink {
     private static final Logger logger = Logger.getLogger(AbstractGrpcSink.class.getName());
     protected String siddhiAppName;
@@ -127,8 +126,8 @@ public abstract class AbstractGrpcSink extends Sink {
         if (optionHolder.isOptionExists(GrpcConstants.HEADERS)) {
             this.headersOption = optionHolder.validateAndGetOption(GrpcConstants.HEADERS);
         }
-        if (optionHolder.isOptionExists("metadata")) {
-            this.metadataOption = optionHolder.validateAndGetOption("metadata");
+        if (optionHolder.isOptionExists(GrpcConstants.METADATA)) {
+            this.metadataOption = optionHolder.validateAndGetOption(GrpcConstants.METADATA);
         }
         if (!url.startsWith(GrpcConstants.GRPC_PROTOCOL_NAME)) {
             throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID +
@@ -294,16 +293,16 @@ public abstract class AbstractGrpcSink extends Sink {
     public Event.Builder addHeadersToEventBuilder(DynamicOptions dynamicOptions, Event.Builder eventBuilder) {
         if (headersOption != null) {
             String headers = headersOption.getValue(dynamicOptions);
-            headers = headers.replaceAll("'", "");
-            String[] headersArray = headers.split(",");
+            headers = headers.replaceAll(GrpcConstants.INVERTED_COMMA_STRING, GrpcConstants.EMPTY_STRING);
+            String[] headersArray = headers.split(GrpcConstants.COMMA_STRING);
             for (String headerKeyValue: headersArray) {
-                String[] headerKeyValueArray = headerKeyValue.split(":");
+                String[] headerKeyValueArray = headerKeyValue.split(GrpcConstants.SEMI_COLON_STRING);
                 eventBuilder.putHeaders(headerKeyValueArray[0], headerKeyValueArray[1]);
             }
         }
 
         if (sequenceName != null) {
-            eventBuilder.putHeaders("sequence", sequenceName);
+            eventBuilder.putHeaders(GrpcConstants.SEQUENCE_HEADER_KEY, sequenceName);
         }
         return eventBuilder;
     }
@@ -311,10 +310,10 @@ public abstract class AbstractGrpcSink extends Sink {
     public AbstractStub attachMetaDataToStub(DynamicOptions dynamicOptions, AbstractStub stub) {
         Metadata metadata = new Metadata();
         String metadataString = metadataOption.getValue(dynamicOptions);
-        metadataString = metadataString.replaceAll("'", "");
-        String[] metadataArray = metadataString.split(",");
+        metadataString = metadataString.replaceAll(GrpcConstants.INVERTED_COMMA_STRING, GrpcConstants.EMPTY_STRING);
+        String[] metadataArray = metadataString.split(GrpcConstants.COMMA_STRING);
         for (String metadataKeyValue: metadataArray) {
-            String[] headerKeyValueArray = metadataKeyValue.split(":");
+            String[] headerKeyValueArray = metadataKeyValue.split(GrpcConstants.SEMI_COLON_STRING);
             metadata.put(Metadata.Key.of(headerKeyValueArray[0], Metadata.ASCII_STRING_MARSHALLER),
                     headerKeyValueArray[1]);
         }
