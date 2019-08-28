@@ -59,6 +59,6 @@ public class SourceServerInterceptor implements ServerInterceptor {
     if (logger.isDebugEnabled()) {
       logger.debug(siddhiAppContext.getName() + ":" + streamID + ": Metadata received: " + metaDataMap.toString());
     }
-    return Contexts.interceptCall(Context.ROOT, serverCall, metadata, serverCallHandler);
+    return Contexts.interceptCall(Context.ROOT, serverCall, metadata, serverCallHandler); //todo check if this line is there in the stacktrace when debugging reading from the threadlocal
   }
 }

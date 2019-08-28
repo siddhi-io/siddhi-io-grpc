@@ -59,7 +59,7 @@ import java.util.concurrent.TimeUnit;
                 @Parameter(
                         name = "publisher.url",
                         description = "The url to which the outgoing events should be published via this extension. " +
-                                "This url should consist the host address, port, service name, method name in the " +
+                                "This url should consist the host hostPort, port, service name, method name in the " +
                                 "following format. `grpc://0.0.0.0:9763/<serviceName>/<methodName>`" ,
                         type = {DataType.STRING}),
                 @Parameter(
@@ -203,7 +203,9 @@ import java.util.concurrent.TimeUnit;
                         "@sink(type='grpc-call',\n" +
                         "      publisher.url = 'grpc://194.23.98.100:8080/EventService/process',\n" +
                         "      sink.id= '1', @map(type='json'))\n" +
-                        "define stream FooStream (message String);\n",
+                        "define stream FooStream (message String);\n" +
+                        "@source(type='grpc-call-response', sink.id= '1')\n" +
+                                "define stream BarStream (message String);",
                         description = "" +
                                 "Here a stream named FooStream is defined with grpc sink. A grpc server " +
                                 "should be running at 194.23.98.100 listening to port 8080. sink.id is set to 1 here." +
@@ -315,7 +317,7 @@ public class GrpcCallSink extends AbstractGrpcSink {
             throw new SiddhiAppRuntimeException(siddhiAppName + ": " + streamID + ": For grpc-call sink " +
                     "to work a grpc-call-response source should be available with the same sink.id. In this case " +
                     "sink.id is " + sinkID + ". Please provide a grpc-call-response source with the sink.id " + sinkID);
-        }
+        } //todo same fixes as grpc sink
     }
 
     /**
@@ -324,7 +326,7 @@ public class GrpcCallSink extends AbstractGrpcSink {
      */
     @Override
     public void disconnect() {
-        try {
+        try { //todo same fixes as grpc sink
             if (channelTerminationWaitingTimeInMillis != -1L) {
                 channel.shutdown().awaitTermination(channelTerminationWaitingTimeInMillis, TimeUnit.MILLISECONDS);
             } else {

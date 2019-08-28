@@ -50,7 +50,7 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.extractHeaders;
                 @Parameter(
                         name = "receiver.url",
                         description = "The url which can be used by a client to access the grpc server in this " +
-                                "extension. This url should consist the host address, port, service name, method " +
+                                "extension. This url should consist the host hostPort, port, service name, method " +
                                 "name in the following format. `grpc://0.0.0.0:9763/<serviceName>/<methodName>`" ,
                         type = {DataType.STRING}),
                 @Parameter(
@@ -161,14 +161,15 @@ public class GrpcSource extends AbstractGrpcSource {
                         logger.error("server thread is: " + Thread.currentThread().getId());
                         try {
                             sourceEventListener.onEvent(request.getPayload(), extractHeaders(request.getHeadersMap(),
-                                    metaDataMap.get(), requestedTransportPropertyNames));
-                            metaDataMap.remove();
+                                    metaDataMap.get(), requestedTransportPropertyNames)); //todo: do this onEvent in a worker thread. user set threadpool parameter and buffer size
                             responseObserver.onNext(Empty.getDefaultInstance());
                             responseObserver.onCompleted();
                         } catch (SiddhiAppRuntimeException e) {
                             logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request. "
                                     + e.getMessage());
                             responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
+                        } finally {
+                            metaDataMap.remove();
                         }
                     }
                 }

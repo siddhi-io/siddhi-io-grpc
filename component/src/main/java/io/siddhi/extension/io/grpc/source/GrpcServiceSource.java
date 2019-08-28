@@ -60,7 +60,7 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.extractHeaders;
                 @Parameter(
                         name = "receiver.url",
                         description = "The url which can be used by a client to access the grpc server in this " +
-                                "extension. This url should consist the host address, port, service name, method " +
+                                "extension. This url should consist the host hostPort, port, service name, method " +
                                 "name in the following format. `grpc://0.0.0.0:9763/<serviceName>/<methodName>`" ,
                         type = {DataType.STRING}),
                 @Parameter(

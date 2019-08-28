@@ -52,8 +52,8 @@ import java.util.concurrent.TimeUnit;
                 @Parameter(
                         name = "publisher.url",
                         description = "The url to which the outgoing events should be published via this extension. " +
-                                "This url should consist the host address, port, service name, method name in the " +
-                                "following format. `grpc://0.0.0.0:9763/<serviceName>/<methodName>`" ,
+                                "This url should consist the host hostPort, port, service name, method name in the " +
+                                "following format. `grpc://0.0.0.0:9763/<serviceName>/<methodName>`" , //todo: give example
                         type = {DataType.STRING}),
                 @Parameter(
                         name = "headers",
@@ -132,7 +132,7 @@ import java.util.concurrent.TimeUnit;
                                 "is enabled" ,
                         type = {DataType.STRING},
                         optional = true,
-                        defaultValue = "-"),
+                        defaultValue = "-"), //todo: add enable trust store and enable keystore two flags in sink params. if enabled carbon jks i default
                 @Parameter(
                         name = "truststore.password",
                         description = "the password of truststore. If this is provided then the integrity of the " +
@@ -238,13 +238,13 @@ public class GrpcSink extends AbstractGrpcSink {
 
                 @Override //todo latch based error???
                 public void onError(Throwable t) { //parent method doest have error in its signature. so cant throw
-                    // from here
+                    // from here todo
 //                    if (((StatusRuntimeException) t).getStatus().getCode().equals(Status.UNAVAILABLE)) {
 //                        throw new ConnectionUnavailableException(siddhiAppName.getName() + ": " + streamID + ": "
 //                        + t.getMessage());
 //                    }
                     logger.error(siddhiAppName + ":" + streamID + ": " + t.getMessage() + " caused by "
-                            + t.getCause());
+                            + t.getCause(), t); //todo: all exceptions t.getmessage, and pass throwable
                 }
 
                 @Override
@@ -270,6 +270,9 @@ public class GrpcSink extends AbstractGrpcSink {
         if (!channel.isShutdown()) {
             logger.info(siddhiAppName + ": gRPC service on " + streamID + " has successfully connected to "
                     + url);
+        } else {
+            throw new ConnectionUnavailableException(siddhiAppName + ": gRPC service on" + streamID + " could not " +
+                    "connect to " + url);
         }
     }
 
@@ -280,15 +283,15 @@ public class GrpcSink extends AbstractGrpcSink {
     @Override
     public void disconnect() {
         try {
-            if (channelTerminationWaitingTimeInMillis != -1L) {
+            if (channelTerminationWaitingTimeInMillis > 0L) {
                 channel.shutdown().awaitTermination(channelTerminationWaitingTimeInMillis, TimeUnit.MILLISECONDS);
             } else {
                 channel.shutdown();
             }
             channel = null;
         } catch (InterruptedException e) {
-            throw new SiddhiAppRuntimeException(siddhiAppName + ": " + streamID + ": Error in shutting " +
-                    "down the channel. ", e);
+            logger.error(siddhiAppName + ": " + streamID + ": Error in shutting " + "down the channel. " +
+                    e.getMessage(), e);
         }
     }
 }

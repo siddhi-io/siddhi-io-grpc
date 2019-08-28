@@ -15,22 +15,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-syntax = "proto3";
+package io.siddhi.extension.io.grpc.util;
 
-option java_multiple_files = true;
-option java_package = "org.wso2.grpc";
-
-package org.wso2.grpc.eventservice;
-
-import "google/protobuf/empty.proto";
-
-service EventService {
-    rpc process(Event) returns (Event) {} //todo check if streaming calls is faster than individual rpcs
-
-    rpc consume(Event) returns (google.protobuf.Empty) {}
-}
-
-message Event {
-    string payload = 1;
-    map<string, string> headers = 2;
+public class GrpcServerConfigs {
+    private String url;
+    private String
 }

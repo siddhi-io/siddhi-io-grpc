@@ -59,7 +59,7 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getServiceName;
  * This is an abstract class extended by GrpcSource and GrpcServiceSource. This provides most of initialization
  * implementations common for both sources
  */
-public abstract class AbstractGrpcSource extends Source {
+public abstract class AbstractGrpcSource extends Source { //todo: have thread workers and handover to the worker after receiving from source
     protected SiddhiAppContext siddhiAppContext;
     protected SourceEventListener sourceEventListener;
     private String url;
@@ -98,21 +98,21 @@ public abstract class AbstractGrpcSource extends Source {
             this.serverShutdownWaitingTimeInMillis = Long.parseLong(optionHolder.validateAndGetOption(
                     GrpcConstants.SERVER_SHUTDOWN_WAITING_TIME).getValue());
         }
-        this.url = optionHolder.validateAndGetOption(GrpcConstants.RECEIVER_URL).getValue();
-        if (!url.startsWith(GrpcConstants.GRPC_PROTOCOL_NAME)) {
-            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID + ": The url must " +
-                    "begin with \"" + GrpcConstants.GRPC_PROTOCOL_NAME + "\" for all grpc sinks");
-        }
-        URL aURL;
-        try {
-            aURL = new URL(GrpcConstants.DUMMY_PROTOCOL_NAME + url.substring(4));
-        } catch (MalformedURLException e) {
-            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID +
-                    ": Error in URL format. Expected format is `grpc://0.0.0.0:9763/<serviceName>/<methodName>` but " +
-                    "the provided url is " + url + ". ", e);
-        }
-        this.serviceName = getServiceName(aURL.getPath());
-        this.port = aURL.getPort();
+//        this.url = optionHolder.validateAndGetOption(GrpcConstants.RECEIVER_URL).getValue();
+//        if (!url.startsWith(GrpcConstants.GRPC_PROTOCOL_NAME)) {
+//            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID + ": The url must " +
+//                    "begin with \"" + GrpcConstants.GRPC_PROTOCOL_NAME + "\" for all grpc sinks");
+//        }
+//        URL aURL;
+//        try {
+//            aURL = new URL(GrpcConstants.DUMMY_PROTOCOL_NAME + url.substring(4));
+//        } catch (MalformedURLException e) {
+//            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID +
+//                    ": Error in URL format. Expected format is `grpc://0.0.0.0:9763/<serviceName>/<methodName>` but " +
+//                    "the provided url is " + url + ". ", e);
+//        }
+//        this.serviceName = getServiceName(aURL.getPath());
+//        this.port = aURL.getPort();
         initSource(optionHolder, requestedTransportPropertyNames);
         this.serverInterceptor = new SourceServerInterceptor(siddhiAppContext, streamID);
 
@@ -147,26 +147,26 @@ public abstract class AbstractGrpcSource extends Source {
         }
 
         //ServerBuilder parameters
-        serverBuilder = NettyServerBuilder.forPort(port);
-        if (keystoreFilePath != null) {
-            try {
-                SslContextBuilder sslContextBuilder = getSslContextBuilder(keystoreFilePath, keystorePassword,
-                        keystoreAlgorithm, tlsStoreType);
-                if (truststoreFilePath != null) {
-                    sslContextBuilder = addTrustStore(truststoreFilePath, truststorePassword, truststoreAlgorithm,
-                            sslContextBuilder, tlsStoreType).clientAuth(ClientAuth.REQUIRE);
-                }
-                serverBuilder.sslContext(sslContextBuilder.build());
-            } catch (IOException | CertificateException | NoSuchAlgorithmException | UnrecoverableKeyException |
-                    KeyStoreException e) {
-                throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " + streamID + ": Error while " +
-                        "creating SslContext. ", e);
-            }
-        }
-        serverBuilder.maxInboundMessageSize(Integer.parseInt(optionHolder.getOrCreateOption(
-                GrpcConstants.MAX_INBOUND_MESSAGE_SIZE, GrpcConstants.MAX_INBOUND_MESSAGE_SIZE_DEFAULT).getValue()));
-        serverBuilder.maxInboundMetadataSize(Integer.parseInt(optionHolder.getOrCreateOption(
-                GrpcConstants.MAX_INBOUND_METADATA_SIZE, GrpcConstants.MAX_INBOUND_METADATA_SIZE_DEFAULT).getValue()));
+//        serverBuilder = NettyServerBuilder.forPort(port);
+//        if (keystoreFilePath != null) {
+//            try {
+//                SslContextBuilder sslContextBuilder = getSslContextBuilder(keystoreFilePath, keystorePassword,
+//                        keystoreAlgorithm, tlsStoreType);
+//                if (truststoreFilePath != null) {
+//                    sslContextBuilder = addTrustStore(truststoreFilePath, truststorePassword, truststoreAlgorithm,
+//                            sslContextBuilder, tlsStoreType).clientAuth(ClientAuth.REQUIRE);
+//                }
+//                serverBuilder.sslContext(sslContextBuilder.build());
+//            } catch (IOException | CertificateException | NoSuchAlgorithmException | UnrecoverableKeyException |
+//                    KeyStoreException e) {
+//                throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " + streamID + ": Error while " +
+//                        "creating SslContext. ", e);
+//            }
+//        }
+//        serverBuilder.maxInboundMessageSize(Integer.parseInt(optionHolder.getOrCreateOption(
+//                GrpcConstants.MAX_INBOUND_MESSAGE_SIZE, GrpcConstants.MAX_INBOUND_MESSAGE_SIZE_DEFAULT).getValue()));
+//        serverBuilder.maxInboundMetadataSize(Integer.parseInt(optionHolder.getOrCreateOption(
+//                GrpcConstants.MAX_INBOUND_METADATA_SIZE, GrpcConstants.MAX_INBOUND_METADATA_SIZE_DEFAULT).getValue()));
 
         if (serviceName.equals(GrpcConstants.DEFAULT_SERVICE_NAME)) {
                 this.isDefaultMode = true;
@@ -174,7 +174,8 @@ public abstract class AbstractGrpcSource extends Source {
         } else {
 
         }
-        this.serviceDeploymentInfo = new ServiceDeploymentInfo(port, false);
+        this.serviceDeploymentInfo = new ServiceDeploymentInfo(port, truststoreFilePath != null ||
+                keystoreFilePath != null);
         return null;
     }
 

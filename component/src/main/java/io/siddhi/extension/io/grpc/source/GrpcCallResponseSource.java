@@ -58,7 +58,11 @@ import java.util.Map;
         examples = {
                 @Example(syntax = "" +
                         "@source(type='grpc-call-response', sink.id= '1')\n" +
-                        "define stream BarStream (message String);",
+                        "define stream BarStream (message String);" +
+                        "@sink(type='grpc-call',\n" +
+                        "      publisher.url = 'grpc://194.23.98.100:8080/EventService/process',\n" +
+                        "      sink.id= '1', @map(type='json'))\n" +
+                        "define stream FooStream (message String);\n",
                         description = "Here we are listening to responses  for requests sent from the sink with " +
                                 "sink.id 1 will be received here. The results will be injected into BarStream"
                 )
@@ -107,7 +111,7 @@ public class GrpcCallResponseSource extends Source {
             if (siddhiRequestEventData.containsKey(requestedTransportPropertyNames[i])) {
                 transportProperties[i] = siddhiRequestEventData.get(requestedTransportPropertyNames[i]);
             }
-        }
+        } //todo: check if we are not getting the requested transport properties. do valid in init
         return transportProperties;
     }
 
