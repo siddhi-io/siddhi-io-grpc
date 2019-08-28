@@ -35,6 +35,7 @@ public class GrpcConstants {
     public static final String GRPC_PROTOCOL_NAME = "grpc";
     public static final String DUMMY_PROTOCOL_NAME = "http";
     public static final String DEFAULT_SERVICE_NAME = "EventService";
+    public static final String DEFAULT_FULLY_QUALIFIED_SERVICE_NAME = "org.wso2.grpc.EventService";
     public static final String SINK_TYPE_OPTION = "type";
     public static final String GRPC_CALL_SINK_NAME = "grpc-call";
     public static final String GRPC_SERVICE_RESPONSE_SINK_NAME = "grpc-service-response";

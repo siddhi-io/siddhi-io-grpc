@@ -19,13 +19,18 @@ package io.siddhi.extension.io.grpc.util;
 
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 import io.grpc.netty.shaded.io.netty.handler.ssl.ClientAuth;
 import io.grpc.netty.shaded.io.netty.handler.ssl.SslContextBuilder;
 import io.siddhi.core.exception.SiddhiAppCreationException;
 import org.apache.log4j.Logger;
 
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.TrustManagerFactory;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
@@ -61,4 +66,35 @@ public class GrpcDefaultServer {
 
     }
 
+    private SslContextBuilder getSslContextBuilder(String filePath, String password, String algorithm, String storeType)
+            throws KeyStoreException, NoSuchAlgorithmException, CertificateException,
+            UnrecoverableKeyException {
+        char[] passphrase = password.toCharArray();
+        KeyStore keyStore = KeyStore.getInstance(storeType);
+        try (FileInputStream fis = new FileInputStream(filePath)) {
+            keyStore.load(fis, passphrase);
+        } catch (IOException e) {
+            throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " + streamID + ": ", e);
+        }
+        KeyManagerFactory kmf = KeyManagerFactory.getInstance(algorithm);
+        kmf.init(keyStore, passphrase);
+        SslContextBuilder sslContextBuilder = SslContextBuilder.forServer(kmf);
+        sslContextBuilder = GrpcSslContexts.configure(sslContextBuilder);
+        return sslContextBuilder;
+    }
+
+    private SslContextBuilder addTrustStore(String filePath, String password, String algorithm,
+                                            SslContextBuilder sslContextBuilder, String storeType)
+            throws NoSuchAlgorithmException, KeyStoreException, CertificateException {
+        char[] passphrase = password.toCharArray();
+        KeyStore keyStore = KeyStore.getInstance(storeType);
+        try (FileInputStream fis = new FileInputStream(filePath)) {
+            keyStore.load(fis, passphrase);
+        } catch (IOException e) {
+            throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " + streamID + ": ", e);
+        }
+        TrustManagerFactory tmf = TrustManagerFactory.getInstance(algorithm);
+        tmf.init(keyStore);
+        return sslContextBuilder.trustManager(tmf).clientAuth(ClientAuth.REQUIRE);
+    }
 }

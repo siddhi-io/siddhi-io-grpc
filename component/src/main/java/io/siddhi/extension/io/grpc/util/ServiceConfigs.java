@@ -25,7 +25,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 public class ServiceConfigs {
@@ -35,10 +34,10 @@ public class ServiceConfigs {
     private String methodName;
     private String hostPort;
     private String sequenceName;
-    private boolean isDefaultService;
+    private boolean isDefaultService = false;
+    private String fullyQualifiedServiceName;
 
-    public ServiceConfigs(String url, OptionHolder optionHolder, SiddhiAppContext siddhiAppContext, String streamID) {
-        this.url = url;
+    public ServiceConfigs(OptionHolder optionHolder, SiddhiAppContext siddhiAppContext, String streamID) {
         this.url = optionHolder.validateAndGetOption(GrpcConstants.RECEIVER_URL).getValue();
         if (!url.startsWith(GrpcConstants.GRPC_PROTOCOL_NAME)) {
             throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID + ": The url must " +
@@ -52,52 +51,57 @@ public class ServiceConfigs {
                     ": Error in URL format. Expected format is `grpc://0.0.0.0:9763/<serviceName>/<methodName>` but " +
                     "the provided url is " + url + ". ", e);
         }
-        this.serviceName = getServiceName(aURL.getPath());
         this.port = aURL.getPort();
-        this.methodName = getMethodName(aURL.getPath());
         this.hostPort = aURL.getAuthority();
 
-        if (serviceName.equals(GrpcConstants.DEFAULT_SERVICE_NAME)) {
-            this.isDefaultService = true;
-            if (isSequenceNamePresent(aURL.getPath())) {
-                this.sequenceName = getSequenceName(aURL.getPath());
+        List<String> urlPathParts = new ArrayList<>(Arrays.asList(aURL.getPath().substring(1).split(GrpcConstants
+                .PORT_SERVICE_SEPARATOR)));
+        if (urlPathParts.contains(GrpcConstants.EMPTY_STRING)) {
+            throw new SiddhiAppValidationException("Malformed URL. There should not be any empty parts in the URL " +
+                    "between two '/'");
+        }
+        if (urlPathParts.size() < 2) {
+            //todo set to default
+        } else {
+            this.methodName = urlPathParts.get(GrpcConstants.PATH_METHOD_NAME_POSITION);
+            this.fullyQualifiedServiceName = urlPathParts.get(GrpcConstants.PATH_SERVICE_NAME_POSITION);
+            String[] fullyQualifiedServiceNameParts = fullyQualifiedServiceName.split("\\.");
+            this.serviceName = fullyQualifiedServiceNameParts[fullyQualifiedServiceNameParts.length - 1];
+            if (fullyQualifiedServiceName.equalsIgnoreCase(GrpcConstants.DEFAULT_FULLY_QUALIFIED_SERVICE_NAME)) {
+                isDefaultService = true;
+                if (urlPathParts.size() == 3) {
+                    this.sequenceName = urlPathParts.get(GrpcConstants.PATH_SEQUENCE_NAME_POSITION);
+                }
             }
         }
     }
 
-    public static String getServiceName(String path) {
-        List<String> urlParts = new ArrayList<>(Arrays.asList(path.substring(1).split(GrpcConstants
-                .PORT_SERVICE_SEPARATOR)));
-        if (urlParts.contains(GrpcConstants.EMPTY_STRING)) {
-            throw new SiddhiAppValidationException("Malformed URL. There should not be any empty parts in the URL " +
-                    "between two '/'");
-        }
-        if (urlParts.size() < 2) { //todo: if user gives only sequence then infer eventswervice and method
-            throw new SiddhiAppValidationException("Malformed URL. After port number at least two sections should " +
-                    "be available separated by '/' as in 'grpc://<host>:<port>/<ServiceName>/<MethodName>'");
-        }
-        String[] fullyQualifiedServiceNameParts = urlParts.get(GrpcConstants.PATH_SERVICE_NAME_POSITION).split("\\.");
-        return fullyQualifiedServiceNameParts[fullyQualifiedServiceNameParts.length - 1];
+    public String getServiceName() {
+        return serviceName;
     }
 
-    public static String getMethodName(String path) { //todo: extract service name method name and give as an object
-        List<String> urlParts = new ArrayList<>(Arrays.asList(path.split(GrpcConstants.PORT_SERVICE_SEPARATOR)));
-        urlParts.removeAll(Collections.singletonList(GrpcConstants.EMPTY_STRING));
-        if (urlParts.size() < GrpcConstants.PATH_METHOD_NAME_POSITION) {
-            return null;
-        }
-        return urlParts.get(GrpcConstants.PATH_METHOD_NAME_POSITION);
+    public int getPort() {
+        return port;
     }
 
-    public static String getSequenceName(String path) {
-        List<String> urlParts = new ArrayList<>(Arrays.asList(path.split(GrpcConstants.PORT_SERVICE_SEPARATOR)));
-        urlParts.removeAll(Collections.singletonList(GrpcConstants.EMPTY_STRING));
-        return urlParts.get(GrpcConstants.PATH_SEQUENCE_NAME_POSITION);
+    public String getMethodName() {
+        return methodName;
     }
 
-    public static boolean isSequenceNamePresent(String path) {
-        List<String> urlParts = new ArrayList<>(Arrays.asList(path.split(GrpcConstants.PORT_SERVICE_SEPARATOR)));
-        urlParts.removeAll(Collections.singletonList(GrpcConstants.EMPTY_STRING));
-        return urlParts.size() == 3;
+    public String getHostPort() {
+        return hostPort;
     }
+
+    public String getSequenceName() {
+        return sequenceName;
+    }
+
+    public boolean isDefaultService() {
+        return isDefaultService;
+    }
+
+//    @Override
+//    public boolean equals(Object obj) {
+//
+//    }
 }

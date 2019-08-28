@@ -17,7 +17,42 @@
  */
 package io.siddhi.extension.io.grpc.util;
 
+import io.siddhi.core.config.SiddhiAppContext;
+import io.siddhi.core.exception.SiddhiAppCreationException;
+import io.siddhi.core.util.transport.OptionHolder;
+
 public class GrpcServerConfigs {
-    private String url;
-    private String
+    private ServiceConfigs serviceConfigs;
+    private String truststoreFilePath = null;
+    private String truststorePassword = null;
+    private String keystoreFilePath = null;
+    private String keystorePassword = null;
+    private String truststoreAlgorithm = null;
+    private String keystoreAlgorithm = null;
+    private String tlsStoreType = null;
+
+    public GrpcServerConfigs(OptionHolder optionHolder, SiddhiAppContext siddhiAppContext, String streamID) {
+        this.serviceConfigs = new ServiceConfigs(optionHolder, siddhiAppContext, streamID);
+        if (optionHolder.isOptionExists(GrpcConstants.KEYSTORE_FILE)) {
+            keystoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_FILE).getValue();
+            keystorePassword = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_PASSWORD).getValue();
+            keystoreAlgorithm = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_ALGORITHM).getValue();
+            tlsStoreType = optionHolder.getOrCreateOption(GrpcConstants.TLS_STORE_TYPE,
+                    GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
+        }
+
+        if (optionHolder.isOptionExists(GrpcConstants.TRUSTSTORE_FILE)) {
+            if (!optionHolder.isOptionExists(GrpcConstants.KEYSTORE_FILE)) {
+                throw new SiddhiAppCreationException(siddhiAppContext.getName() + ":" + streamID + ": Truststore " +
+                        "configurations given without keystore configurations. Please provide keystore");
+            }
+            truststoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_FILE).getValue();
+            if (optionHolder.isOptionExists(GrpcConstants.TRUSTSTORE_PASSWORD)) {
+                truststorePassword = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_PASSWORD).getValue();
+            }
+            truststoreAlgorithm = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_ALGORITHM).getValue();
+            tlsStoreType = optionHolder.getOrCreateOption(GrpcConstants.TLS_STORE_TYPE,
+                    GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
+        }
+    }
 }

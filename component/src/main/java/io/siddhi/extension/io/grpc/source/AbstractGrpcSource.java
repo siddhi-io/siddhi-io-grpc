@@ -34,6 +34,7 @@ import io.siddhi.core.util.config.ConfigReader;
 import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
+import io.siddhi.extension.io.grpc.util.ServiceConfigs;
 import io.siddhi.extension.io.grpc.util.SourceServerInterceptor;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.log4j.Logger;
@@ -72,6 +73,7 @@ public abstract class AbstractGrpcSource extends Source { //todo: have thread wo
     protected String streamID;
     private ServiceDeploymentInfo serviceDeploymentInfo;
     public static ThreadLocal<Map<String, String>> metaDataMap = new ThreadLocal<>();
+    private ServiceConfigs serviceConfigs;
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
@@ -98,53 +100,39 @@ public abstract class AbstractGrpcSource extends Source { //todo: have thread wo
             this.serverShutdownWaitingTimeInMillis = Long.parseLong(optionHolder.validateAndGetOption(
                     GrpcConstants.SERVER_SHUTDOWN_WAITING_TIME).getValue());
         }
-//        this.url = optionHolder.validateAndGetOption(GrpcConstants.RECEIVER_URL).getValue();
-//        if (!url.startsWith(GrpcConstants.GRPC_PROTOCOL_NAME)) {
-//            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID + ": The url must " +
-//                    "begin with \"" + GrpcConstants.GRPC_PROTOCOL_NAME + "\" for all grpc sinks");
-//        }
-//        URL aURL;
-//        try {
-//            aURL = new URL(GrpcConstants.DUMMY_PROTOCOL_NAME + url.substring(4));
-//        } catch (MalformedURLException e) {
-//            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID +
-//                    ": Error in URL format. Expected format is `grpc://0.0.0.0:9763/<serviceName>/<methodName>` but " +
-//                    "the provided url is " + url + ". ", e);
-//        }
-//        this.serviceName = getServiceName(aURL.getPath());
-//        this.port = aURL.getPort();
+//        this.serviceConfigs = new ServiceConfigs(optionHolder, siddhiAppContext, streamID);
         initSource(optionHolder, requestedTransportPropertyNames);
         this.serverInterceptor = new SourceServerInterceptor(siddhiAppContext, streamID);
 
-        String truststoreFilePath = null;
-        String truststorePassword = null;
-        String keystoreFilePath = null;
-        String keystorePassword = null;
-        String truststoreAlgorithm = null;
-        String keystoreAlgorithm = null;
-        String tlsStoreType = null;
-
-        if (optionHolder.isOptionExists(GrpcConstants.KEYSTORE_FILE)) {
-            keystoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_FILE).getValue();
-            keystorePassword = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_PASSWORD).getValue();
-            keystoreAlgorithm = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_ALGORITHM).getValue();
-            tlsStoreType = optionHolder.getOrCreateOption(GrpcConstants.TLS_STORE_TYPE,
-                    GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
-        }
-
-        if (optionHolder.isOptionExists(GrpcConstants.TRUSTSTORE_FILE)) {
-            if (!optionHolder.isOptionExists(GrpcConstants.KEYSTORE_FILE)) {
-                throw new SiddhiAppCreationException(siddhiAppContext.getName() + ":" + streamID + ": Truststore " +
-                        "configurations given without keystore configurations. Please provide keystore");
-            }
-            truststoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_FILE).getValue();
-            if (optionHolder.isOptionExists(GrpcConstants.TRUSTSTORE_PASSWORD)) {
-                truststorePassword = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_PASSWORD).getValue();
-            }
-            truststoreAlgorithm = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_ALGORITHM).getValue();
-            tlsStoreType = optionHolder.getOrCreateOption(GrpcConstants.TLS_STORE_TYPE,
-                    GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
-        }
+//        String truststoreFilePath = null;
+//        String truststorePassword = null;
+//        String keystoreFilePath = null;
+//        String keystorePassword = null;
+//        String truststoreAlgorithm = null;
+//        String keystoreAlgorithm = null;
+//        String tlsStoreType = null;
+//
+//        if (optionHolder.isOptionExists(GrpcConstants.KEYSTORE_FILE)) {
+//            keystoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_FILE).getValue();
+//            keystorePassword = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_PASSWORD).getValue();
+//            keystoreAlgorithm = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_ALGORITHM).getValue();
+//            tlsStoreType = optionHolder.getOrCreateOption(GrpcConstants.TLS_STORE_TYPE,
+//                    GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
+//        }
+//
+//        if (optionHolder.isOptionExists(GrpcConstants.TRUSTSTORE_FILE)) {
+//            if (!optionHolder.isOptionExists(GrpcConstants.KEYSTORE_FILE)) {
+//                throw new SiddhiAppCreationException(siddhiAppContext.getName() + ":" + streamID + ": Truststore " +
+//                        "configurations given without keystore configurations. Please provide keystore");
+//            }
+//            truststoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_FILE).getValue();
+//            if (optionHolder.isOptionExists(GrpcConstants.TRUSTSTORE_PASSWORD)) {
+//                truststorePassword = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_PASSWORD).getValue();
+//            }
+//            truststoreAlgorithm = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_ALGORITHM).getValue();
+//            tlsStoreType = optionHolder.getOrCreateOption(GrpcConstants.TLS_STORE_TYPE,
+//                    GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
+//        }
 
         //ServerBuilder parameters
 //        serverBuilder = NettyServerBuilder.forPort(port);
@@ -168,12 +156,12 @@ public abstract class AbstractGrpcSource extends Source { //todo: have thread wo
 //        serverBuilder.maxInboundMetadataSize(Integer.parseInt(optionHolder.getOrCreateOption(
 //                GrpcConstants.MAX_INBOUND_METADATA_SIZE, GrpcConstants.MAX_INBOUND_METADATA_SIZE_DEFAULT).getValue()));
 
-        if (serviceName.equals(GrpcConstants.DEFAULT_SERVICE_NAME)) {
-                this.isDefaultMode = true;
-                initializeGrpcServer(port);
-        } else {
-
-        }
+//        if (serviceName.equals(GrpcConstants.DEFAULT_SERVICE_NAME)) {
+//                this.isDefaultMode = true;
+//                initializeGrpcServer(port);
+//        } else {
+//
+//        }
         this.serviceDeploymentInfo = new ServiceDeploymentInfo(port, truststoreFilePath != null ||
                 keystoreFilePath != null);
         return null;
