@@ -50,6 +50,8 @@ import java.util.concurrent.TimeUnit;
 
 import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRPCmethodList;
 
+
+
 /**
  * {@code GrpcCallSink} Handle the gRPC publishing tasks and injects response into grpc-call-response source.
  */
@@ -228,6 +230,22 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRPCmethodList;
                         description = "Here with the same FooStream definition we have added a BarStream which has " +
                                 "a grpc-call-response source with the same sink.id 1. So the responses for calls " +
                                 "sent from the FooStream will be added to BarStream."
+                ),
+                @Example(syntax = "" +
+                        "@sink(type='grpc-call',\n" +
+                        "      publisher.url = 'grpc://194.23.98.100:8888/org.wso2.grpc.test.MyService/process',\n" +
+                        "      sink.id= '1', @map(type='protobuf'))\n" +
+                        "define stream FooStream (stringValue string, intValue int,longValue long,booleanValue " +
+                        "bool,floatValue float,doubleValue double);\n" +
+                        "\n" +
+                        "@source(type='grpc-call-response', sink.id= '1')\n" +
+                        "define stream FooStream (stringValue string, intValue int,longValue long,booleanValue bool," +
+                        "floatValue float,doubleValue double);",
+                        description = "Here with the same FooStream definition we have added a BarStream which has " +
+                                "a grpc-call-response source with the same sink.id 1. So the responses for calls " +
+                                "sent from the FooStream will be added to BarStream. since there is no mapping " +
+                                "available stream definition attributes names should be as same as the attributes of " +
+                                "the protobuf message definition"
                 )
         }
 )
@@ -394,3 +412,4 @@ public class GrpcCallSink extends AbstractGrpcSink {
         }
     }
 }
+

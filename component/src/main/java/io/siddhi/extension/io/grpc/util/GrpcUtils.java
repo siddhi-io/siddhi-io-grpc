@@ -82,7 +82,8 @@ public class GrpcUtils {
         List headersArrayList = Arrays.asList(headersArray);
         if (headersArrayList.contains(null)) {
             throw new SiddhiAppRuntimeException("Requested transport property '" +
-                requestedTransportPropertyNames[headersArrayList.indexOf(null)] + "' not present in received event");
+                    requestedTransportPropertyNames[headersArrayList.indexOf(null)] + "' not present in received " +
+                    "event");
         }
         return headersArray;
     }
@@ -94,7 +95,7 @@ public class GrpcUtils {
             throw new SiddhiAppValidationException("Malformed URL. There should not be any empty parts in the URL " +
                     "between two '/'");
         }
-        if (urlParts.size() < 2) { //todo: if user gives only sequence then infer eventswervice and method
+        if (urlParts.size() < 2) {
             throw new SiddhiAppValidationException("Malformed URL. After port number at least two sections should " +
                     "be available separated by '/' as in 'grpc://<host>:<port>/<ServiceName>/<MethodName>'");
         }
@@ -124,12 +125,14 @@ public class GrpcUtils {
         }
         return null;
     }
-    public static List<String> getRPCmethodList(String serviceReference, String siddhiAppName) { //require full serviceName
+
+    public static List<String> getRPCmethodList(String serviceReference, String siddhiAppName) { //require full
+        // serviceName
         List<String> rpcMethodNameList = new ArrayList<>();
         String blockingStubReference = serviceReference + GrpcConstants.GRPC_PROTOCOL_NAME_UPPERCAMELCASE
-                + GrpcConstants.DOLLAR_SIGN + serviceReference +GrpcConstants.BLOCKING_STUB_NAME;
+                + GrpcConstants.DOLLAR_SIGN + serviceReference + GrpcConstants.BLOCKING_STUB_NAME;
         String[] serviceReferenceArray = serviceReference.split("\\.");
-        String serviceName = serviceReferenceArray[serviceReference.length()-1];
+        String serviceName = serviceReferenceArray[serviceReference.length() - 1];
         Method[] methodsInBlockingStub; // the place where
         try {
             methodsInBlockingStub = Class.forName(blockingStubReference).getMethods();
@@ -139,9 +142,9 @@ public class GrpcUtils {
         }
         // ClassNotFound Exception will be thrown
         for (Method method : methodsInBlockingStub) {
-            if (method.getDeclaringClass().getName().equals(blockingStubReference)) // check if the method belogs
+            if (method.getDeclaringClass().getName().equals(blockingStubReference)) { // check if the method belogs
             // to blocking stub, other methods that does not belongs to blocking stub are not rpc methods
-            {
+
                 rpcMethodNameList.add(method.getName());
             }
         }

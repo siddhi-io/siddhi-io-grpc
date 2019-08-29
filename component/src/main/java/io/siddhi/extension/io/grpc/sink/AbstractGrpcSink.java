@@ -52,8 +52,12 @@ import java.util.concurrent.TimeUnit;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.TrustManagerFactory;
 
-import static io.siddhi.extension.io.grpc.util.GrpcUtils.*;
+import static io.siddhi.extension.io.grpc.util.GrpcUtils.getFullServiceName;
+import static io.siddhi.extension.io.grpc.util.GrpcUtils.getMethodName;
 import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRequestClass;
+import static io.siddhi.extension.io.grpc.util.GrpcUtils.getSequenceName;
+import static io.siddhi.extension.io.grpc.util.GrpcUtils.getServiceName;
+import static io.siddhi.extension.io.grpc.util.GrpcUtils.isSequenceNamePresent;
 
 /**
  * {@code AbstractGrpcSink} is a super class extended by GrpcCallSink, and GrpcSink.
@@ -74,7 +78,6 @@ public abstract class AbstractGrpcSink extends Sink {
     protected ManagedChannelBuilder managedChannelBuilder;
     protected long channelTerminationWaitingTimeInMillis = -1L;
     protected StreamDefinition streamDefinition;
-
     protected Class requestClass;
     protected String serviceReference;
 
@@ -82,6 +85,7 @@ public abstract class AbstractGrpcSink extends Sink {
      * Returns the list of classes which this sink can consume.
      * Based on the type of the sink, it may be limited to being able to publish specific type of classes.
      * For example, a sink of type file can only write objects of type String .
+     *
      * @return array of supported classes , if extension can support of any types of classes
      * then return empty array .
      */
@@ -111,11 +115,12 @@ public abstract class AbstractGrpcSink extends Sink {
     /**
      * The initialization method for {@link Sink}, will be called before other methods. It used to validate
      * all configurations and to get initial values.
-     * @param streamDefinition  containing stream definition bind to the {@link Sink}
-     * @param optionHolder            Option holder containing static and dynamic configuration related
-     *                                to the {@link Sink}
-     * @param configReader        to read the sink related system configuration.
-     * @param siddhiAppContext        the context of the {@link io.siddhi.query.api.SiddhiApp} used to
+     *
+     * @param streamDefinition containing stream definition bind to the {@link Sink}
+     * @param optionHolder     Option holder containing static and dynamic configuration related
+     *                         to the {@link Sink}
+     * @param configReader     to read the sink related system configuration.
+     * @param siddhiAppContext the context of the {@link io.siddhi.query.api.SiddhiApp} used to
      */
     @Override
     protected StateFactory init(StreamDefinition streamDefinition, OptionHolder optionHolder, ConfigReader configReader,
@@ -246,10 +251,11 @@ public abstract class AbstractGrpcSink extends Sink {
         } else {
             this.serviceReference = getFullServiceName(aURL.getPath());
             try {
-                this.requestClass = getRequestClass(serviceReference,methodName);
+                this.requestClass = getRequestClass(serviceReference, methodName);
             } catch (ClassNotFoundException e) {
                 throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " +
-                        "Invalid service name provided in the url, provided service name : '" + serviceReference + "'", e);
+                        "Invalid service name provided in the url, provided service name : '" + serviceReference +
+                        "'", e);
             }
         }
         initSink(optionHolder);
@@ -302,7 +308,7 @@ public abstract class AbstractGrpcSink extends Sink {
             String headers = headersOption.getValue(dynamicOptions);
             headers = headers.replaceAll(GrpcConstants.INVERTED_COMMA_STRING, GrpcConstants.EMPTY_STRING);
             String[] headersArray = headers.split(GrpcConstants.COMMA_STRING);
-            for (String headerKeyValue: headersArray) {
+            for (String headerKeyValue : headersArray) {
                 String[] headerKeyValueArray = headerKeyValue.split(GrpcConstants.SEMI_COLON_STRING);
                 eventBuilder.putHeaders(headerKeyValueArray[0], headerKeyValueArray[1]);
             }
@@ -319,7 +325,7 @@ public abstract class AbstractGrpcSink extends Sink {
         String metadataString = metadataOption.getValue(dynamicOptions);
         metadataString = metadataString.replaceAll(GrpcConstants.INVERTED_COMMA_STRING, GrpcConstants.EMPTY_STRING);
         String[] metadataArray = metadataString.split(GrpcConstants.COMMA_STRING);
-        for (String metadataKeyValue: metadataArray) {
+        for (String metadataKeyValue : metadataArray) {
             String[] headerKeyValueArray = metadataKeyValue.split(GrpcConstants.SEMI_COLON_STRING);
             metadata.put(Metadata.Key.of(headerKeyValueArray[0], Metadata.ASCII_STRING_MARSHALLER),
                     headerKeyValueArray[1]);

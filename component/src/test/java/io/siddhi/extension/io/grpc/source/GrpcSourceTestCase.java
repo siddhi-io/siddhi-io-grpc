@@ -325,12 +325,12 @@ public class GrpcSourceTestCase {
 
 
     @Test
-    public void test2() throws Exception {
+    public void genericTestCase01() throws Exception {
         logger.info("Test case to call process");
         logger.setLevel(Level.DEBUG);
         SiddhiManager siddhiManager = new SiddhiManager();
 
-        String stream2 = "@source(type='grpc', receiver.url='grpc://localhost:8888/org.wso2.grpc.test" +
+        String stream2 = "@source(type='grpc', receiver.url='grpc://localhost:8898/org.wso2.grpc.test" +
                 ".MyService/send', " +
                 "@map(type='protobuf'," +
                 " @attributes(a = 'stringValue', b = 'intValue', c = 'longValue',d = 'booleanValue', e ='floatValue'," +
@@ -359,7 +359,7 @@ public class GrpcSourceTestCase {
                 }
             }
         });
-        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888")
+        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8898")
                 .usePlaintext().build();
         Request request = Request.newBuilder()
                 .setStringValue("Test 01")
@@ -378,12 +378,12 @@ public class GrpcSourceTestCase {
     }
 
     @Test
-    public void test3() throws Exception {
+    public void genericTestCase02() throws Exception {
         logger.info("Test case to call process");
         logger.setLevel(Level.DEBUG);
         SiddhiManager siddhiManager = new SiddhiManager();
 
-        String stream2 = "@source(type='grpc', receiver.url='grpc://localhost:8888/org.wso2.grpc.test" +
+        String stream2 = "@source(type='grpc', receiver.url='grpc://localhost:8899/org.wso2.grpc.test" +
                 ".MyService/send', " +
                 "@map(type='protobuf')) " +
                 "define stream BarStream (stringValue string, intValue int,longValue long,booleanValue bool," +
@@ -411,7 +411,7 @@ public class GrpcSourceTestCase {
                 }
             }
         });
-        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888")
+        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8899")
                 .usePlaintext().build();
         Request request = Request.newBuilder()
                 .setStringValue("Test 01")

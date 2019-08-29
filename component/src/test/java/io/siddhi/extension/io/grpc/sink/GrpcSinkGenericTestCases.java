@@ -20,22 +20,14 @@ package io.siddhi.extension.io.grpc.sink;
 import io.siddhi.core.SiddhiAppRuntime;
 import io.siddhi.core.SiddhiManager;
 import io.siddhi.core.stream.input.InputHandler;
-import io.siddhi.core.util.persistence.InMemoryPersistenceStore;
 import io.siddhi.extension.io.grpc.utils.GenericTestServer;
-import io.siddhi.extension.io.grpc.utils.TestAppender;
-import io.siddhi.extension.io.grpc.utils.TestServer;
-import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.apache.log4j.spi.LoggingEvent;
-import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 public class GrpcSinkGenericTestCases {
     private static final Logger log = Logger.getLogger(GrpcSinkTestCase.class.getName());
@@ -52,7 +44,7 @@ public class GrpcSinkGenericTestCases {
     }
 
     @Test
-    public void test3() throws Exception {
+    public void test1() throws Exception {
         log.info("Test case to call send");
         log.setLevel(Level.DEBUG);
         SiddhiManager siddhiManager = new SiddhiManager();

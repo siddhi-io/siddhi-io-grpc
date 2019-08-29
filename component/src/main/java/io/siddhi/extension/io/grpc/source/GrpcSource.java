@@ -21,7 +21,6 @@ import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Empty;
 import io.grpc.Server;
-import io.grpc.ServerBuilder;
 import io.grpc.ServerInterceptors;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
@@ -61,69 +60,69 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRPCmethodList;
                         name = "receiver.url",
                         description = "The url which can be used by a client to access the grpc server in this " +
                                 "extension. This url should consist the host address, port, service name, method " +
-                                "name in the following format. `grpc://0.0.0.0:9763/<serviceName>/<methodName>`" ,
+                                "name in the following format. `grpc://0.0.0.0:9763/<serviceName>/<methodName>`",
                         type = {DataType.STRING}),
                 @Parameter(
                         name = "max.inbound.message.size",
-                        description = "Sets the maximum message size in bytes allowed to be received on the server." ,
+                        description = "Sets the maximum message size in bytes allowed to be received on the server.",
                         type = {DataType.INT},
                         optional = true,
                         defaultValue = "4194304"),
                 @Parameter(
                         name = "max.inbound.metadata.size",
-                        description = "Sets the maximum size of metadata in bytes allowed to be received." ,
+                        description = "Sets the maximum size of metadata in bytes allowed to be received.",
                         type = {DataType.INT},
                         optional = true,
                         defaultValue = "8192"),
                 @Parameter(
                         name = "server.shutdown.waiting.time",
                         description = "The time in seconds to wait for the server to shutdown, giving up " +
-                                "if the timeout is reached." ,
+                                "if the timeout is reached.",
                         type = {DataType.LONG},
                         optional = true,
                         defaultValue = "5"),
                 @Parameter(
                         name = "truststore.file",
                         description = "the file path of truststore. If this is provided then server authentication " +
-                                "is enabled" ,
+                                "is enabled",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "-"),
                 @Parameter(
                         name = "truststore.password",
                         description = "the password of truststore. If this is provided then the integrity of the " +
-                                "keystore is checked" ,
+                                "keystore is checked",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "-"),
                 @Parameter(
                         name = "truststore.algorithm",
-                        description = "the encryption algorithm to be used for server authentication" ,
+                        description = "the encryption algorithm to be used for server authentication",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "-"),
                 @Parameter(
                         name = "tls.store.type",
-                        description = "TLS store type" ,
+                        description = "TLS store type",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "-"),
                 @Parameter(
                         name = "keystore.file",
                         description = "the file path of keystore. If this is provided then client authentication " +
-                                "is enabled" ,
+                                "is enabled",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "-"),
                 @Parameter(
                         name = "keystore.password",
-                        description = "the password of keystore" ,
+                        description = "the password of keystore",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "-"),
                 @Parameter(
                         name = "keystore.algorithm",
-                        description = "the encryption algorithm to be used for client authentication" ,
+                        description = "the encryption algorithm to be used for client authentication",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "-"),
@@ -131,7 +130,7 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRPCmethodList;
         examples = {
                 @Example(syntax = "" +
                         "@source(type='grpc',\n" +
-                        "       receiver.url='grpc://locanhost:8888/org.wso2.grpc.EventService/consume',\n" +
+                        "       receiver.url='grpc://194.23.98.100:8888/org.wso2.grpc.EventService/consume',\n" +
                         "       @map(type='json'))\n" +
                         "define stream BarStream (message String);",
                         description = "Here the port is given as 8888. So a grpc server will be started on port 8888 " +
@@ -140,12 +139,21 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRPCmethodList;
                 ),
                 @Example(syntax = "" +
                         "@source(type='grpc',\n" +
-                        "       receiver.url='grpc://locanhost:8888/org.wso2.grpc.EventService/consume',\n" +
+                        "       receiver.url='grpc://194.23.98.100:8888/org.wso2.grpc.EventService/consume',\n" +
                         "       @map(type='json', @attributes(name='trp:name', age='trp:age', message='message')))\n" +
                         "define stream BarStream (message String, name String, age int);",
                         description = "Here we are getting headers sent with the request as transport properties and " +
                                 "injecting them into the stream. With each request a header will be sent in MetaData " +
                                 "in the following format: 'Name:John', 'Age:23'"
+                ),
+                @Example(syntax = "" +
+                        "@source(type='grpc',\n" +
+                        "       receiver.url='grpc://194.23.98.100:8888/org.wso2.grpc.test.MyService/send',\n" +
+                        "       @map(type='protobuf', ))\n" +
+                        "define stream BarStream (stringValue string, intValue int,longValue long,booleanValue bool," +
+                        "floatValue float,doubleValue double);",
+                        description = "Here the port is give as 8888. So a grpc server will be started on port 8888 " +
+                                "and sever will be keep listening to the 'send method in the 'MyService' service."
                 )
         }
 )
@@ -159,31 +167,33 @@ public class GrpcSource extends AbstractGrpcSource {
         if (isDefaultMode) {
             this.server = serverBuilder.addService(ServerInterceptors.intercept(
                     new EventServiceGrpc.EventServiceImplBase() {
-                @Override
-                public void consume(Event request,
-                                    StreamObserver<Empty> responseObserver) {
-                    if (request.getPayload() == null) {
-                        logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request due to " +
-                                "missing payload ");
-                        responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
+                        @Override
+                        public void consume(Event request,
+                                            StreamObserver<Empty> responseObserver) {
+                            if (request.getPayload() == null) {
+                                logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request due to" +
+                                        " " +
+                                        "missing payload ");
+                                responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
 
-                    } else {
-                        logger.error("server thread is: " + Thread.currentThread().getId());
-                        try {
-                            sourceEventListener.onEvent(request.getPayload(), extractHeaders(request.getHeadersMap(),
-                                    metaDataMap.get(), requestedTransportPropertyNames));
-                            responseObserver.onNext(Empty.getDefaultInstance());
-                            responseObserver.onCompleted();
-                        } catch (SiddhiAppRuntimeException e) {
-                            logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request. "
-                                    + e.getMessage(), e);
-                            responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
-                        } finally {
-                            metaDataMap.remove();
+                            } else {
+                                logger.error("server thread is: " + Thread.currentThread().getId());
+                                try {
+                                    sourceEventListener.onEvent(request.getPayload(),
+                                            extractHeaders(request.getHeadersMap(),
+                                            metaDataMap.get(), requestedTransportPropertyNames));
+                                    responseObserver.onNext(Empty.getDefaultInstance());
+                                    responseObserver.onCompleted();
+                                } catch (SiddhiAppRuntimeException e) {
+                                    logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request. "
+                                            + e.getMessage(), e);
+                                    responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
+                                } finally {
+                                    metaDataMap.remove();
+                                }
+                            }
                         }
-                    }
-                }
-            }, serverInterceptor)).build();
+                    }, serverInterceptor)).build();
         } else {
 
             GenericServiceClass.setServiceName(serviceName);
@@ -196,18 +206,19 @@ public class GrpcSource extends AbstractGrpcSource {
                         Method parseFrom = requestClass.getDeclaredMethod(GrpcConstants.PARSE_FROM_METHOD_NAME,
                                 ByteString.class);
                         requestObject = parseFrom.invoke(requestClass, request.toByteString());
-                    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) { //todo handle exception
-                        throw new SiddhiAppCreationException(siddhiAppContext.getName() +":"+streamID+ ": Invalid method name provided " +
+                    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                        throw new SiddhiAppCreationException(siddhiAppContext.getName() + ":" + streamID + ": Invalid" +
+                                " method name provided " +
                                 "in the url," +
                                 " provided method name : '" + methodName + "' expected one of these methods : " +
                                 getRPCmethodList(serviceReference, siddhiAppContext.getName()), e);
                     }
                     sourceEventListener.onEvent(requestObject, null);
-                    responseObserver.onNext(Empty.getDefaultInstance()); //todo don't send anything
+                    responseObserver.onNext(Empty.getDefaultInstance());
                     responseObserver.onCompleted();
                 }
             };
-            this.server = ServerBuilder.forPort(port).addService(service).build(); // TODO: 8/26/19 remove serverBuilder
+            this.server = serverBuilder.addService(ServerInterceptors.intercept(service, serverInterceptor)).build();
         }
     }
 

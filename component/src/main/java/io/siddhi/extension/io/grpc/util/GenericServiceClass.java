@@ -33,7 +33,6 @@ public class GenericServiceClass {
     private static String serviceName = "";
     private static String nonEmptyResponseMethodName = "";
     private static String emptyResponseMethodName = "";
-    // if we have 2 empty responses
     private static volatile io.grpc.ServiceDescriptor serviceDescriptor;
     private static volatile io.grpc.MethodDescriptor<Any, Empty> handleEmptyResponse;
     private static volatile io.grpc.MethodDescriptor<Any, Any> getHandleNonEmptyResponse;
@@ -68,11 +67,6 @@ public class GenericServiceClass {
         return result;
     }
 
-    @io.grpc.stub.annotations.RpcMethod(
-            fullMethodName = "serviceName" + '/' + "emptyResponse",//not relevant the methodName
-            requestType = Any.class,
-            responseType = Empty.class,
-            methodType = io.grpc.MethodDescriptor.MethodType.UNARY)
     public static io.grpc.MethodDescriptor<Any,
             Empty> getHandleEmptyResponse() {
         io.grpc.MethodDescriptor<Any, Empty> getNoResponseMethod;
@@ -83,12 +77,14 @@ public class GenericServiceClass {
                             io.grpc.MethodDescriptor.<Any, Empty>newBuilder()
                                     .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
                                     .setFullMethodName(generateFullMethodName(
-                                            serviceName, emptyResponseMethodName)) //todo ====
+                                            serviceName, emptyResponseMethodName))
                                     .setSampledToLocalTracing(true)
-                                    .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(Any.getDefaultInstance()))
+                                    .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.
+                                            marshaller(Any.getDefaultInstance()))
                                     .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
                                             Empty.getDefaultInstance()))
-                                    .setSchemaDescriptor(new AnyServiceMethodDescriptorSupplier(emptyResponseMethodName))
+                                    .setSchemaDescriptor(
+                                            new AnyServiceMethodDescriptorSupplier(emptyResponseMethodName))
                                     .build();
                 }
             }
@@ -96,7 +92,6 @@ public class GenericServiceClass {
         return getNoResponseMethod;
     }
 
-    //todo remove all anotations
     public static io.grpc.MethodDescriptor<Any,
             Any> getHandleNonEmptyResponse() {
         io.grpc.MethodDescriptor<Any, Any> getDetail;
@@ -107,12 +102,14 @@ public class GenericServiceClass {
                             io.grpc.MethodDescriptor.<Any, Any>newBuilder()
                                     .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
                                     .setFullMethodName(generateFullMethodName(
-                                            serviceName, nonEmptyResponseMethodName))//todo ====
+                                            serviceName, nonEmptyResponseMethodName))
                                     .setSampledToLocalTracing(true)
-                                    .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(Any.getDefaultInstance()))
+                                    .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.
+                                            marshaller(Any.getDefaultInstance()))
                                     .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
                                             Any.getDefaultInstance()))
-                                    .setSchemaDescriptor(new AnyServiceMethodDescriptorSupplier(nonEmptyResponseMethodName))
+                                    .setSchemaDescriptor(
+                                            new AnyServiceMethodDescriptorSupplier(nonEmptyResponseMethodName))
                                     .build();
                 }
             }
@@ -120,7 +117,7 @@ public class GenericServiceClass {
         return getDetail;
     }
 
-    private static abstract class AnyServiceBaseDescriptorSupplier
+    private abstract static class AnyServiceBaseDescriptorSupplier
             implements io.grpc.protobuf.ProtoFileDescriptorSupplier, io.grpc.protobuf.ProtoServiceDescriptorSupplier {
         AnyServiceBaseDescriptorSupplier() {
         }
@@ -133,7 +130,7 @@ public class GenericServiceClass {
 
         @Override
         public Descriptors.ServiceDescriptor getServiceDescriptor() {
-            return getFileDescriptor().findServiceByName(serviceName);//todo get service name from url
+            return getFileDescriptor().findServiceByName(serviceName);
         }
     }
 
@@ -149,7 +146,6 @@ public class GenericServiceClass {
 
         private final String methodName;
 
-
         AnyServiceMethodDescriptorSupplier(String methodName) {
             this.methodName = methodName;
         }
@@ -159,9 +155,6 @@ public class GenericServiceClass {
             return getServiceDescriptor().findMethodByName(methodName); //return  null
         }
     }
-
-
-    //=================================== ===========================
 
     private static final class MethodHandlers<Req, Resp> implements io.grpc.stub.ServerCalls.UnaryMethod<Req, Resp>,
             io.grpc.stub.ServerCalls.ServerStreamingMethod<Req, Resp>,
@@ -204,11 +197,11 @@ public class GenericServiceClass {
         }
     }
 
-
-    public static abstract class AnyServiceImplBase implements io.grpc.BindableService {
-
-        public void handleEmptyResponse(Any request,
-                                        io.grpc.stub.StreamObserver<Empty> responseObserver) {
+    /**
+     * Generic ImplBase class of the GenericServiceClass
+     */
+    public abstract static class AnyServiceImplBase implements io.grpc.BindableService {
+        public void handleEmptyResponse(Any request, io.grpc.stub.StreamObserver<Empty> responseObserver) {
             asyncUnimplementedUnaryCall(getHandleEmptyResponse(), responseObserver);
         }
 

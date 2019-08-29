@@ -51,7 +51,7 @@ public class GrpcCallSinkGenericTestCase {
     }
 
     @Test
-    public void test3() throws Exception {
+    public void testCase01() throws Exception {
         logger.info("Test case to call process sending 1 requests");
         logger.setLevel(Level.DEBUG);
         SiddhiManager siddhiManager = new SiddhiManager();
@@ -81,7 +81,6 @@ public class GrpcCallSinkGenericTestCase {
                 EventPrinter.print(timeStamp, inEvents, removeEvents);
                 for (int i = 0; i < inEvents.length; i++) {
                     eventCount.incrementAndGet();
-                    System.out.println(inEvents[i]);
                     switch (i) {
                         case 0:
                             Assert.assertEquals((String) inEvents[i].getData()[0], "Test 01");

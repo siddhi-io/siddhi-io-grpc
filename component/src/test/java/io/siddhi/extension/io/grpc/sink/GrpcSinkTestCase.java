@@ -21,7 +21,6 @@ import io.siddhi.core.SiddhiAppRuntime;
 import io.siddhi.core.SiddhiManager;
 import io.siddhi.core.stream.input.InputHandler;
 import io.siddhi.core.util.persistence.InMemoryPersistenceStore;
-import io.siddhi.extension.io.grpc.utils.GenericTestServer;
 import io.siddhi.extension.io.grpc.utils.TestAppender;
 import io.siddhi.extension.io.grpc.utils.TestServer;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
@@ -359,19 +358,6 @@ public class GrpcSinkTestCase {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
         server.start();
-
-        final List<LoggingEvent> log = appender.getLog();
-        List<String> logMessages = new ArrayList<>();
-        for (LoggingEvent logEvent : log) {
-            String message = String.valueOf(logEvent.getMessage());
-            if (message.contains("FooStream: ")) {
-                message = message.split("FooStream: ")[1];
-            }
-            logMessages.add(message);
-        }
-        Assert.assertTrue(logMessages.contains("UNAVAILABLE: io exception caused by io.grpc.netty.shaded.io.netty" +
-                ".channel.AbstractChannel$AnnotatedConnectException: Connection refused: localhost/0:0:0:0:0:0:0:1" +
-                ":8888"));
     }
 
     @Test
