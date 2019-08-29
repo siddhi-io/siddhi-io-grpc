@@ -52,7 +52,7 @@ import java.util.Map;
                         description = "a unique ID that should be set for each grpc-call source. There is a 1:1 " +
                                 "mapping between grpc-call sinks and grpc-call-response sources. Each sink has one " +
                                 "particular source listening to the responses to requests published from that sink. " +
-                                "So the same sink.id should be given when writing the sink also." ,
+                                "So the same sink.id should be given when writing the sink also.",
                         type = {DataType.INT}),
         },
         examples = {
@@ -77,6 +77,7 @@ public class GrpcCallResponseSource extends Source {
     /**
      * The initialization method for {@link Source}, will be called before other methods. It used to validate
      * all configurations and to get initial values.
+     *
      * @param sourceEventListener After receiving events, the source should trigger onEvent() of this listener.
      *                            Listener will then pass on the events to the appropriate mappers for processing .
      * @param optionHolder        Option holder containing static configuration related to the {@link Source}
@@ -99,9 +100,24 @@ public class GrpcCallResponseSource extends Source {
                 siddhiRequestEventData));
     }
 
+    public void onResponse(Object response, Map<String, String> siddhiRequestEventData) {
+        sourceEventListener.onEvent(response, getTransportProperties(siddhiRequestEventData));
+    }
+
     private String[] getTransportProperties(Map<String, String> headersMap,
                                             Map<String, String> siddhiRequestEventData) {
         siddhiRequestEventData.putAll(headersMap);
+        String[] transportProperties = new String[requestedTransportPropertyNames.length];
+        for (int i = 0; i < requestedTransportPropertyNames.length; i++) {
+            if (siddhiRequestEventData.containsKey(requestedTransportPropertyNames[i])) {
+                transportProperties[i] = siddhiRequestEventData.get(requestedTransportPropertyNames[i]);
+            }
+        }
+        return transportProperties;
+    }
+
+    private String[] getTransportProperties(Map<String, String> siddhiRequestEventData) { //overloaded method for
+        // generic grpc
         String[] transportProperties = new String[requestedTransportPropertyNames.length];
         for (int i = 0; i < requestedTransportPropertyNames.length; i++) {
             if (siddhiRequestEventData.containsKey(requestedTransportPropertyNames[i])) {

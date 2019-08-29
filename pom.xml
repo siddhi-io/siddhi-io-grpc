@@ -113,6 +113,12 @@
                 <version>${testng.version}</version>
                 <scope>test</scope>
             </dependency>
+            <dependency>
+                <groupId>io.siddhi.extension.map.protobuf</groupId>
+                <artifactId>siddhi-map-protobuf</artifactId>
+                <version>1.0.0-SNAPSHOT</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
     <build>

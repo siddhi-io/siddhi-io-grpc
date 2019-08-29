@@ -53,25 +53,32 @@ import java.util.concurrent.TimeUnit;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.TrustManagerFactory;
 
+import static io.siddhi.extension.io.grpc.util.GrpcUtils.getFullServiceName;
+import static io.siddhi.extension.io.grpc.util.GrpcUtils.getMethodName;
+import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRequestClass;
 import static io.siddhi.extension.io.grpc.util.GrpcUtils.getServiceName;
+
 
 /**
  * This is an abstract class extended by GrpcSource and GrpcServiceSource. This provides most of initialization
  * implementations common for both sources
  */
 public abstract class AbstractGrpcSource extends Source {
+    public static ThreadLocal<Map<String, String>> metaDataMap = new ThreadLocal<>();
     protected SiddhiAppContext siddhiAppContext;
     protected SourceEventListener sourceEventListener;
-    private String url;
-    private String serviceName;
+    protected String serviceName;
     protected boolean isDefaultMode;
-    private int port;
     protected SourceServerInterceptor serverInterceptor;
     protected NettyServerBuilder serverBuilder;
     protected long serverShutdownWaitingTimeInMillis = -1L;
     protected String streamID;
+    protected Class requestClass;
+    protected String methodName;
+    protected String serviceReference;
+    private String url;
+    private int port;
     private ServiceDeploymentInfo serviceDeploymentInfo;
-    public static ThreadLocal<Map<String, String>> metaDataMap = new ThreadLocal<>();
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
@@ -81,6 +88,7 @@ public abstract class AbstractGrpcSource extends Source {
     /**
      * The initialization method for {@link Source}, will be called before other methods. It used to validate
      * all configurations and to get initial values.
+     *
      * @param sourceEventListener After receiving events, the source should trigger onEvent() of this listener.
      *                            Listener will then pass on the events to the appropriate mappers for processing .
      * @param optionHolder        Option holder containing static configuration related to the {@link Source}
@@ -169,10 +177,21 @@ public abstract class AbstractGrpcSource extends Source {
                 GrpcConstants.MAX_INBOUND_METADATA_SIZE, GrpcConstants.MAX_INBOUND_METADATA_SIZE_DEFAULT).getValue()));
 
         if (serviceName.equals(GrpcConstants.DEFAULT_SERVICE_NAME)) {
-                this.isDefaultMode = true;
-                initializeGrpcServer(port);
+            this.isDefaultMode = true;
+            initializeGrpcServer(port);
         } else {
-
+            serviceReference = getFullServiceName(aURL.getPath());
+            methodName = getMethodName(aURL.getPath());
+            String[] serviceReferenceArray = this.serviceReference.split("\\.");
+            this.serviceName = serviceReferenceArray[serviceReferenceArray.length - 1];
+            initializeGrpcServer(port);
+            try {
+                requestClass = getRequestClass(serviceReference, methodName); //change the name
+            } catch (ClassNotFoundException e) {
+                throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " +
+                        "Invalid service name provided in the url, provided service name : '" + serviceReference +
+                        "'", e);
+            }
         }
         this.serviceDeploymentInfo = new ServiceDeploymentInfo(port, false);
         return null;
