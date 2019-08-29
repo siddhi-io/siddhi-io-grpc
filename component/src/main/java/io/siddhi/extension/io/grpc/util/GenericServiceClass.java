@@ -29,8 +29,6 @@ import static io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall;
  * {@code GenericServiceClass} Work as a generic service to handle rpc calls that send non-empty responses and empty
  * responses.
  */
-
-
 public class GenericServiceClass {
     private static String serviceName = "";
     private static String nonEmptyResponseMethodName = "";

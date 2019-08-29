@@ -35,6 +35,8 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
+import org.wso2.grpc.test.MyServiceGrpc;
+import org.wso2.grpc.test.Request;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -319,5 +321,111 @@ public class GrpcSourceTestCase {
 
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(stream1 + stream2 + query);
         siddhiAppRuntime.start();
+    }
+
+
+    @Test
+    public void test2() throws Exception {
+        logger.info("Test case to call process");
+        logger.setLevel(Level.DEBUG);
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String stream2 = "@source(type='grpc', receiver.url='grpc://localhost:8888/org.wso2.grpc.test" +
+                ".MyService/send', " +
+                "@map(type='protobuf'," +
+                " @attributes(a = 'stringValue', b = 'intValue', c = 'longValue',d = 'booleanValue', e ='floatValue'," +
+                "f ='doubleValue'), class = 'org.wso2.grpc.test.Request'))" +
+                "define stream FooStream (a string ,c long,b int, d bool,e float,f double);";
+        String query = "@info(name = 'query') "
+                + "from FooStream "
+                + "select *  "
+                + "insert into outputStream;";
+
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(stream2 + query);
+        siddhiAppRuntime.addCallback("query", new QueryCallback() {
+            @Override
+            public void receive(long timeStamp, io.siddhi.core.event.Event[] inEvents,
+                                io.siddhi.core.event.Event[] removeEvents) {
+                EventPrinter.print(timeStamp, inEvents, removeEvents);
+                for (int i = 0; i < inEvents.length; i++) {
+                    eventCount.incrementAndGet();
+                    switch (i) {
+                        case 0:
+                            Assert.assertEquals((String) inEvents[i].getData()[0], "Test 01");
+                            break;
+                        default:
+                            Assert.fail();
+                    }
+                }
+            }
+        });
+        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888")
+                .usePlaintext().build();
+        Request request = Request.newBuilder()
+                .setStringValue("Test 01")
+                .setIntValue(100)
+                .setBooleanValue(false)
+                .setDoubleValue(168.4567)
+                .setFloatValue(45.345f)
+                .setLongValue(1000000L)
+                .build();
+        MyServiceGrpc.MyServiceBlockingStub blockingStub = MyServiceGrpc.newBlockingStub(channel);
+        siddhiAppRuntime.start();
+        blockingStub.send(request);
+
+        Thread.sleep(1000);
+        siddhiAppRuntime.shutdown();
+    }
+
+    @Test
+    public void test3() throws Exception {
+        logger.info("Test case to call process");
+        logger.setLevel(Level.DEBUG);
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String stream2 = "@source(type='grpc', receiver.url='grpc://localhost:8888/org.wso2.grpc.test" +
+                ".MyService/send', " +
+                "@map(type='protobuf')) " +
+                "define stream BarStream (stringValue string, intValue int,longValue long,booleanValue bool," +
+                "floatValue float,doubleValue double);";
+        String query = "@info(name = 'query') "
+                + "from BarStream "
+                + "select *  "
+                + "insert into outputStream;";
+
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(stream2 + query);
+        siddhiAppRuntime.addCallback("query", new QueryCallback() {
+            @Override
+            public void receive(long timeStamp, io.siddhi.core.event.Event[] inEvents,
+                                io.siddhi.core.event.Event[] removeEvents) {
+                EventPrinter.print(timeStamp, inEvents, removeEvents);
+                for (int i = 0; i < inEvents.length; i++) {
+                    eventCount.incrementAndGet();
+                    switch (i) {
+                        case 0:
+                            Assert.assertEquals((String) inEvents[i].getData()[0], "Test 01");
+                            break;
+                        default:
+                            Assert.fail();
+                    }
+                }
+            }
+        });
+        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888")
+                .usePlaintext().build();
+        Request request = Request.newBuilder()
+                .setStringValue("Test 01")
+                .setIntValue(100)
+                .setBooleanValue(false)
+                .setDoubleValue(168.4567)
+                .setFloatValue(45.345f)
+                .setLongValue(1000000L)
+                .build();
+        MyServiceGrpc.MyServiceBlockingStub blockingStub = MyServiceGrpc.newBlockingStub(channel);
+        siddhiAppRuntime.start();
+        blockingStub.send(request);
+
+        Thread.sleep(1000);
+        siddhiAppRuntime.shutdown();
     }
 }

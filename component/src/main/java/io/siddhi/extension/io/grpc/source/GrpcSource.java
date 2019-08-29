@@ -30,6 +30,7 @@ import io.siddhi.annotation.Extension;
 import io.siddhi.annotation.Parameter;
 import io.siddhi.annotation.util.DataType;
 import io.siddhi.core.exception.ConnectionUnavailableException;
+import io.siddhi.core.exception.SiddhiAppCreationException;
 import io.siddhi.core.exception.SiddhiAppRuntimeException;
 import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.transport.OptionHolder;
@@ -43,6 +44,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import static io.siddhi.extension.io.grpc.util.GrpcUtils.extractHeaders;
+import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRPCmethodList;
 
 /**
  * This handles receiving requests from grpc clients and populating the stream
@@ -196,7 +198,10 @@ public class GrpcSource extends AbstractGrpcSource {
                                 ByteString.class);
                         requestObject = parseFrom.invoke(requestClass, request.toByteString());
                     } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) { //todo handle exception
-
+                        throw new SiddhiAppCreationException(siddhiAppContext.getName() +":"+streamID+ ": Invalid method name provided " +
+                                "in the url," +
+                                " provided method name : '" + methodName + "' expected one of these methods : " +
+                                getRPCmethodList(serviceReference, siddhiAppContext.getName()), e);
                     }
                     sourceEventListener.onEvent(requestObject, null);
                     responseObserver.onNext(Empty.getDefaultInstance()); //todo don't send anything
