@@ -185,8 +185,7 @@ public class GrpcSource extends AbstractGrpcSource {
                 }
             }, serverInterceptor)).build();
         } else {
-            String[] serviceReferenceArray = super.serviceReference.split("\\.");
-            String serviceName = serviceReferenceArray[serviceReferenceArray.length-1];
+
             GenericServiceClass.setServiceName(serviceName);
             GenericServiceClass.setEmptyResponseMethodName(super.methodName);
             GenericServiceClass.AnyServiceImplBase service = new GenericServiceClass.AnyServiceImplBase() {

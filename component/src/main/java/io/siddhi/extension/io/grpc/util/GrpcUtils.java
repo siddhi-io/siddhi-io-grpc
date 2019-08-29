@@ -75,7 +75,7 @@ public class GrpcUtils {
             if (headersMap.containsKey(requestedTransportPropertyNames[i])) {
                 headersArray[i] = headersMap.get(requestedTransportPropertyNames[i]);
             }
-            if (metaDataMap.containsKey(requestedTransportPropertyNames[i])) {
+            if (metaDataMap != null && metaDataMap.containsKey(requestedTransportPropertyNames[i])) {
                 headersArray[i] = metaDataMap.get(requestedTransportPropertyNames[i]);
             }
         }

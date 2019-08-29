@@ -63,7 +63,7 @@ public abstract class AbstractGrpcSource extends Source {
     protected SiddhiAppContext siddhiAppContext;
     protected SourceEventListener sourceEventListener;
     private String url;
-    private String serviceName;
+    protected String serviceName;
     protected boolean isDefaultMode;
     private int port;
     protected SourceServerInterceptor serverInterceptor;
@@ -178,6 +178,8 @@ public abstract class AbstractGrpcSource extends Source {
         } else {
             serviceReference = getFullServiceName(aURL.getPath());
             methodName = getMethodName(aURL.getPath());
+            String[] serviceReferenceArray = this.serviceReference.split("\\.");
+            this.serviceName = serviceReferenceArray[serviceReferenceArray.length-1];
             initializeGrpcServer(port);
             try {
                 requestClass = getRequestClass(serviceReference,methodName); //change the name

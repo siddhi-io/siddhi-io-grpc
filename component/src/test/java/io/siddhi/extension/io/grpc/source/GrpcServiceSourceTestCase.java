@@ -33,6 +33,9 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
+import org.wso2.grpc.test.MyServiceGrpc;
+import org.wso2.grpc.test.Request;
+import org.wso2.grpc.test.Response;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -412,5 +415,80 @@ public class GrpcServiceSourceTestCase {
         }
         Assert.assertTrue(logMessages.contains("Dropping request. Requested transport property 'age' not present in " +
                 "received event"));
+    }
+
+
+    @Test
+    public void testToCallProcess_1() throws Exception {
+        logger.info("Test case to call process");
+        logger.setLevel(Level.DEBUG);
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String stream1 = "@source(type='grpc-service', " +
+                "receiver.url='grpc://localhost:8888/org.wso2.grpc.test.MyService/process', source.id='1', " +
+                "@map(type='protobuf' , " +
+                "@attributes(messageId='trp:message.id', a = 'stringValue', b = 'intValue', c = 'longValue',d = 'booleanValue', e = 'floatValue', f ='doubleValue'))) " +
+                "define stream FooStream (a string,messageId string, b int,c long,d bool,e float,f double);";
+
+        String stream2 = "@sink(type='grpc-service-response', " +
+                "publisher.url='grpc://localhost:8888/org.wso2.grpc.test.MyService/process', source.id='1', " +
+                "message.id='{{messageId}}', " +
+                "@map(type='protobuf'," +
+                "@payload(stringValue='a',intValue='b',longValue='c',booleanValue='d',floatValue = 'e', doubleValue = 'f'))) " +
+                "define stream BarStream (a string,messageId string, b int,c long,d bool,e float,f double);";
+        String query = "@info(name = 'query') "
+                + "from FooStream "
+                + "select a,messageId,b*2 as b, c*2 as c,d,e*100 as e,f*4 as f "
+                + "insert into BarStream;";
+// TODO: 8/8/19 either user have to define the messageId in the first field or user has to provide the payload
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(stream1 + stream2 + query);
+        siddhiAppRuntime.addCallback("query", new QueryCallback() {
+            @Override
+            public void receive(long timeStamp, io.siddhi.core.event.Event[] inEvents,
+                                io.siddhi.core.event.Event[] removeEvents) {
+                EventPrinter.print(timeStamp, inEvents, removeEvents);
+                for (int i = 0; i < inEvents.length; i++) {
+                    eventCount.incrementAndGet();
+                   /* switch (i) {
+                        case 0:
+                            Assert.assertEquals((String) inEvents[i].getData()[1], "Benjamin Watson");
+                            break;
+                        default:
+                            Assert.fail();
+                    }*/
+                }
+            }
+        });
+
+        Thread client = new Thread() {
+            public void run() {
+
+                Request request = Request.newBuilder()
+                        .setStringValue("Benjamin Watson")
+                        .setIntValue(100)
+                        .setBooleanValue(true)
+                        .setDoubleValue(168.4567)
+                        .setFloatValue(45.345f)
+                        .setLongValue(1000000L)
+                        .build();
+                ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888")
+                        .usePlaintext()
+                        .build();
+                MyServiceGrpc.MyServiceBlockingStub blockingStub = MyServiceGrpc.newBlockingStub(channel);
+                try {
+                    Response response = blockingStub.process(request);
+                    System.out.println("Request\n"+request+"\n");
+                    System.out.println("Response :\n"+response);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+
+            }
+        };
+        siddhiAppRuntime.start();
+        client.start();
+        Thread.sleep(100000);
+        siddhiAppRuntime.shutdown();
     }
 }

@@ -17,31 +17,24 @@ import java.util.concurrent.TimeUnit;
 public class GenericTestServer {
 
     private static final Logger logger = Logger.getLogger(TestServer.class.getName());
-    private Server server;
     TestServerInterceptor testInterceptor = new TestServerInterceptor();
+    private Server server;
+
     public void start() throws IOException {
         if (server != null) {
             throw new IllegalStateException("Already started");
         }
         server = ServerBuilder
                 .forPort(8888)
-                .addService( ServerInterceptors.intercept( new MyServiceGrpc.MyServiceImplBase() {
+                .addService(ServerInterceptors.intercept(new MyServiceGrpc.MyServiceImplBase() {
                     @Override
                     public void send(Request request, StreamObserver<Empty> responseObserver) {
-                        System.out.println("Request :::::::::::::::::::::::::::::::::::");
-                        System.out.println(request);
-                        System.out.println(":::::::::::::::::::::::::::::::::::::::::::");
-                        System.out.println("Server hit ....");
                         responseObserver.onNext(Empty.getDefaultInstance());
                         responseObserver.onCompleted();
                     }
 
                     @Override
                     public void process(Request request, StreamObserver<Response> responseObserver) {
-                        System.out.println("Request :::::::::::::::::::::::::::::::::::");
-                        System.out.println(request);
-                        System.out.println(":::::::::::::::::::::::::::::::::::::::::::");
-                        System.out.println("Server hit ....");
                         Response response = Response.newBuilder()
                                 .setIntValue(request.getIntValue())
                                 .setStringValue(request.getStringValue())
@@ -55,7 +48,7 @@ public class GenericTestServer {
                         responseObserver.onCompleted();
 
                     }
-                },testInterceptor)).build();
+                }, testInterceptor)).build();
         server.start();
         if (logger.isDebugEnabled()) {
             logger.debug("Server started");
