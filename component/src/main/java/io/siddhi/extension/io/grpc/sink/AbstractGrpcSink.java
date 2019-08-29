@@ -104,7 +104,7 @@ public abstract class AbstractGrpcSink extends Sink {
      */
     @Override
     public String[] getSupportedDynamicOptions() {
-        return new String[]{GrpcConstants.HEADERS, "metadata"};
+        return new String[]{GrpcConstants.HEADERS, GrpcConstants.METADATA};
     }
 
     /**
@@ -139,7 +139,7 @@ public abstract class AbstractGrpcSink extends Sink {
         } catch (MalformedURLException e) {
             throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID +
                     ": Error in URL format. Expected format is `grpc://0.0.0.0:9763/<serviceName>/<methodName>` but " +
-                    "the provided url is " + url + ". ", e);
+                    "the provided url is " + url + ". " + e.getMessage(), e);
         }
         String serviceName = getServiceName(aURL.getPath());
         this.methodName = getMethodName(aURL.getPath());
@@ -201,7 +201,7 @@ public abstract class AbstractGrpcSink extends Sink {
         } catch (KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException |
                 UnrecoverableKeyException e) {
             throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " + streamID + ": Error while " +
-                    "creating gRPC channel. ", e);
+                    "creating gRPC channel. " + e.getMessage(), e);
         }
 
         if (optionHolder.isOptionExists(GrpcConstants.IDLE_TIMEOUT_MILLIS)) {
@@ -257,7 +257,7 @@ public abstract class AbstractGrpcSink extends Sink {
         try (FileInputStream fis = new FileInputStream(filePath)) {
             keyStore.load(fis, passphrase);
         } catch (IOException e) {
-            throw new SiddhiAppCreationException(siddhiAppName + ": " + streamID + ": ", e);
+            throw new SiddhiAppCreationException(siddhiAppName + ": " + streamID + ": " + e.getMessage(), e);
         }
         TrustManagerFactory tmf = TrustManagerFactory.getInstance(algorithm);
         tmf.init(keyStore);
@@ -272,7 +272,7 @@ public abstract class AbstractGrpcSink extends Sink {
         try (FileInputStream fis = new FileInputStream(filePath)) {
             keyStore.load(fis, passphrase);
         } catch (IOException e) {
-            throw new SiddhiAppCreationException(siddhiAppName + ": " + streamID + ": ", e);
+            throw new SiddhiAppCreationException(siddhiAppName + ": " + streamID + ": " + e.getMessage(), e);
         }
         KeyManagerFactory kmf = KeyManagerFactory.getInstance(algorithm);
         kmf.init(keyStore, passphrase);

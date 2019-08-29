@@ -162,13 +162,14 @@ public class GrpcSource extends AbstractGrpcSource {
                         try {
                             sourceEventListener.onEvent(request.getPayload(), extractHeaders(request.getHeadersMap(),
                                     metaDataMap.get(), requestedTransportPropertyNames));
-                            metaDataMap.remove();
                             responseObserver.onNext(Empty.getDefaultInstance());
                             responseObserver.onCompleted();
                         } catch (SiddhiAppRuntimeException e) {
                             logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request. "
-                                    + e.getMessage());
+                                    + e.getMessage(), e);
                             responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
+                        } finally {
+                            metaDataMap.remove();
                         }
                     }
                 }

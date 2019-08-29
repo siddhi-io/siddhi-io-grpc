@@ -109,7 +109,7 @@ public abstract class AbstractGrpcSource extends Source {
         } catch (MalformedURLException e) {
             throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID +
                     ": Error in URL format. Expected format is `grpc://0.0.0.0:9763/<serviceName>/<methodName>` but " +
-                    "the provided url is " + url + ". ", e);
+                    "the provided url is " + url + ". " + e.getMessage(), e);
         }
         this.serviceName = getServiceName(aURL.getPath());
         this.port = aURL.getPort();
@@ -160,7 +160,7 @@ public abstract class AbstractGrpcSource extends Source {
             } catch (IOException | CertificateException | NoSuchAlgorithmException | UnrecoverableKeyException |
                     KeyStoreException e) {
                 throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " + streamID + ": Error while " +
-                        "creating SslContext. ", e);
+                        "creating SslContext. " + e.getMessage(), e);
             }
         }
         serverBuilder.maxInboundMessageSize(Integer.parseInt(optionHolder.getOrCreateOption(
@@ -186,7 +186,8 @@ public abstract class AbstractGrpcSource extends Source {
         try (FileInputStream fis = new FileInputStream(filePath)) {
             keyStore.load(fis, passphrase);
         } catch (IOException e) {
-            throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " + streamID + ": ", e);
+            throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " + streamID + ": " + e.getMessage(),
+                    e);
         }
         KeyManagerFactory kmf = KeyManagerFactory.getInstance(algorithm);
         kmf.init(keyStore, passphrase);
@@ -203,7 +204,8 @@ public abstract class AbstractGrpcSource extends Source {
         try (FileInputStream fis = new FileInputStream(filePath)) {
             keyStore.load(fis, passphrase);
         } catch (IOException e) {
-            throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " + streamID + ": ", e);
+            throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " + streamID + ": " + e.getMessage(),
+                    e);
         }
         TrustManagerFactory tmf = TrustManagerFactory.getInstance(algorithm);
         tmf.init(keyStore);
@@ -261,9 +263,10 @@ public abstract class AbstractGrpcSource extends Source {
                         "server is already running on the port " + port + ". Please provide a different port");
             } else {
                 connectionCallback.onError(new ConnectionUnavailableException(siddhiAppContext.getName() + ":" +
-                        streamID + ": Error when starting the server. ", e));
+                        streamID + ": Error when starting the server. " + e.getMessage(), e));
             }
-            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": " + streamID + ": ", e);
+            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": " + streamID + ": " + e.getMessage(),
+                    e);
         }
     }
 
@@ -292,7 +295,8 @@ public abstract class AbstractGrpcSource extends Source {
                         "shutdown server");
             }
         } catch (InterruptedException e) {
-            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": " + streamID + ": ", e);
+            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": " + streamID + ": " + e.getMessage(),
+                    e);
         }
     }
 }

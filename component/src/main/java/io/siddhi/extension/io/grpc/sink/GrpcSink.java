@@ -288,7 +288,7 @@ public class GrpcSink extends AbstractGrpcSink {
             channel = null;
         } catch (InterruptedException e) {
             throw new SiddhiAppRuntimeException(siddhiAppName + ": " + streamID + ": Error in shutting " +
-                    "down the channel. ", e);
+                    "down the channel. " + e.getMessage(), e);
         }
     }
 }

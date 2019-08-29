@@ -208,14 +208,15 @@ public class GrpcServiceSource extends AbstractGrpcSource {
                         try {
                             sourceEventListener.onEvent(request.getPayload(), extractHeaders(transportPropertyMap,
                                     metaDataMap.get(), requestedTransportPropertyNames));
-                            metaDataMap.remove();
                             streamObserverMap.put(messageId, responseObserver);
                             timer.schedule(new ServiceSourceTimeoutChecker(messageId,
                                     siddhiAppContext.getTimestampGenerator().currentTime()), serviceTimeout);
                         } catch (SiddhiAppRuntimeException e) {
                         logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request. "
-                                + e.getMessage());
+                                + e.getMessage(), e);
                         responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
+                        } finally {
+                            metaDataMap.remove();
                         }
                     }
                 }
@@ -238,7 +239,8 @@ public class GrpcServiceSource extends AbstractGrpcSource {
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
-                    throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": " + streamID + ": ", e);
+                    throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": " + streamID + ": " +
+                            e.getMessage(), e);
                 }
             }
             StreamObserver streamObserver = streamObserverMap.remove(messageId);
