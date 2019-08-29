@@ -267,6 +267,27 @@ public class GrpcSink extends AbstractGrpcSink {
                 currentAsyncStub = (EventServiceGrpc.EventServiceStub) attachMetaDataToStub(dynamicOptions,
                         currentAsyncStub);
             }
+            StreamObserver<Empty> responseObserver = new StreamObserver<Empty>() {
+                //try to send all the siddhi events using one stream observer - impossible without adding client
+                // side streaming in protobuf definition
+                @Override
+                public void onNext(Empty event) {}
+
+                @Override //todo latch based error???
+                public void onError(Throwable t) { //parent method doest have error in its signature. so cant throw
+                    // from here
+//                    if (((StatusRuntimeException) t).getStatus().getCode().equals(Status.UNAVAILABLE)) {
+//                        throw new ConnectionUnavailableException(siddhiAppName.getName() + ": " + streamID + ": "
+//                        + t.getMessage());
+//                    }
+                    logger.error(siddhiAppName + ":" + streamID + ": " + t.getMessage() + " caused by "
+                            + t.getCause(), t);
+                }
+
+                @Override
+                public void onCompleted() {
+                }
+            };
             currentAsyncStub.consume(eventBuilder.build(), responseObserver);
         } else {
             try {
@@ -323,6 +344,9 @@ public class GrpcSink extends AbstractGrpcSink {
         if (!channel.isShutdown()) {
             logger.info(siddhiAppName + ": gRPC service on " + streamID + " has successfully connected to "
                     + url);
+        } else {
+            throw new ConnectionUnavailableException(siddhiAppName + ": gRPC service on" + streamID + " could not " +
+                    "connect to " + url);
         }
     }
 
@@ -333,15 +357,15 @@ public class GrpcSink extends AbstractGrpcSink {
     @Override
     public void disconnect() {
         try {
-            if (channelTerminationWaitingTimeInMillis != -1L) {
+            if (channelTerminationWaitingTimeInMillis > 0) {
                 channel.shutdown().awaitTermination(channelTerminationWaitingTimeInMillis, TimeUnit.MILLISECONDS);
             } else {
                 channel.shutdown();
             }
             channel = null;
         } catch (InterruptedException e) {
-            throw new SiddhiAppRuntimeException(siddhiAppName + ": " + streamID + ": Error in shutting " +
-                    "down the channel. " + e.getMessage(), e);
+            logger.error(siddhiAppName + ": " + streamID + ": Error in shutting " + "down the channel. " +
+                    e.getMessage(), e);
         }
     }
 }
