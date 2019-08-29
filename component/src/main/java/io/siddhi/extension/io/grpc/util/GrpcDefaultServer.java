@@ -18,12 +18,13 @@
 package io.siddhi.extension.io.grpc.util;
 
 import io.grpc.Server;
-import io.grpc.ServerBuilder;
 import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 import io.grpc.netty.shaded.io.netty.handler.ssl.ClientAuth;
 import io.grpc.netty.shaded.io.netty.handler.ssl.SslContextBuilder;
+import io.siddhi.core.config.SiddhiAppContext;
 import io.siddhi.core.exception.SiddhiAppCreationException;
+import io.siddhi.core.util.transport.OptionHolder;
 import org.apache.log4j.Logger;
 
 import javax.net.ssl.KeyManagerFactory;
@@ -40,17 +41,29 @@ public class GrpcDefaultServer {
     private static final Logger logger = Logger.getLogger(GrpcDefaultServer.class.getName());
     protected String[] requestedTransportPropertyNames;
     protected Server server;
-    private ServerBuilder serverBuilder;
+    private NettyServerBuilder serverBuilder;
+    private GrpcServerConfigs grpcServerConfigs;
+    private SiddhiAppContext siddhiAppContext;
+    private String streamID;
+
+    public GrpcDefaultServer(OptionHolder optionHolder, SiddhiAppContext siddhiAppContext, String streamID, String[] requestedTransportPropertyNames) {
+        this.requestedTransportPropertyNames = requestedTransportPropertyNames;
+        this.siddhiAppContext = siddhiAppContext;
+        this.streamID = streamID;
+        grpcServerConfigs = new GrpcServerConfigs(optionHolder, siddhiAppContext, streamID);
+        initServer();
+    }
 
     public void initServer() {
-        serverBuilder = NettyServerBuilder.forPort(port);
-        if (keystoreFilePath != null) {
+        serverBuilder = NettyServerBuilder.forPort(grpcServerConfigs.getServiceConfigs().getPort());
+        if (grpcServerConfigs.getKeystoreFilePath() != null) {
             try {
-                SslContextBuilder sslContextBuilder = getSslContextBuilder(keystoreFilePath, keystorePassword,
-                        keystoreAlgorithm, tlsStoreType);
-                if (truststoreFilePath != null) {
-                    sslContextBuilder = addTrustStore(truststoreFilePath, truststorePassword, truststoreAlgorithm,
-                            sslContextBuilder, tlsStoreType).clientAuth(ClientAuth.REQUIRE);
+                SslContextBuilder sslContextBuilder = getSslContextBuilder(grpcServerConfigs.getKeystoreFilePath(), grpcServerConfigs.getKeystorePassword(),
+                        grpcServerConfigs.getKeystoreAlgorithm(), grpcServerConfigs.getTlsStoreType());
+                if (grpcServerConfigs.getTruststoreFilePath() != null) {
+                    sslContextBuilder = addTrustStore(grpcServerConfigs.getTruststoreFilePath(), grpcServerConfigs.getTruststorePassword(),
+                            grpcServerConfigs.getTruststoreAlgorithm(),
+                            sslContextBuilder, grpcServerConfigs.getTlsStoreType()).clientAuth(ClientAuth.REQUIRE);
                 }
                 serverBuilder.sslContext(sslContextBuilder.build());
             } catch (IOException | CertificateException | NoSuchAlgorithmException | UnrecoverableKeyException |
@@ -59,10 +72,8 @@ public class GrpcDefaultServer {
                         "creating SslContext. ", e);
             }
         }
-        serverBuilder.maxInboundMessageSize(Integer.parseInt(optionHolder.getOrCreateOption(
-                GrpcConstants.MAX_INBOUND_MESSAGE_SIZE, GrpcConstants.MAX_INBOUND_MESSAGE_SIZE_DEFAULT).getValue()));
-        serverBuilder.maxInboundMetadataSize(Integer.parseInt(optionHolder.getOrCreateOption(
-                GrpcConstants.MAX_INBOUND_METADATA_SIZE, GrpcConstants.MAX_INBOUND_METADATA_SIZE_DEFAULT).getValue()));
+        serverBuilder.maxInboundMessageSize(grpcServerConfigs.getMaxInboundMessageSize());
+        serverBuilder.maxInboundMetadataSize(grpcServerConfigs.getMaxInboundMetadataSize());
 
     }
 
@@ -96,5 +107,9 @@ public class GrpcDefaultServer {
         TrustManagerFactory tmf = TrustManagerFactory.getInstance(algorithm);
         tmf.init(keyStore);
         return sslContextBuilder.trustManager(tmf).clientAuth(ClientAuth.REQUIRE);
+    }
+
+    public GrpcServerConfigs getGrpcServerConfigs() {
+        return grpcServerConfigs;
     }
 }

@@ -23,13 +23,15 @@ import io.siddhi.core.util.transport.OptionHolder;
 
 public class GrpcServerConfigs {
     private ServiceConfigs serviceConfigs;
-    private String truststoreFilePath = null;
-    private String truststorePassword = null;
-    private String keystoreFilePath = null;
-    private String keystorePassword = null;
-    private String truststoreAlgorithm = null;
-    private String keystoreAlgorithm = null;
-    private String tlsStoreType = null;
+    private String truststoreFilePath;
+    private String truststorePassword;
+    private String keystoreFilePath;
+    private String keystorePassword;
+    private String truststoreAlgorithm;
+    private String keystoreAlgorithm;
+    private String tlsStoreType;
+    private int maxInboundMessageSize;
+    private int maxInboundMetadataSize;
 
     public GrpcServerConfigs(OptionHolder optionHolder, SiddhiAppContext siddhiAppContext, String streamID) {
         this.serviceConfigs = new ServiceConfigs(optionHolder, siddhiAppContext, streamID);
@@ -54,5 +56,52 @@ public class GrpcServerConfigs {
             tlsStoreType = optionHolder.getOrCreateOption(GrpcConstants.TLS_STORE_TYPE,
                     GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
         }
+
+        if (optionHolder.isOptionExists(GrpcConstants.MAX_INBOUND_MESSAGE_SIZE)) {
+            maxInboundMessageSize = Integer.parseInt(optionHolder.validateAndGetOption(GrpcConstants.MAX_INBOUND_MESSAGE_SIZE).getValue());
+        }
+        if (optionHolder.isOptionExists(GrpcConstants.MAX_INBOUND_METADATA_SIZE)) {
+            maxInboundMetadataSize = Integer.parseInt(optionHolder.validateAndGetOption(GrpcConstants.MAX_INBOUND_METADATA_SIZE).getValue());
+        }
+    }
+
+    public ServiceConfigs getServiceConfigs() {
+        return serviceConfigs;
+    }
+
+    public String getTruststoreFilePath() {
+        return truststoreFilePath;
+    }
+
+    public String getTruststorePassword() {
+        return truststorePassword;
+    }
+
+    public String getKeystoreFilePath() {
+        return keystoreFilePath;
+    }
+
+    public String getKeystorePassword() {
+        return keystorePassword;
+    }
+
+    public String getTruststoreAlgorithm() {
+        return truststoreAlgorithm;
+    }
+
+    public String getKeystoreAlgorithm() {
+        return keystoreAlgorithm;
+    }
+
+    public String getTlsStoreType() {
+        return tlsStoreType;
+    }
+
+    public int getMaxInboundMessageSize() {
+        return maxInboundMessageSize;
+    }
+
+    public int getMaxInboundMetadataSize() {
+        return maxInboundMetadataSize;
     }
 }

@@ -34,6 +34,7 @@ import io.siddhi.core.util.config.ConfigReader;
 import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
+import io.siddhi.extension.io.grpc.util.GrpcDefaultServer;
 import io.siddhi.extension.io.grpc.util.ServiceConfigs;
 import io.siddhi.extension.io.grpc.util.SourceServerInterceptor;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
@@ -63,17 +64,18 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getServiceName;
 public abstract class AbstractGrpcSource extends Source { //todo: have thread workers and handover to the worker after receiving from source
     protected SiddhiAppContext siddhiAppContext;
     protected SourceEventListener sourceEventListener;
-    private String url;
-    private String serviceName;
+//    private String url;
+//    private String serviceName;
     protected boolean isDefaultMode;
-    private int port;
+//    private int port;
     protected SourceServerInterceptor serverInterceptor;
     protected NettyServerBuilder serverBuilder;
     protected long serverShutdownWaitingTimeInMillis = -1L;
     protected String streamID;
     private ServiceDeploymentInfo serviceDeploymentInfo;
     public static ThreadLocal<Map<String, String>> metaDataMap = new ThreadLocal<>();
-    private ServiceConfigs serviceConfigs;
+//    private ServiceConfigs serviceConfigs;
+    private GrpcDefaultServer server;
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
@@ -103,6 +105,8 @@ public abstract class AbstractGrpcSource extends Source { //todo: have thread wo
 //        this.serviceConfigs = new ServiceConfigs(optionHolder, siddhiAppContext, streamID);
         initSource(optionHolder, requestedTransportPropertyNames);
         this.serverInterceptor = new SourceServerInterceptor(siddhiAppContext, streamID);
+        server =
+
 
 //        String truststoreFilePath = null;
 //        String truststorePassword = null;
