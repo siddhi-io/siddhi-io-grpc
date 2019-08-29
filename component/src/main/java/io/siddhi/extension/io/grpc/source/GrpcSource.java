@@ -172,12 +172,10 @@ public class GrpcSource extends AbstractGrpcSource {
                                             StreamObserver<Empty> responseObserver) {
                             if (request.getPayload() == null) {
                                 logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request due to" +
-                                        " " +
-                                        "missing payload ");
+                                        " missing payload ");
                                 responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
 
                             } else {
-                                logger.error("server thread is: " + Thread.currentThread().getId());
                                 try {
                                     sourceEventListener.onEvent(request.getPayload(),
                                             extractHeaders(request.getHeadersMap(),
@@ -208,10 +206,9 @@ public class GrpcSource extends AbstractGrpcSource {
                         requestObject = parseFrom.invoke(requestClass, request.toByteString());
                     } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
                         throw new SiddhiAppCreationException(siddhiAppContext.getName() + ":" + streamID + ": Invalid" +
-                                " method name provided " +
-                                "in the url," +
-                                " provided method name : '" + methodName + "' expected one of these methods : " +
-                                getRPCmethodList(serviceReference, siddhiAppContext.getName()), e);
+                                " method name provided in the url, provided method name : '" + methodName +
+                                "' expected one of these methods : " + getRPCmethodList(serviceReference,
+                                siddhiAppContext.getName()) + ". " + e.getMessage(), e);
                     }
                     sourceEventListener.onEvent(requestObject, null);
                     responseObserver.onNext(Empty.getDefaultInstance());

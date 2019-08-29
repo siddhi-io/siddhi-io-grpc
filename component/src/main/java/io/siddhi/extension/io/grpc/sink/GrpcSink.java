@@ -281,9 +281,8 @@ public class GrpcSink extends AbstractGrpcSink {
                 rpcMethod.invoke(currentAsyncStubObject, arguments);
             } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
                 throw new SiddhiAppCreationException(siddhiAppName + ": Invalid method name provided " +
-                        "in the url," +
-                        " provided method name : '" + methodName + "' expected one of these methods : " +
-                        getRPCmethodList(serviceReference, siddhiAppName), e);
+                        "in the url, provided method name : '" + methodName + "' expected one of these methods : " +
+                        getRPCmethodList(serviceReference, siddhiAppName) + ". " + e.getMessage(), e);
             }
         }
     }
@@ -311,12 +310,11 @@ public class GrpcSink extends AbstractGrpcSink {
             } catch (ClassNotFoundException e) {
                 throw new SiddhiAppCreationException(siddhiAppName + ": " +
                         "Invalid service name provided in the url, provided service name : '" + serviceReference +
-                        "'", e);
+                        "'. " + e.getMessage(), e);
             } catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
                 throw new SiddhiAppCreationException(siddhiAppName + ": Invalid method name provided " +
-                        "in the url," +
-                        " provided method name : '" + methodName + "' expected one of these methods : " +
-                        getRPCmethodList(serviceReference, siddhiAppName), e);
+                        "in the url, provided method name : '" + methodName + "' expected one of these methods : " +
+                        getRPCmethodList(serviceReference, siddhiAppName) + ". " + e.getMessage(), e);
             }
         }
         if (!channel.isShutdown()) {

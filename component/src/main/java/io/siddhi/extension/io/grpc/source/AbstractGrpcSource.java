@@ -190,7 +190,7 @@ public abstract class AbstractGrpcSource extends Source {
             } catch (ClassNotFoundException e) {
                 throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " +
                         "Invalid service name provided in the url, provided service name : '" + serviceReference +
-                        "'", e);
+                        "'. " + e.getMessage(), e);
             }
         }
         this.serviceDeploymentInfo = new ServiceDeploymentInfo(port, false);

@@ -200,7 +200,7 @@ public abstract class AbstractGrpcSink extends Sink {
                         .build());
             } catch (SSLException e) {
                 throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " + streamID + ": Error while " +
-                        "creating gRPC channel. ", e);
+                        "creating gRPC channel. " + e.getMessage(), e);
             }
         } else {
             managedChannelBuilder = managedChannelBuilder.usePlaintext();
@@ -251,7 +251,7 @@ public abstract class AbstractGrpcSink extends Sink {
             } catch (ClassNotFoundException e) {
                 throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " +
                         "Invalid service name provided in the url, provided service name : '" + serviceReference +
-                        "'", e);
+                        "'. " + e.getMessage(), e);
             }
         }
         initSink(optionHolder);
@@ -272,9 +272,9 @@ public abstract class AbstractGrpcSink extends Sink {
             tmf.init(keyStore);
             return tmf;
         } catch (CertificateException | NoSuchAlgorithmException | KeyStoreException e) {
-        throw new SiddhiAppCreationException(siddhiAppName + ": " + streamID + ": Error while reading truststore " +
-                e.getMessage(), e);
-    }
+            throw new SiddhiAppCreationException(siddhiAppName + ": " + streamID + ": Error while reading truststore " +
+                    e.getMessage(), e);
+        }
     }
 
     private KeyManagerFactory getKeyManagerFactory(String filePath, String password, String algorithm,

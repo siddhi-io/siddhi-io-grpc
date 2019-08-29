@@ -236,8 +236,7 @@ public class GrpcServiceSource extends AbstractGrpcSource {
                                             StreamObserver<Event> responseObserver) {
                             if (request.getPayload() == null) {
                                 logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request due to" +
-                                        " " +
-                                        "missing payload ");
+                                        " missing payload ");
                                 responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
                             } else {
                                 String messageId = UUID.randomUUID().toString();
@@ -252,8 +251,7 @@ public class GrpcServiceSource extends AbstractGrpcSource {
                                             extractHeaders(transportPropertyMap,
                                                     metaDataMap.get(), requestedTransportPropertyNames));
                                 } catch (SiddhiAppRuntimeException e) {
-                                    logger.error(siddhiAppContext.getName() + ":" + streamID +
-                                            ": Dropping request. "
+                                    logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request. "
                                             + e.getMessage(), e);
                                     responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
                                 } finally {
@@ -264,8 +262,7 @@ public class GrpcServiceSource extends AbstractGrpcSource {
                     }, serverInterceptor)).build();
         } else {
             GenericServiceClass.setServiceName(this.serviceName);
-            GenericServiceClass.setNonEmptyResponseMethodName(this.methodName); //doesn't affect if 'methodname'
-            // changed after creating the server
+            GenericServiceClass.setNonEmptyResponseMethodName(this.methodName);
             GenericServiceClass.AnyServiceImplBase service = new GenericServiceClass.AnyServiceImplBase() {
                 @Override
                 public void handleNonEmptyResponse(Any request, StreamObserver<Any> responseObserver) {
@@ -276,10 +273,9 @@ public class GrpcServiceSource extends AbstractGrpcSource {
                         requestObject = parseFrom.invoke(requestClass, request.toByteString());
                     } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
                         throw new SiddhiAppCreationException(siddhiAppContext.getName() + ":" + streamID + ": Invalid" +
-                                " method name provided " +
-                                "in the url," +
-                                " provided method name : '" + methodName + "' expected one of these methods : " +
-                                getRPCmethodList(serviceReference, siddhiAppContext.getName()), e);
+                                " method name provided in the url, provided method name : '" + methodName +
+                                "' expected one of these methods : " + getRPCmethodList(serviceReference,
+                                siddhiAppContext.getName()), e);
                     }
                     String messageId = UUID.randomUUID().toString();
                     Map<String, String> transportPropertyMap = new HashMap<>();
@@ -339,23 +335,17 @@ public class GrpcServiceSource extends AbstractGrpcSource {
             StreamObserver<Any> genericStreamObserver = genericStreamObserverMap.remove(messageId);
             if (genericStreamObserver != null) {
                 try {
-
                     Method toByteString = AbstractMessageLite.class.getDeclaredMethod("toByteString");
                     ByteString responseByteString = (ByteString) toByteString.invoke(responsePayload);
                     Any response = Any.parseFrom(responseByteString);
-
-//                    StreamObserver<Any> streamObserver = genericStreamObserverMap.get(messageId);
-//                    genericStreamObserverMap.remove(messageId);
                     genericStreamObserver.onNext(response);
                     genericStreamObserver.onCompleted();
-
-
                 } catch (NoSuchMethodException | IllegalAccessException | InvalidProtocolBufferException |
                         InvocationTargetException e) {
                     throw new SiddhiAppCreationException(siddhiAppContext.getName() + ":" + streamID + ": Invalid" +
                             " method name provided in the url, provided method name : '" + methodName + "' expected " +
-                            "one of these methods : " +
-                            getRPCmethodList(serviceReference, siddhiAppContext.getName()), e);
+                            "one of these methods : " + getRPCmethodList(serviceReference, siddhiAppContext.getName()) +
+                            ". " + e.getMessage(), e);
                 }
             }
         }

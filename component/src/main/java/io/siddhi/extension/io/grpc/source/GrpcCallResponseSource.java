@@ -117,7 +117,6 @@ public class GrpcCallResponseSource extends Source {
     }
 
     private String[] getTransportProperties(Map<String, String> siddhiRequestEventData) { //overloaded method for
-        // generic grpc
         String[] transportProperties = new String[requestedTransportPropertyNames.length];
         for (int i = 0; i < requestedTransportPropertyNames.length; i++) {
             if (siddhiRequestEventData.containsKey(requestedTransportPropertyNames[i])) {

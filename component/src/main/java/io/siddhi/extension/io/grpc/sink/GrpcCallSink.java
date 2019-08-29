@@ -337,9 +337,8 @@ public class GrpcCallSink extends AbstractGrpcSink {
 
             } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
                 throw new SiddhiAppCreationException(siddhiAppName + ": Invalid method name provided " +
-                        "in the url," +
-                        " provided method name : '" + methodName + "' expected one of these methods : " +
-                        getRPCmethodList(serviceReference, siddhiAppName), e);
+                        "in the url, provided method name : '" + methodName + "' expected one of these methods : " +
+                        getRPCmethodList(serviceReference, siddhiAppName) + ". " + e.getMessage(), e);
             }
         }
     }
@@ -367,8 +366,7 @@ public class GrpcCallSink extends AbstractGrpcSink {
         this.channel = managedChannelBuilder.build();
         if (isDefaultMode) {
             this.futureStub = EventServiceGrpc.newFutureStub(channel);
-            logger.info(siddhiAppName + ": gRPC service on " + streamID + " has successfully connected to "
-                    + url);
+            logger.info(siddhiAppName + ": gRPC service on " + streamID + " has successfully connected to " + url);
         } else {
             try {
                 Class serviceClass = Class.forName(serviceReference + GrpcConstants.GRPC_PROTOCOL_NAME_UPPERCAMELCASE);
@@ -380,10 +378,9 @@ public class GrpcCallSink extends AbstractGrpcSink {
                         "Invalid service name provided in the url, provided service name : '" + serviceReference +
                         "'", e);
             } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-                throw new SiddhiAppCreationException(siddhiAppName + ": Invalid method name provided " +
-                        "in the url," +
+                throw new SiddhiAppCreationException(siddhiAppName + ": Invalid method name provided in the url," +
                         " provided method name : '" + methodName + "' expected one of these methods : " +
-                        getRPCmethodList(serviceReference, siddhiAppName), e);
+                        getRPCmethodList(serviceReference, siddhiAppName) + ". " + e.getMessage(), e);
             }
         }
         if (GrpcSourceRegistry.getInstance().getGrpcCallResponseSource(sinkID) == null) {
