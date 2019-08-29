@@ -27,7 +27,6 @@ import io.siddhi.annotation.Parameter;
 import io.siddhi.annotation.util.DataType;
 import io.siddhi.core.exception.ConnectionUnavailableException;
 import io.siddhi.core.exception.SiddhiAppCreationException;
-import io.siddhi.core.exception.SiddhiAppRuntimeException;
 import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.transport.DynamicOptions;
 import io.siddhi.core.util.transport.OptionHolder;
@@ -267,27 +266,6 @@ public class GrpcSink extends AbstractGrpcSink {
                 currentAsyncStub = (EventServiceGrpc.EventServiceStub) attachMetaDataToStub(dynamicOptions,
                         currentAsyncStub);
             }
-            StreamObserver<Empty> responseObserver = new StreamObserver<Empty>() {
-                //try to send all the siddhi events using one stream observer - impossible without adding client
-                // side streaming in protobuf definition
-                @Override
-                public void onNext(Empty event) {}
-
-                @Override //todo latch based error???
-                public void onError(Throwable t) { //parent method doest have error in its signature. so cant throw
-                    // from here
-//                    if (((StatusRuntimeException) t).getStatus().getCode().equals(Status.UNAVAILABLE)) {
-//                        throw new ConnectionUnavailableException(siddhiAppName.getName() + ": " + streamID + ": "
-//                        + t.getMessage());
-//                    }
-                    logger.error(siddhiAppName + ":" + streamID + ": " + t.getMessage() + " caused by "
-                            + t.getCause(), t);
-                }
-
-                @Override
-                public void onCompleted() {
-                }
-            };
             currentAsyncStub.consume(eventBuilder.build(), responseObserver);
         } else {
             try {
