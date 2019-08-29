@@ -188,40 +188,40 @@ public class GrpcServiceSource extends AbstractGrpcSource {
     protected Server server;
     private Timer timer;
 
-    @Override
-    public void initializeGrpcServer(int port) {
-        if (isDefaultMode) {
-            this.server = serverBuilder.addService(ServerInterceptors.intercept(
-                    new EventServiceGrpc.EventServiceImplBase() {
-                @Override
-                public void process(Event request,
-                                    StreamObserver<Event> responseObserver) {
-                    if (request.getPayload() == null) {
-                        logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request due to " +
-                                "missing payload ");
-                        responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
-                    } else {
-                        String messageId = UUID.randomUUID().toString();
-                        Map<String, String> transportPropertyMap = new HashMap<>();
-                        transportPropertyMap.put(GrpcConstants.MESSAGE_ID, messageId);
-                        transportPropertyMap.putAll(request.getHeadersMap());
-                        try {
-                            sourceEventListener.onEvent(request.getPayload(), extractHeaders(transportPropertyMap,
-                                    metaDataMap.get(), requestedTransportPropertyNames));
-                            metaDataMap.remove();
-                            streamObserverMap.put(messageId, responseObserver);
-                            timer.schedule(new ServiceSourceTimeoutChecker(messageId,
-                                    siddhiAppContext.getTimestampGenerator().currentTime()), serviceTimeout);
-                        } catch (SiddhiAppRuntimeException e) {
-                        logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request. "
-                                + e.getMessage());
-                        responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
-                        }
-                    }
-                }
-            }, serverInterceptor)).build();
-        }
-    }
+//    @Override
+//    public void initializeGrpcServer(int port) {
+//        if (isDefaultMode) {
+//            this.server = serverBuilder.addService(ServerInterceptors.intercept(
+//                    new EventServiceGrpc.EventServiceImplBase() {
+//                @Override
+//                public void process(Event request,
+//                                    StreamObserver<Event> responseObserver) {
+//                    if (request.getPayload() == null) {
+//                        logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request due to " +
+//                                "missing payload ");
+//                        responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
+//                    } else {
+//                        String messageId = UUID.randomUUID().toString();
+//                        Map<String, String> transportPropertyMap = new HashMap<>();
+//                        transportPropertyMap.put(GrpcConstants.MESSAGE_ID, messageId);
+//                        transportPropertyMap.putAll(request.getHeadersMap());
+//                        try {
+//                            sourceEventListener.onEvent(request.getPayload(), extractHeaders(transportPropertyMap,
+//                                    metaDataMap.get(), requestedTransportPropertyNames));
+//                            metaDataMap.remove();
+//                            streamObserverMap.put(messageId, responseObserver);
+//                            timer.schedule(new ServiceSourceTimeoutChecker(messageId,
+//                                    siddhiAppContext.getTimestampGenerator().currentTime()), serviceTimeout);
+//                        } catch (SiddhiAppRuntimeException e) {
+//                        logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request. "
+//                                + e.getMessage());
+//                        responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
+//                        }
+//                    }
+//                }
+//            }, serverInterceptor)).build();
+//        }
+//    }
 
     class ServiceSourceTimeoutChecker extends TimerTask {
         private String messageId;
@@ -261,7 +261,7 @@ public class GrpcServiceSource extends AbstractGrpcSource {
 
     @Override
     public void connect(ConnectionCallback connectionCallback, State state) throws ConnectionUnavailableException {
-        connectGrpcServer(server, logger, connectionCallback);
+//        connectGrpcServer(server, logger, connectionCallback);
     }
 
     /**
@@ -269,7 +269,7 @@ public class GrpcServiceSource extends AbstractGrpcSource {
      */
     @Override
     public void disconnect() {
-        disconnectGrpcServer(server, logger);
+//        disconnectGrpcServer(server, logger);
     }
 
     public void handleCallback(String messageId, String responsePayload) {

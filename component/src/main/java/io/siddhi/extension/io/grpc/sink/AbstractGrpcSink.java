@@ -54,11 +54,6 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.TrustManagerFactory;
 
-import static io.siddhi.extension.io.grpc.util.GrpcUtils.getMethodName;
-import static io.siddhi.extension.io.grpc.util.GrpcUtils.getSequenceName;
-import static io.siddhi.extension.io.grpc.util.GrpcUtils.getServiceName;
-import static io.siddhi.extension.io.grpc.util.GrpcUtils.isSequenceNamePresent;
-
 /**
  * {@code AbstractGrpcSink} is a super class extended by GrpcCallSink, and GrpcSink.
  * This provides most of the initialization implementations

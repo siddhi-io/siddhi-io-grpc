@@ -23,8 +23,6 @@ import io.grpc.Metadata;
 import io.grpc.ServerCall;
 import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
-import io.siddhi.core.config.SiddhiAppContext;
-import io.siddhi.extension.io.grpc.source.AbstractGrpcSource;
 import org.apache.log4j.Logger;
 
 import java.util.HashMap;
@@ -36,14 +34,13 @@ import java.util.Set;
  */
 public class SourceServerInterceptor implements ServerInterceptor {
   private static final Logger logger = Logger.getLogger(SourceServerInterceptor.class.getName());
-  private SiddhiAppContext siddhiAppContext;
-  private String streamID;
+//  private String siddhiAppName;
+//  private String streamID;
 
-  public SourceServerInterceptor(SiddhiAppContext siddhiAppContext,
-                                 String streamID) {
-    this.siddhiAppContext = siddhiAppContext;
-    this.streamID = streamID;
-  }
+//  public SourceServerInterceptor(String siddhiAppName, String streamID) {
+////    this.siddhiAppName = siddhiAppName;
+////    this.streamID = streamID;
+//  }
 
   @Override
   public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> serverCall,
@@ -55,10 +52,10 @@ public class SourceServerInterceptor implements ServerInterceptor {
     for (String key: metadataKeys) {
       metaDataMap.put(key, metadata.get(Metadata.Key.of(key, io.grpc.Metadata.ASCII_STRING_MARSHALLER)));
     }
-    AbstractGrpcSource.metaDataMap.set(metaDataMap);
-    if (logger.isDebugEnabled()) {
-      logger.debug(siddhiAppContext.getName() + ":" + streamID + ": Metadata received: " + metaDataMap.toString());
-    }
+    GrpcEventServiceServer.metaDataMap.set(metaDataMap);
+//    if (logger.isDebugEnabled()) {
+//      logger.debug(siddhiAppName + ":" + streamID + ": Metadata received: " + metaDataMap.toString());
+//    }
     return Contexts.interceptCall(Context.ROOT, serverCall, metadata, serverCallHandler); //todo check if this line is there in the stacktrace when debugging reading from the threadlocal
   }
 }

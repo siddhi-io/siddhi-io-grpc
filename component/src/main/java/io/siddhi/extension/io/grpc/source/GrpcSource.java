@@ -144,49 +144,49 @@ public class GrpcSource extends AbstractGrpcSource {
     protected String[] requestedTransportPropertyNames;
     protected Server server;
 
-    @Override
-    public void initializeGrpcServer(int port) {
-        if (isDefaultMode) {
-            this.server = serverBuilder.addService(ServerInterceptors.intercept(
-                    new EventServiceGrpc.EventServiceImplBase() {
-                @Override
-                public void consume(Event request,
-                                    StreamObserver<Empty> responseObserver) {
-                    if (request.getPayload() == null) {
-                        logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request due to " +
-                                "missing payload ");
-                        responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
+//    @Override
+//    public void addServicesAndBuildServer(int port) {
+//        if (isDefaultMode) {
+//            this.server = serverBuilder.addService(ServerInterceptors.intercept(
+//                    new EventServiceGrpc.EventServiceImplBase() {
+//                @Override
+//                public void consume(Event request,
+//                                    StreamObserver<Empty> responseObserver) {
+//                    if (request.getPayload() == null) {
+//                        logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request due to " +
+//                                "missing payload ");
+//                        responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
+//
+//                    } else {
+//                        logger.error("server thread is: " + Thread.currentThread().getId());
+//                        try {
+//                            sourceEventListener.onEvent(request.getPayload(), extractHeaders(request.getHeadersMap(),
+//                                    metaDataMap.get(), requestedTransportPropertyNames)); //todo: do this onEvent in a worker thread. user set threadpool parameter and buffer size
+//                            responseObserver.onNext(Empty.getDefaultInstance());
+//                            responseObserver.onCompleted();
+//                        } catch (SiddhiAppRuntimeException e) {
+//                            logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request. "
+//                                    + e.getMessage());
+//                            responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
+//                        } finally {
+//                            metaDataMap.remove();
+//                        }
+//                    }
+//                }
+//            }, serverInterceptor)).build();
+//        } else {
+//
+//        }
+//    }
 
-                    } else {
-                        logger.error("server thread is: " + Thread.currentThread().getId());
-                        try {
-                            sourceEventListener.onEvent(request.getPayload(), extractHeaders(request.getHeadersMap(),
-                                    metaDataMap.get(), requestedTransportPropertyNames)); //todo: do this onEvent in a worker thread. user set threadpool parameter and buffer size
-                            responseObserver.onNext(Empty.getDefaultInstance());
-                            responseObserver.onCompleted();
-                        } catch (SiddhiAppRuntimeException e) {
-                            logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request. "
-                                    + e.getMessage());
-                            responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
-                        } finally {
-                            metaDataMap.remove();
-                        }
-                    }
-                }
-            }, serverInterceptor)).build();
-        } else {
-
-        }
-    }
-
-    @Override
-    public void initSource(OptionHolder optionHolder, String[] requestedTransportPropertyNames) {
-        this.requestedTransportPropertyNames = requestedTransportPropertyNames.clone();
-    }
+//    @Override
+//    public void initSource(OptionHolder optionHolder, String[] requestedTransportPropertyNames) {
+//        this.requestedTransportPropertyNames = requestedTransportPropertyNames.clone();
+//    }
 
     @Override
     public void connect(ConnectionCallback connectionCallback, State state) throws ConnectionUnavailableException {
-        connectGrpcServer(server, logger, connectionCallback);
+//        connectGrpcServer(server, logger, connectionCallback);
     }
 
     /**
@@ -194,6 +194,6 @@ public class GrpcSource extends AbstractGrpcSource {
      */
     @Override
     public void disconnect() {
-        disconnectGrpcServer(server, logger);
+//        disconnectGrpcServer(server, logger);
     }
 }

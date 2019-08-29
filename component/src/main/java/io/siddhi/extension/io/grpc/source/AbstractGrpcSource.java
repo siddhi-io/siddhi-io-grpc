@@ -33,10 +33,7 @@ import io.siddhi.core.stream.input.source.SourceEventListener;
 import io.siddhi.core.util.config.ConfigReader;
 import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.core.util.transport.OptionHolder;
-import io.siddhi.extension.io.grpc.util.GrpcConstants;
-import io.siddhi.extension.io.grpc.util.GrpcDefaultServer;
-import io.siddhi.extension.io.grpc.util.ServiceConfigs;
-import io.siddhi.extension.io.grpc.util.SourceServerInterceptor;
+import io.siddhi.extension.io.grpc.util.*;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.log4j.Logger;
 
@@ -55,8 +52,6 @@ import java.util.concurrent.TimeUnit;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.TrustManagerFactory;
 
-import static io.siddhi.extension.io.grpc.util.GrpcUtils.getServiceName;
-
 /**
  * This is an abstract class extended by GrpcSource and GrpcServiceSource. This provides most of initialization
  * implementations common for both sources
@@ -64,18 +59,20 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getServiceName;
 public abstract class AbstractGrpcSource extends Source { //todo: have thread workers and handover to the worker after receiving from source
     protected SiddhiAppContext siddhiAppContext;
     protected SourceEventListener sourceEventListener;
+    private String[] requestedTransportPropertyNames;
 //    private String url;
 //    private String serviceName;
     protected boolean isDefaultMode;
 //    private int port;
-    protected SourceServerInterceptor serverInterceptor;
-    protected NettyServerBuilder serverBuilder;
+//    protected SourceServerInterceptor serverInterceptor;
+//    protected NettyServerBuilder serverBuilder;
     protected long serverShutdownWaitingTimeInMillis = -1L;
     protected String streamID;
     private ServiceDeploymentInfo serviceDeploymentInfo;
     public static ThreadLocal<Map<String, String>> metaDataMap = new ThreadLocal<>();
 //    private ServiceConfigs serviceConfigs;
-    private GrpcDefaultServer server;
+//    private GrpcEventServiceServer server;
+    private GrpcServerConfigs grpcServerConfigs;
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
@@ -98,14 +95,16 @@ public abstract class AbstractGrpcSource extends Source { //todo: have thread wo
         this.streamID = sourceEventListener.getStreamDefinition().getId();
         this.siddhiAppContext = siddhiAppContext;
         this.sourceEventListener = sourceEventListener;
-        if (optionHolder.isOptionExists(GrpcConstants.SERVER_SHUTDOWN_WAITING_TIME)) {
-            this.serverShutdownWaitingTimeInMillis = Long.parseLong(optionHolder.validateAndGetOption(
-                    GrpcConstants.SERVER_SHUTDOWN_WAITING_TIME).getValue());
-        }
+        this.grpcServerConfigs = new GrpcServerConfigs(optionHolder, siddhiAppContext,streamID);
+        GrpcServerManager.getInstance().registerSource();
+
+//        if (optionHolder.isOptionExists(GrpcConstants.SERVER_SHUTDOWN_WAITING_TIME)) {
+//            this.serverShutdownWaitingTimeInMillis = Long.parseLong(optionHolder.validateAndGetOption(
+//                    GrpcConstants.SERVER_SHUTDOWN_WAITING_TIME).getValue());
+//        }
 //        this.serviceConfigs = new ServiceConfigs(optionHolder, siddhiAppContext, streamID);
-        initSource(optionHolder, requestedTransportPropertyNames);
-        this.serverInterceptor = new SourceServerInterceptor(siddhiAppContext, streamID);
-        server =
+//        initSource(optionHolder, requestedTransportPropertyNames);
+
 
 
 //        String truststoreFilePath = null;
@@ -162,50 +161,54 @@ public abstract class AbstractGrpcSource extends Source { //todo: have thread wo
 
 //        if (serviceName.equals(GrpcConstants.DEFAULT_SERVICE_NAME)) {
 //                this.isDefaultMode = true;
-//                initializeGrpcServer(port);
+//                addServicesAndBuildServer(port);
 //        } else {
 //
 //        }
-        this.serviceDeploymentInfo = new ServiceDeploymentInfo(port, truststoreFilePath != null ||
-                keystoreFilePath != null);
+        this.serviceDeploymentInfo = new ServiceDeploymentInfo(grpcServerConfigs.getServiceConfigs().getPort(), grpcServerConfigs.getTruststoreFilePath() != null ||
+                grpcServerConfigs.getKeystoreFilePath() != null);
         return null;
     }
 
-    private SslContextBuilder getSslContextBuilder(String filePath, String password, String algorithm, String storeType)
-            throws KeyStoreException, NoSuchAlgorithmException, CertificateException,
-            UnrecoverableKeyException {
-        char[] passphrase = password.toCharArray();
-        KeyStore keyStore = KeyStore.getInstance(storeType);
-        try (FileInputStream fis = new FileInputStream(filePath)) {
-            keyStore.load(fis, passphrase);
-        } catch (IOException e) {
-            throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " + streamID + ": ", e);
-        }
-        KeyManagerFactory kmf = KeyManagerFactory.getInstance(algorithm);
-        kmf.init(keyStore, passphrase);
-        SslContextBuilder sslContextBuilder = SslContextBuilder.forServer(kmf);
-        sslContextBuilder = GrpcSslContexts.configure(sslContextBuilder);
-        return sslContextBuilder;
+    public void handleInjection(String payload, String[] headers) {
+        sourceEventListener.onEvent(payload, headers);
     }
 
-    private SslContextBuilder addTrustStore(String filePath, String password, String algorithm,
-                                            SslContextBuilder sslContextBuilder, String storeType)
-            throws NoSuchAlgorithmException, KeyStoreException, CertificateException {
-        char[] passphrase = password.toCharArray();
-        KeyStore keyStore = KeyStore.getInstance(storeType);
-        try (FileInputStream fis = new FileInputStream(filePath)) {
-            keyStore.load(fis, passphrase);
-        } catch (IOException e) {
-            throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " + streamID + ": ", e);
-        }
-        TrustManagerFactory tmf = TrustManagerFactory.getInstance(algorithm);
-        tmf.init(keyStore);
-        return sslContextBuilder.trustManager(tmf).clientAuth(ClientAuth.REQUIRE);
-    }
+//    private SslContextBuilder getSslContextBuilder(String filePath, String password, String algorithm, String storeType)
+//            throws KeyStoreException, NoSuchAlgorithmException, CertificateException,
+//            UnrecoverableKeyException {
+//        char[] passphrase = password.toCharArray();
+//        KeyStore keyStore = KeyStore.getInstance(storeType);
+//        try (FileInputStream fis = new FileInputStream(filePath)) {
+//            keyStore.load(fis, passphrase);
+//        } catch (IOException e) {
+//            throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " + streamID + ": ", e);
+//        }
+//        KeyManagerFactory kmf = KeyManagerFactory.getInstance(algorithm);
+//        kmf.init(keyStore, passphrase);
+//        SslContextBuilder sslContextBuilder = SslContextBuilder.forServer(kmf);
+//        sslContextBuilder = GrpcSslContexts.configure(sslContextBuilder);
+//        return sslContextBuilder;
+//    }
+//
+//    private SslContextBuilder addTrustStore(String filePath, String password, String algorithm,
+//                                            SslContextBuilder sslContextBuilder, String storeType)
+//            throws NoSuchAlgorithmException, KeyStoreException, CertificateException {
+//        char[] passphrase = password.toCharArray();
+//        KeyStore keyStore = KeyStore.getInstance(storeType);
+//        try (FileInputStream fis = new FileInputStream(filePath)) {
+//            keyStore.load(fis, passphrase);
+//        } catch (IOException e) {
+//            throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " + streamID + ": ", e);
+//        }
+//        TrustManagerFactory tmf = TrustManagerFactory.getInstance(algorithm);
+//        tmf.init(keyStore);
+//        return sslContextBuilder.trustManager(tmf).clientAuth(ClientAuth.REQUIRE);
+//    }
 
-    public abstract void initializeGrpcServer(int port);
+//    public abstract void initializeGrpcServer(int port);
 
-    public abstract void initSource(OptionHolder optionHolder, String[] requestedTransportPropertyNames);
+//    public abstract void initSource(OptionHolder optionHolder, String[] requestedTransportPropertyNames);
 
     /**
      * Returns the list of classes which this source can output.
@@ -242,50 +245,58 @@ public abstract class AbstractGrpcSource extends Source { //todo: have thread wo
 
     }
 
-    public void connectGrpcServer(Server server, Logger logger, ConnectionCallback connectionCallback) {
-        try {
-            server.start();
-            if (logger.isDebugEnabled()) {
-                logger.debug(siddhiAppContext.getName() + ":" + streamID + ": gRPC Server started");
-            }
-        } catch (IOException e) {
-            if (e.getCause() instanceof BindException) {
-                throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID + ": Another " +
-                        "server is already running on the port " + port + ". Please provide a different port");
-            } else {
-                connectionCallback.onError(new ConnectionUnavailableException(siddhiAppContext.getName() + ":" +
-                        streamID + ": Error when starting the server. ", e));
-            }
-            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": " + streamID + ": ", e);
-        }
+    public String[] getRequestedTransportPropertyNames() {
+        return requestedTransportPropertyNames;
     }
 
-    public void disconnectGrpcServer(Server server, Logger logger) {
-        try {
-            if (server == null) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug(siddhiAppContext.getName() + ":" + streamID + ": Illegal state. Server already " +
-                            "stopped.");
-                }
-                return;
-            }
-            server.shutdown();
-            if (serverShutdownWaitingTimeInMillis != -1L) {
-                if (server.awaitTermination(serverShutdownWaitingTimeInMillis, TimeUnit.MILLISECONDS)) {
-                    if (logger.isDebugEnabled()) {
-                        logger.debug(siddhiAppContext.getName() + ": " + streamID + ": Server stopped");
-                    }
-                    return;
-                }
-                server.shutdownNow();
-                if (server.awaitTermination(serverShutdownWaitingTimeInMillis, TimeUnit.SECONDS)) {
-                    return;
-                }
-                throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ":" + streamID + ": Unable to " +
-                        "shutdown server");
-            }
-        } catch (InterruptedException e) {
-            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": " + streamID + ": ", e);
-        }
+    public String getStreamID() {
+        return streamID;
     }
+
+    //    public void connectGrpcServer(Server server, Logger logger, ConnectionCallback connectionCallback) {
+//        try {
+//            server.start();
+//            if (logger.isDebugEnabled()) {
+//                logger.debug(siddhiAppContext.getName() + ":" + streamID + ": gRPC Server started");
+//            }
+//        } catch (IOException e) {
+//            if (e.getCause() instanceof BindException) {
+//                throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID + ": Another " +
+//                        "server is already running on the port " + port + ". Please provide a different port");
+//            } else {
+//                connectionCallback.onError(new ConnectionUnavailableException(siddhiAppContext.getName() + ":" +
+//                        streamID + ": Error when starting the server. ", e));
+//            }
+//            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": " + streamID + ": ", e);
+//        }
+//    }
+//
+//    public void disconnectGrpcServer(Server server, Logger logger) {
+//        try {
+//            if (server == null) {
+//                if (logger.isDebugEnabled()) {
+//                    logger.debug(siddhiAppContext.getName() + ":" + streamID + ": Illegal state. Server already " +
+//                            "stopped.");
+//                }
+//                return;
+//            }
+//            server.shutdown();
+//            if (serverShutdownWaitingTimeInMillis != -1L) {
+//                if (server.awaitTermination(serverShutdownWaitingTimeInMillis, TimeUnit.MILLISECONDS)) {
+//                    if (logger.isDebugEnabled()) {
+//                        logger.debug(siddhiAppContext.getName() + ": " + streamID + ": Server stopped");
+//                    }
+//                    return;
+//                }
+//                server.shutdownNow();
+//                if (server.awaitTermination(serverShutdownWaitingTimeInMillis, TimeUnit.SECONDS)) {
+//                    return;
+//                }
+//                throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ":" + streamID + ": Unable to " +
+//                        "shutdown server");
+//            }
+//        } catch (InterruptedException e) {
+//            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": " + streamID + ": ", e);
+//        }
+//    }
 }
