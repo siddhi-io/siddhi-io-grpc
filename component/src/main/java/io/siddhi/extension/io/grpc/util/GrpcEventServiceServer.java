@@ -33,6 +33,7 @@ import io.siddhi.core.exception.SiddhiAppRuntimeException;
 import io.siddhi.core.stream.input.source.Source;
 import io.siddhi.extension.io.grpc.source.AbstractGrpcSource;
 import io.siddhi.extension.io.grpc.source.GrpcServiceSource;
+import io.siddhi.extension.io.grpc.source.GrpcSource;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
@@ -65,7 +66,8 @@ public class GrpcEventServiceServer {
     private String streamID;
     private SourceServerInterceptor serverInterceptor;
     public static ThreadLocal<Map<String, String>> metaDataMap = new ThreadLocal<>();
-    private Map<String, AbstractGrpcSource> subscribers = new HashMap<>();
+    private Map<String, GrpcSource> subscribersForConsume = new HashMap<>();
+    private Map<String, GrpcServiceSource> subscribersForProcess = new HashMap<>();
 
     public GrpcEventServiceServer(GrpcServerConfigs grpcServerConfigs) {
 //        this.requestedTransportPropertyNames = requestedTransportPropertyNames;
@@ -114,7 +116,7 @@ public class GrpcEventServiceServer {
                         } else {
                             logger.error("server thread is: " + Thread.currentThread().getId());
                             try {
-                                AbstractGrpcSource relevantSource = subscribers.get(request.getHeadersMap().get("streamID"));
+                                GrpcSource relevantSource = subscribersForConsume.get(request.getHeadersMap().get("streamID"));
                                 relevantSource.handleInjection(request.getPayload(), extractHeaders(request.getHeadersMap(),
                                         metaDataMap.get(), relevantSource.getRequestedTransportPropertyNames())); //todo: do this onEvent in a worker thread. user set threadpool parameter and buffer size
 //                                sourceEventListener.onEvent();
@@ -143,9 +145,10 @@ public class GrpcEventServiceServer {
                             transportPropertyMap.put(GrpcConstants.MESSAGE_ID, messageId);
                             transportPropertyMap.putAll(request.getHeadersMap());
                             try {
-                                sourceEventListener.onEvent(request.getPayload(), extractHeaders(transportPropertyMap,
-                                        metaDataMap.get(), requestedTransportPropertyNames));
-                                metaDataMap.remove();
+                                GrpcServiceSource relevantSource = subscribersForProcess.get(request.getHeadersMap().get("streamID"));
+                                relevantSource.handleInjection(request.getPayload(), extractHeaders(transportPropertyMap,
+                                        metaDataMap.get(), relevantSource.getRequestedTransportPropertyNames()));
+//                                sourceEventListener.onEvent();
                                 streamObserverMap.put(messageId, responseObserver);
                                 timer.schedule(new GrpcServiceSource.ServiceSourceTimeoutChecker(messageId,
                                         siddhiAppContext.getTimestampGenerator().currentTime()), serviceTimeout);
@@ -153,6 +156,8 @@ public class GrpcEventServiceServer {
                                 logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request. "
                                         + e.getMessage());
                                 responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
+                            } finally {
+                                metaDataMap.remove();
                             }
                         }
                     }
@@ -243,7 +248,17 @@ public class GrpcEventServiceServer {
         return grpcServerConfigs;
     }
 
-    public void subscribe(String streamID, AbstractGrpcSource source) {
-        subscribers.putIfAbsent(streamID, source);
+    public void subscribe(String streamID, AbstractGrpcSource source, String methodName) {
+        if (methodName.equalsIgnoreCase(GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE)) {
+            if (source instanceof GrpcSource) {
+                subscribersForConsume.putIfAbsent(streamID, (GrpcSource) source);
+            }
+        } else if (methodName.equalsIgnoreCase(GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE)) {
+            if (source instanceof GrpcServiceSource) {
+                subscribersForProcess.putIfAbsent(streamID, (GrpcServiceSource) source);
+            }
+        } else {
+            //todo throw error
+        }
     }
 }

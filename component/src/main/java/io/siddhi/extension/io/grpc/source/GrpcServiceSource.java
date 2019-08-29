@@ -285,6 +285,10 @@ public class GrpcServiceSource extends AbstractGrpcSource {
         }
     }
 
+    public void putStreamObserver(String messageID, StreamObserver streamObserver) {
+        streamObserverMap.put(messageID, streamObserver);
+    }
+
     @Override
     public void destroy() {
         GrpcSourceRegistry.getInstance().removeGrpcServiceSource(sourceId);

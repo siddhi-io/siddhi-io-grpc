@@ -46,7 +46,7 @@ public class GrpcServerManager {
             grpcPortServerMap.get(serverConfigs.getServiceConfigs().getPort()).subscribe(source.getStreamID(), source); //todo: validate for same server configs
         } else {
             GrpcEventServiceServer server = new GrpcEventServiceServer(serverConfigs);
-            server.subscribe(source.getStreamID(), source);
+            server.subscribe(source.getStreamID(), source, serverConfigs.getServiceConfigs().getMethodName());
             grpcPortServerMap.put(serverConfigs.getServiceConfigs().getPort(), server);
         }
     }
