@@ -21,6 +21,7 @@ import io.siddhi.core.SiddhiAppRuntime;
 import io.siddhi.core.SiddhiManager;
 import io.siddhi.core.stream.input.InputHandler;
 import io.siddhi.core.util.persistence.InMemoryPersistenceStore;
+import io.siddhi.extension.io.grpc.utils.GenericTestServer;
 import io.siddhi.extension.io.grpc.utils.TestAppender;
 import io.siddhi.extension.io.grpc.utils.TestServer;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
@@ -39,6 +40,7 @@ import java.util.List;
 public class GrpcSinkTestCase {
     private static final Logger log = Logger.getLogger(GrpcSinkTestCase.class.getName());
     private TestServer server = new TestServer(8888);
+
 
     @BeforeTest
     public void init() throws IOException {
@@ -416,4 +418,8 @@ public class GrpcSinkTestCase {
         Assert.assertTrue(logMessages.contains("Server consume hit with payload = [Request 1] and Headers = {{}}"));
         Assert.assertTrue(logMessages.contains("Server consume hit with payload = [Request 2] and Headers = {{}}"));
     }
+
+
+
+
 }

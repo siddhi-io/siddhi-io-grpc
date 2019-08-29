@@ -53,7 +53,7 @@ import java.util.concurrent.TimeUnit;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.TrustManagerFactory;
 
-import static io.siddhi.extension.io.grpc.util.GrpcUtils.getServiceName;
+import static io.siddhi.extension.io.grpc.util.GrpcUtils.*;
 
 /**
  * This is an abstract class extended by GrpcSource and GrpcServiceSource. This provides most of initialization
@@ -72,6 +72,10 @@ public abstract class AbstractGrpcSource extends Source {
     protected String streamID;
     private ServiceDeploymentInfo serviceDeploymentInfo;
     public static ThreadLocal<Map<String, String>> metaDataMap = new ThreadLocal<>();
+
+    protected Class requestClass;
+    protected String methodName;
+    protected String serviceReference;
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
@@ -172,7 +176,15 @@ public abstract class AbstractGrpcSource extends Source {
                 this.isDefaultMode = true;
                 initializeGrpcServer(port);
         } else {
-
+            serviceReference = getFullServiceName(aURL.getPath());
+            methodName = getMethodName(aURL.getPath());
+            initializeGrpcServer(port);
+            try {
+                requestClass = getRequestClass(serviceReference,methodName); //change the name
+            } catch (ClassNotFoundException e) {
+                throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " +
+                        "Invalid service name provided in the url, provided service name : '" + serviceReference + "'", e);
+            }
         }
         this.serviceDeploymentInfo = new ServiceDeploymentInfo(port, false);
         return null;

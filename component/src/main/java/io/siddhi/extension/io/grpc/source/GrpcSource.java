@@ -17,8 +17,11 @@
  */
 package io.siddhi.extension.io.grpc.source;
 
+import com.google.protobuf.Any;
+import com.google.protobuf.ByteString;
 import com.google.protobuf.Empty;
 import io.grpc.Server;
+import io.grpc.ServerBuilder;
 import io.grpc.ServerInterceptors;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
@@ -30,9 +33,14 @@ import io.siddhi.core.exception.ConnectionUnavailableException;
 import io.siddhi.core.exception.SiddhiAppRuntimeException;
 import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.transport.OptionHolder;
+import io.siddhi.extension.io.grpc.util.GenericServiceClass;
+import io.siddhi.extension.io.grpc.util.GrpcConstants;
 import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 import static io.siddhi.extension.io.grpc.util.GrpcUtils.extractHeaders;
 
@@ -175,7 +183,27 @@ public class GrpcSource extends AbstractGrpcSource {
                 }
             }, serverInterceptor)).build();
         } else {
+            String[] serviceReferenceArray = super.serviceReference.split("\\.");
+            String serviceName = serviceReferenceArray[serviceReferenceArray.length-1];
+            GenericServiceClass.setServiceName(serviceName);
+            GenericServiceClass.setEmptyResponseMethodName(super.methodName);
+            GenericServiceClass.AnyServiceImplBase service = new GenericServiceClass.AnyServiceImplBase() {
+                @Override
+                public void handleEmptyResponse(Any request, StreamObserver<Empty> responseObserver) {
+                    Object requestObject = null;
+                    try {
+                        Method parseFrom = requestClass.getDeclaredMethod(GrpcConstants.PARSE_FROM_METHOD_NAME,
+                                ByteString.class);
+                        requestObject = parseFrom.invoke(requestClass, request.toByteString());
+                    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) { //todo handle exception
 
+                    }
+                    sourceEventListener.onEvent(requestObject, null);
+                    responseObserver.onNext(Empty.getDefaultInstance()); //todo don't send anything
+                    responseObserver.onCompleted();
+                }
+            };
+            this.server = ServerBuilder.forPort(port).addService(service).build(); // TODO: 8/26/19 remove serverBuilder
         }
     }
 

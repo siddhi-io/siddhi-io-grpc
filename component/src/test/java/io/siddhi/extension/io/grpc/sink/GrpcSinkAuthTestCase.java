@@ -43,7 +43,7 @@ public class GrpcSinkAuthTestCase {
 
     private void setCarbonHome() {
         Path carbonHome = Paths.get("");
-        carbonHome = Paths.get(carbonHome.toString(), "src", "test");
+        carbonHome = Paths.get(carbonHome.toString(), "src", "org/wso2/grpc/test");
         System.setProperty(CARBON_HOME, carbonHome.toString());
 
     }

@@ -52,10 +52,8 @@ import java.util.concurrent.TimeUnit;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.TrustManagerFactory;
 
-import static io.siddhi.extension.io.grpc.util.GrpcUtils.getMethodName;
-import static io.siddhi.extension.io.grpc.util.GrpcUtils.getSequenceName;
-import static io.siddhi.extension.io.grpc.util.GrpcUtils.getServiceName;
-import static io.siddhi.extension.io.grpc.util.GrpcUtils.isSequenceNamePresent;
+import static io.siddhi.extension.io.grpc.util.GrpcUtils.*;
+import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRequestClass;
 
 /**
  * {@code AbstractGrpcSink} is a super class extended by GrpcCallSink, and GrpcSink.
@@ -76,6 +74,9 @@ public abstract class AbstractGrpcSink extends Sink {
     protected ManagedChannelBuilder managedChannelBuilder;
     protected long channelTerminationWaitingTimeInMillis = -1L;
     protected StreamDefinition streamDefinition;
+
+    protected Class requestClass;
+    protected String serviceReference;
 
     /**
      * Returns the list of classes which this sink can consume.
@@ -243,7 +244,13 @@ public abstract class AbstractGrpcSink extends Sink {
                 this.sequenceName = getSequenceName(aURL.getPath());
             }
         } else {
-
+            this.serviceReference = getFullServiceName(aURL.getPath());
+            try {
+                this.requestClass = getRequestClass(serviceReference,methodName);
+            } catch (ClassNotFoundException e) {
+                throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " +
+                        "Invalid service name provided in the url, provided service name : '" + serviceReference + "'", e);
+            }
         }
         initSink(optionHolder);
         return null;
