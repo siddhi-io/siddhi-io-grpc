@@ -203,7 +203,9 @@ import java.util.concurrent.TimeUnit;
                         "@sink(type='grpc-call',\n" +
                         "      publisher.url = 'grpc://194.23.98.100:8080/EventService/process',\n" +
                         "      sink.id= '1', @map(type='json'))\n" +
-                        "define stream FooStream (message String);\n",
+                        "define stream FooStream (message String);\n" +
+                        "@source(type='grpc-call-response', sink.id= '1')\n" +
+                        "define stream BarStream (message String);",
                         description = "" +
                                 "Here a stream named FooStream is defined with grpc sink. A grpc server " +
                                 "should be running at 194.23.98.100 listening to port 8080. sink.id is set to 1 here." +
