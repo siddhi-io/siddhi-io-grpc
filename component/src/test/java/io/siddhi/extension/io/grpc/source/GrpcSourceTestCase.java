@@ -424,7 +424,6 @@ public class GrpcSourceTestCase {
         MyServiceGrpc.MyServiceBlockingStub blockingStub = MyServiceGrpc.newBlockingStub(channel);
         siddhiAppRuntime.start();
         blockingStub.send(request);
-
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
     }

@@ -62,9 +62,7 @@ public class GrpcSinkGenericTestCases {
         fooStream.send(new Object[]{"Test 01", 60, 10000L, true, 522.7586f, 34.5668});
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
-
     }
-
 
     @Test
     public void testWithHeader2() throws Exception {
@@ -90,10 +88,6 @@ public class GrpcSinkGenericTestCases {
         fooStream.send(new Object[]{"Test 02", 10000L, 60, false, 768.987f, 34.5668, "'Name:Sahan','Age:21'," +
                 "'Content-Type:json'"});
         Thread.sleep(1000);
-
         siddhiAppRuntime.shutdown();
-
-
     }
-
 }

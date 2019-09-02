@@ -156,7 +156,6 @@ public abstract class AbstractGrpcSink extends Sink {
             this.channelTerminationWaitingTimeInMillis = Long.parseLong(optionHolder.validateAndGetOption(
                     GrpcConstants.CHANNEL_TERMINATION_WAITING_TIME_MILLIS).getValue());
         }
-
         String truststoreFilePath = null;
         String truststorePassword = null;
         String keystoreFilePath = null;
@@ -164,7 +163,6 @@ public abstract class AbstractGrpcSink extends Sink {
         String truststoreAlgorithm = null;
         String keystoreAlgorithm = null;
         String tlsStoreType = null;
-
         if (optionHolder.isOptionExists(GrpcConstants.TRUSTSTORE_FILE)) {
             truststoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_FILE).getValue();
             if (optionHolder.isOptionExists(GrpcConstants.TRUSTSTORE_PASSWORD)) {

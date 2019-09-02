@@ -416,7 +416,6 @@ public class GrpcServiceSourceTestCase {
                 "received event"));
     }
 
-
     @Test
     public void testToCallProcess_1() throws Exception {
         logger.info("Test case to call process");
@@ -462,7 +461,6 @@ public class GrpcServiceSourceTestCase {
 
         Thread client = new Thread() {
             public void run() {
-
                 Request request = Request.newBuilder()
                         .setStringValue("Benjamin Watson")
                         .setIntValue(100)
@@ -477,12 +475,8 @@ public class GrpcServiceSourceTestCase {
                 MyServiceGrpc.MyServiceBlockingStub blockingStub = MyServiceGrpc.newBlockingStub(channel);
                 try {
                         blockingStub.process(request);
-
                 } catch (Exception e) {
-
                 }
-
-
             }
         };
         siddhiAppRuntime.start();
