@@ -68,6 +68,9 @@ public class GrpcUtils {
 
     public static String[] extractHeaders(Map<String, String> headersMap, Map<String, String> metaDataMap,
                                           String[] requestedTransportPropertyNames) {
+        if (requestedTransportPropertyNames == null) {
+            return new String[]{};
+        }
         String[] headersArray = new String[requestedTransportPropertyNames.length];
         for (int i = 0; i < requestedTransportPropertyNames.length; i++) {
             if (headersMap.containsKey(requestedTransportPropertyNames[i])) {

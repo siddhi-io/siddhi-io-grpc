@@ -84,6 +84,7 @@ public class GrpcSourceTestCase {
         String json = "{ \"message\": \"Benjamin Watson\"}";
 
         requestBuilder.setPayload(json);
+        requestBuilder.putHeaders("streamID", "BarStream");
         Event sequenceCallRequest = requestBuilder.build();
         ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:" + port).usePlaintext().build();
         EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);

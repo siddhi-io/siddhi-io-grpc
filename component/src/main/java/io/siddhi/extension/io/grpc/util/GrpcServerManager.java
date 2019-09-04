@@ -41,13 +41,17 @@ public class GrpcServerManager {
 //        }
 //    }
 
-    public void registerSource(GrpcServerConfigs serverConfigs, AbstractGrpcSource source) {
+    public void registerSource(GrpcServerConfigs serverConfigs, AbstractGrpcSource source, String methodName) {
         if (grpcPortServerMap.containsKey(serverConfigs.getServiceConfigs().getPort())) {
-            grpcPortServerMap.get(serverConfigs.getServiceConfigs().getPort()).subscribe(source.getStreamID(), source); //todo: validate for same server configs
+            grpcPortServerMap.get(serverConfigs.getServiceConfigs().getPort()).subscribe(source.getStreamID(), source, methodName); //todo: validate for same server configs
         } else {
             GrpcEventServiceServer server = new GrpcEventServiceServer(serverConfigs);
             server.subscribe(source.getStreamID(), source, serverConfigs.getServiceConfigs().getMethodName());
             grpcPortServerMap.put(serverConfigs.getServiceConfigs().getPort(), server);
         }
+    }
+
+    public GrpcEventServiceServer getServer(int port) {
+        return grpcPortServerMap.get(port);
     }
 }

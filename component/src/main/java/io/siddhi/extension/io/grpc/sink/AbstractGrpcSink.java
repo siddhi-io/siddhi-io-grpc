@@ -83,7 +83,7 @@ public abstract class AbstractGrpcSink extends Sink {
      */
     @Override
     public Class[] getSupportedInputEventClasses() {
-        return new Class[]{com.google.protobuf.GeneratedMessageV3.class, String.class};
+        return new Class[]{com.google.protobuf.GeneratedMessageV3.class, String.class}; // TODO: 2019-09-04 restrict text mapper
         // in default case json mapper will inject String. In custom gRPC service
         // case protobuf mapper will inject gRPC message class
     }

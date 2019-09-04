@@ -72,7 +72,7 @@ public abstract class AbstractGrpcSource extends Source { //todo: have thread wo
     public static ThreadLocal<Map<String, String>> metaDataMap = new ThreadLocal<>();
 //    private ServiceConfigs serviceConfigs;
 //    private GrpcEventServiceServer server;
-    private GrpcServerConfigs grpcServerConfigs;
+    protected GrpcServerConfigs grpcServerConfigs;
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
@@ -96,16 +96,14 @@ public abstract class AbstractGrpcSource extends Source { //todo: have thread wo
         this.siddhiAppContext = siddhiAppContext;
         this.sourceEventListener = sourceEventListener;
         this.grpcServerConfigs = new GrpcServerConfigs(optionHolder, siddhiAppContext,streamID);
-        GrpcServerManager.getInstance().registerSource();
+//        GrpcServerManager.getInstance().registerSource();
 
 //        if (optionHolder.isOptionExists(GrpcConstants.SERVER_SHUTDOWN_WAITING_TIME)) {
 //            this.serverShutdownWaitingTimeInMillis = Long.parseLong(optionHolder.validateAndGetOption(
 //                    GrpcConstants.SERVER_SHUTDOWN_WAITING_TIME).getValue());
 //        }
 //        this.serviceConfigs = new ServiceConfigs(optionHolder, siddhiAppContext, streamID);
-//        initSource(optionHolder, requestedTransportPropertyNames);
-
-
+        initSource(optionHolder, requestedTransportPropertyNames);
 
 //        String truststoreFilePath = null;
 //        String truststorePassword = null;
@@ -208,7 +206,7 @@ public abstract class AbstractGrpcSource extends Source { //todo: have thread wo
 
 //    public abstract void initializeGrpcServer(int port);
 
-//    public abstract void initSource(OptionHolder optionHolder, String[] requestedTransportPropertyNames);
+    public abstract void initSource(OptionHolder optionHolder, String[] requestedTransportPropertyNames);
 
     /**
      * Returns the list of classes which this source can output.

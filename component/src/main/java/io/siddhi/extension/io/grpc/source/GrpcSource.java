@@ -30,6 +30,8 @@ import io.siddhi.core.exception.ConnectionUnavailableException;
 import io.siddhi.core.exception.SiddhiAppRuntimeException;
 import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.transport.OptionHolder;
+import io.siddhi.extension.io.grpc.util.GrpcConstants;
+import io.siddhi.extension.io.grpc.util.GrpcServerManager;
 import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
@@ -179,13 +181,15 @@ public class GrpcSource extends AbstractGrpcSource {
 //        }
 //    }
 
-//    @Override
-//    public void initSource(OptionHolder optionHolder, String[] requestedTransportPropertyNames) {
-//        this.requestedTransportPropertyNames = requestedTransportPropertyNames.clone();
-//    }
+    @Override
+    public void initSource(OptionHolder optionHolder, String[] requestedTransportPropertyNames) {
+        this.requestedTransportPropertyNames = requestedTransportPropertyNames.clone();
+        GrpcServerManager.getInstance().registerSource(grpcServerConfigs, this, GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE);
+    }
 
     @Override
     public void connect(ConnectionCallback connectionCallback, State state) throws ConnectionUnavailableException {
+        GrpcServerManager.getInstance().getServer(grpcServerConfigs.getServiceConfigs().getPort()).connectServer(logger, connectionCallback);
 //        connectGrpcServer(server, logger, connectionCallback);
     }
 
@@ -194,6 +198,7 @@ public class GrpcSource extends AbstractGrpcSource {
      */
     @Override
     public void disconnect() {
+        GrpcServerManager.getInstance().getServer(grpcServerConfigs.getServiceConfigs().getPort()).disconnectServer(logger);
 //        disconnectGrpcServer(server, logger);
     }
 }

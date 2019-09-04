@@ -30,9 +30,9 @@ public class GrpcServerConfigs {
     private String truststoreAlgorithm;
     private String keystoreAlgorithm;
     private String tlsStoreType;
-    private int maxInboundMessageSize;
-    private int maxInboundMetadataSize;
-    private long serverShutdownWaitingTimeInMillis;
+    private int maxInboundMessageSize = -1;
+    private int maxInboundMetadataSize = -1;
+    private long serverShutdownWaitingTimeInMillis = -1L;
 
     public GrpcServerConfigs(OptionHolder optionHolder, SiddhiAppContext siddhiAppContext, String streamID) {
         this.serviceConfigs = new ServiceConfigs(optionHolder, siddhiAppContext, streamID);
