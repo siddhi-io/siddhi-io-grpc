@@ -51,6 +51,7 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static io.siddhi.extension.io.grpc.util.GrpcUtils.extractHeaders;
@@ -67,6 +68,7 @@ public class GrpcEventServiceServer {
     public static ThreadLocal<Map<String, String>> metaDataMap = new ThreadLocal<>();
     private Map<String, GrpcSource> subscribersForConsume = new HashMap<>();
     private Map<String, GrpcServiceSource> subscribersForProcess = new HashMap<>();
+    private int state = 0;
 
     public GrpcEventServiceServer(GrpcServerConfigs grpcServerConfigs, SiddhiAppContext siddhiAppContext, String streamID) {
 //        this.requestedTransportPropertyNames = requestedTransportPropertyNames;
@@ -145,41 +147,51 @@ public class GrpcEventServiceServer {
                         }
                     }
 
-//                    @Override
-//                    public void process(Event request,
-//                                        StreamObserver<Event> responseObserver) {
-//                        if (request.getPayload() == null) {
-//                            logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request due to " +
-//                                    "missing payload ");
-//                            responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
-//                        } else {
-//                            String messageId = UUID.randomUUID().toString();
-//                            Map<String, String> transportPropertyMap = new HashMap<>();
-//                            transportPropertyMap.put(GrpcConstants.MESSAGE_ID, messageId);
-//                            transportPropertyMap.putAll(request.getHeadersMap());
-//                            try {
-//                                GrpcServiceSource relevantSource = subscribersForProcess.get(request.getHeadersMap().get("streamID"));
-//                                relevantSource.handleInjection(request.getPayload(), extractHeaders(transportPropertyMap,
-//                                        metaDataMap.get(), relevantSource.getRequestedTransportPropertyNames()));
-////                                sourceEventListener.onEvent();
-//                                streamObserverMap.put(messageId, responseObserver);
-//                                timer.schedule(new GrpcServiceSource.ServiceSourceTimeoutChecker(messageId,
-//                                        siddhiAppContext.getTimestampGenerator().currentTime()), serviceTimeout);
-//                            } catch (SiddhiAppRuntimeException e) {
-//                                logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request. "
-//                                        + e.getMessage());
-//                                responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
-//                            } finally {
-//                                metaDataMap.remove();
-//                            }
-//                        }
-//                    }
+                    @Override
+                    public void process(Event request,
+                                        StreamObserver<Event> responseObserver) {
+                        if (request.getPayload() == null) {
+                            logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request due to " +
+                                    "missing payload ");
+                            responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
+                        } else if (!request.getHeadersMap().containsKey("streamID")) {
+                            logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request due to " +
+                                    "missing streamID ");
+                            responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
+                        } else if (!subscribersForProcess.containsKey(request.getHeadersMap().get("streamID"))) {
+                            logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request because " +
+                                    "requested stream with streamID " + request.getHeadersMap().get("streamID") +
+                                    " not subcribed to the gRPC server on port " +
+                                    grpcServerConfigs.getServiceConfigs().getPort());
+                            responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
+                        } else {
+                            String messageId = UUID.randomUUID().toString();
+                            Map<String, String> transportPropertyMap = new HashMap<>();
+                            transportPropertyMap.put(GrpcConstants.MESSAGE_ID, messageId);
+                            transportPropertyMap.putAll(request.getHeadersMap());
+                            try {
+                                GrpcServiceSource relevantSource = subscribersForProcess.get(request.getHeadersMap().get("streamID"));
+                                relevantSource.handleInjection(request.getPayload(), extractHeaders(transportPropertyMap,
+                                        metaDataMap.get(), relevantSource.getRequestedTransportPropertyNames()));
+//                                sourceEventListener.onEvent();
+                                relevantSource.putStreamObserver(messageId, responseObserver);
+                                relevantSource.scheduleServiceTimeout(messageId);
+                            } catch (SiddhiAppRuntimeException e) {
+                                logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request. "
+                                        + e.getMessage());
+                                responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
+                            } finally {
+                                metaDataMap.remove();
+                            }
+                        }
+                    }
                 }, serverInterceptor)).build();
     }
 
     public void connectServer(Logger logger, Source.ConnectionCallback connectionCallback, SiddhiAppContext siddhiAppContext, String streamID) {
         try {
             server.start();
+            state = 1;
             if (logger.isDebugEnabled()) {
                 logger.debug(siddhiAppContext.getName() + ":" + streamID + ": gRPC Server started");
             }
@@ -220,6 +232,7 @@ public class GrpcEventServiceServer {
                 throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ":" + streamID + ": Unable to " +
                         "shutdown server");
             }
+            state = 2;
         } catch (InterruptedException e) {
             throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": " + streamID + ": ", e);
         }
@@ -281,5 +294,9 @@ public class GrpcEventServiceServer {
 
     public boolean isShutDown() {
         return server.isShutdown();
+    }
+
+    public int getState() {
+        return state;
     }
 }

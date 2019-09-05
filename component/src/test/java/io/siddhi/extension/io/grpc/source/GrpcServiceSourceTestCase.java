@@ -85,10 +85,9 @@ public class GrpcServiceSourceTestCase {
         Thread client = new Thread() {
             public void run() {
                 Event.Builder requestBuilder = Event.newBuilder();
-
                 String json = "{ \"message\": \"Benjamin Watson\"}";
-
                 requestBuilder.setPayload(json);
+                requestBuilder.putHeaders("streamID", "FooStream");
                 Event sequenceCallRequest = requestBuilder.build();
                 ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:" + port).usePlaintext().build();
                 EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);

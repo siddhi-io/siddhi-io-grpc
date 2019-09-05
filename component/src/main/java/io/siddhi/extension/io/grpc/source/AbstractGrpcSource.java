@@ -95,7 +95,7 @@ public abstract class AbstractGrpcSource extends Source { //todo: have thread wo
         this.streamID = sourceEventListener.getStreamDefinition().getId();
         this.siddhiAppContext = siddhiAppContext;
         this.sourceEventListener = sourceEventListener;
-        this.requestedTransportPropertyNames = requestedTransportPropertyNames;
+        this.requestedTransportPropertyNames = requestedTransportPropertyNames.clone();
         this.grpcServerConfigs = new GrpcServerConfigs(optionHolder, siddhiAppContext,streamID);
 //        GrpcServerManager.getInstance().registerSource();
 

@@ -30,6 +30,7 @@ import io.siddhi.core.exception.SiddhiAppRuntimeException;
 import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
+import io.siddhi.extension.io.grpc.util.GrpcServerManager;
 import io.siddhi.extension.io.grpc.util.GrpcSourceRegistry;
 import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
@@ -223,6 +224,11 @@ public class GrpcServiceSource extends AbstractGrpcSource {
 //        }
 //    }
 
+    public void scheduleServiceTimeout(String messageId) {
+        timer.schedule(new GrpcServiceSource.ServiceSourceTimeoutChecker(messageId,
+                siddhiAppContext.getTimestampGenerator().currentTime()), serviceTimeout);
+    }
+
     class ServiceSourceTimeoutChecker extends TimerTask {
         private String messageId;
         private long requestReceivedTime;
@@ -252,16 +258,18 @@ public class GrpcServiceSource extends AbstractGrpcSource {
     //@Override
     public void initSource(OptionHolder optionHolder, String[] requestedTransportPropertyNames) {
         this.sourceId = optionHolder.validateAndGetOption(GrpcConstants.SOURCE_ID).getValue();
-        this.requestedTransportPropertyNames = requestedTransportPropertyNames.clone();
         this.serviceTimeout = Long.parseLong(optionHolder.getOrCreateOption(GrpcConstants.SERVICE_TIMEOUT,
                 GrpcConstants.SERVICE_TIMEOUT_DEFAULT).getValue());
         this.timer = new Timer();
         GrpcSourceRegistry.getInstance().putGrpcServiceSource(sourceId, this);
+        GrpcServerManager.getInstance().registerSource(grpcServerConfigs, this, GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE, siddhiAppContext, streamID);
     }
 
     @Override
     public void connect(ConnectionCallback connectionCallback, State state) throws ConnectionUnavailableException {
-//        connectGrpcServer(server, logger, connectionCallback);
+        if (GrpcServerManager.getInstance().getServer(grpcServerConfigs.getServiceConfigs().getPort()).getState() == 0) {
+            GrpcServerManager.getInstance().getServer(grpcServerConfigs.getServiceConfigs().getPort()).connectServer(logger, connectionCallback, siddhiAppContext, streamID);
+        }
     }
 
     /**
