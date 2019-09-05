@@ -134,6 +134,7 @@ public class GrpcSourceTestCase {
         String json = "{ \"message\": \"Hello !\"}";
 
         requestBuilder.setPayload(json);
+        requestBuilder.putHeaders("streamID", "BarStream");
         Event sequenceCallRequest = requestBuilder.build();
         ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:" + port).usePlaintext().build();
         EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
@@ -172,6 +173,7 @@ public class GrpcSourceTestCase {
         Event.Builder requestBuilder = Event.newBuilder();
         String json = "{ \"message\": \"Hello !\"}";
         requestBuilder.setPayload(json);
+        requestBuilder.putHeaders("streamID", "BarStream");
         Event sequenceCallRequest = requestBuilder.build();
         ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:" + port).usePlaintext().build();
         EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
@@ -239,6 +241,7 @@ public class GrpcSourceTestCase {
         Event.Builder requestBuilder = Event.newBuilder();
         String json = "{ \"message\": \"Hello !\"}";
         requestBuilder.setPayload(json);
+        requestBuilder.putHeaders("streamID", "BarStream");
         requestBuilder.putHeaders("name", "john");
         requestBuilder.putHeaders("age", "24");
         Event sequenceCallRequest = requestBuilder.build();
@@ -273,6 +276,7 @@ public class GrpcSourceTestCase {
         Event.Builder requestBuilder = Event.newBuilder();
         String json = "{ \"message\": \"Hello !\"}";
         requestBuilder.setPayload(json);
+        requestBuilder.putHeaders("streamID", "BarStream");
         requestBuilder.putHeaders("age", "24");
         Event sequenceCallRequest = requestBuilder.build();
         ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:" + port).usePlaintext().build();
@@ -300,7 +304,7 @@ public class GrpcSourceTestCase {
     }
 
     @Test
-    public void bindExceptionTest() throws Exception {
+    public void bindExceptionTest() throws Exception { //irrelevant now with subscriber model
         logger.info("Test case to call process");
         logger.setLevel(Level.DEBUG);
         SiddhiManager siddhiManager = new SiddhiManager();

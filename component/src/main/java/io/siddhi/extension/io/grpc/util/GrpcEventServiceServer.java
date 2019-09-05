@@ -120,6 +120,12 @@ public class GrpcEventServiceServer {
                             logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request due to " +
                                     "missing streamID ");
                             responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
+                        } else if (!subscribersForConsume.containsKey(request.getHeadersMap().get("streamID"))) {
+                            logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request because " +
+                                    "requested stream with streamID " + request.getHeadersMap().get("streamID") +
+                                    " not subcribed to the gRPC server on port " +
+                                    grpcServerConfigs.getServiceConfigs().getPort());
+                            responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
                         } else {
                             logger.error("server thread is: " + Thread.currentThread().getId());
                             try {
@@ -272,4 +278,8 @@ public class GrpcEventServiceServer {
 //    public Server getCoreServer() {
 //        return server;
 //    }
+
+    public boolean isShutDown() {
+        return server.isShutdown();
+    }
 }

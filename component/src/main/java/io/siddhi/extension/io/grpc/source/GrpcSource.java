@@ -189,8 +189,9 @@ public class GrpcSource extends AbstractGrpcSource {
 
     @Override
     public void connect(ConnectionCallback connectionCallback, State state) throws ConnectionUnavailableException {
-        GrpcServerManager.getInstance().getServer(grpcServerConfigs.getServiceConfigs().getPort()).connectServer(logger, connectionCallback, siddhiAppContext, streamID);
-//        connectGrpcServer(server, logger, connectionCallback);
+        if (GrpcServerManager.getInstance().getServer(grpcServerConfigs.getServiceConfigs().getPort()).isShutDown()) {
+            GrpcServerManager.getInstance().getServer(grpcServerConfigs.getServiceConfigs().getPort()).connectServer(logger, connectionCallback, siddhiAppContext, streamID);
+        }
     }
 
     /**
@@ -199,6 +200,5 @@ public class GrpcSource extends AbstractGrpcSource {
     @Override
     public void disconnect() {
         GrpcServerManager.getInstance().getServer(grpcServerConfigs.getServiceConfigs().getPort()).disconnectServer(logger, siddhiAppContext, streamID);
-//        disconnectGrpcServer(server, logger);
     }
 }
