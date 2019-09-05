@@ -17,6 +17,7 @@
  */
 package io.siddhi.extension.io.grpc.util;
 
+import io.siddhi.core.config.SiddhiAppContext;
 import io.siddhi.extension.io.grpc.source.AbstractGrpcSource;
 
 import java.util.Collections;
@@ -41,11 +42,11 @@ public class GrpcServerManager {
 //        }
 //    }
 
-    public void registerSource(GrpcServerConfigs serverConfigs, AbstractGrpcSource source, String methodName) {
+    public void registerSource(GrpcServerConfigs serverConfigs, AbstractGrpcSource source, String methodName, SiddhiAppContext siddhiAppContext, String streamID) {
         if (grpcPortServerMap.containsKey(serverConfigs.getServiceConfigs().getPort())) {
             grpcPortServerMap.get(serverConfigs.getServiceConfigs().getPort()).subscribe(source.getStreamID(), source, methodName); //todo: validate for same server configs
         } else {
-            GrpcEventServiceServer server = new GrpcEventServiceServer(serverConfigs);
+            GrpcEventServiceServer server = new GrpcEventServiceServer(serverConfigs, siddhiAppContext, streamID);
             server.subscribe(source.getStreamID(), source, serverConfigs.getServiceConfigs().getMethodName());
             grpcPortServerMap.put(serverConfigs.getServiceConfigs().getPort(), server);
         }

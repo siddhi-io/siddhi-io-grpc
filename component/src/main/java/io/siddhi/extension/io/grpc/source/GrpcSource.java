@@ -184,12 +184,12 @@ public class GrpcSource extends AbstractGrpcSource {
     @Override
     public void initSource(OptionHolder optionHolder, String[] requestedTransportPropertyNames) {
         this.requestedTransportPropertyNames = requestedTransportPropertyNames.clone();
-        GrpcServerManager.getInstance().registerSource(grpcServerConfigs, this, GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE);
+        GrpcServerManager.getInstance().registerSource(grpcServerConfigs, this, GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE, siddhiAppContext, streamID);
     }
 
     @Override
     public void connect(ConnectionCallback connectionCallback, State state) throws ConnectionUnavailableException {
-        GrpcServerManager.getInstance().getServer(grpcServerConfigs.getServiceConfigs().getPort()).connectServer(logger, connectionCallback);
+        GrpcServerManager.getInstance().getServer(grpcServerConfigs.getServiceConfigs().getPort()).connectServer(logger, connectionCallback, siddhiAppContext, streamID);
 //        connectGrpcServer(server, logger, connectionCallback);
     }
 
@@ -198,7 +198,7 @@ public class GrpcSource extends AbstractGrpcSource {
      */
     @Override
     public void disconnect() {
-        GrpcServerManager.getInstance().getServer(grpcServerConfigs.getServiceConfigs().getPort()).disconnectServer(logger);
+        GrpcServerManager.getInstance().getServer(grpcServerConfigs.getServiceConfigs().getPort()).disconnectServer(logger, siddhiAppContext, streamID);
 //        disconnectGrpcServer(server, logger);
     }
 }

@@ -61,33 +61,33 @@ public class GrpcEventServiceServer {
     protected Server server;
     private NettyServerBuilder serverBuilder;
     private GrpcServerConfigs grpcServerConfigs;
-    private SiddhiAppContext siddhiAppContext;
-    private String streamID;
+//    private SiddhiAppContext siddhiAppContext;
+//    private String streamID;
     private SourceServerInterceptor serverInterceptor;
     public static ThreadLocal<Map<String, String>> metaDataMap = new ThreadLocal<>();
     private Map<String, GrpcSource> subscribersForConsume = new HashMap<>();
     private Map<String, GrpcServiceSource> subscribersForProcess = new HashMap<>();
 
-    public GrpcEventServiceServer(GrpcServerConfigs grpcServerConfigs) {
+    public GrpcEventServiceServer(GrpcServerConfigs grpcServerConfigs, SiddhiAppContext siddhiAppContext, String streamID) {
 //        this.requestedTransportPropertyNames = requestedTransportPropertyNames;
-        this.siddhiAppContext = siddhiAppContext;
-        this.streamID = streamID;
+//        this.siddhiAppContext = siddhiAppContext;
+//        this.streamID = streamID;
         this.serverInterceptor = new SourceServerInterceptor();
         this.grpcServerConfigs = grpcServerConfigs;
-        setServerPropertiesToBuilder();
-        addServicesAndBuildServer();
+        setServerPropertiesToBuilder(siddhiAppContext, streamID);
+        addServicesAndBuildServer(siddhiAppContext, streamID);
     }
 
-    public void setServerPropertiesToBuilder() {
+    public void setServerPropertiesToBuilder(SiddhiAppContext siddhiAppContext, String streamID) {
         serverBuilder = NettyServerBuilder.forPort(grpcServerConfigs.getServiceConfigs().getPort());
         if (grpcServerConfigs.getKeystoreFilePath() != null) {
             try {
                 SslContextBuilder sslContextBuilder = getSslContextBuilder(grpcServerConfigs.getKeystoreFilePath(), grpcServerConfigs.getKeystorePassword(),
-                        grpcServerConfigs.getKeystoreAlgorithm(), grpcServerConfigs.getTlsStoreType());
+                        grpcServerConfigs.getKeystoreAlgorithm(), grpcServerConfigs.getTlsStoreType(), siddhiAppContext, streamID);
                 if (grpcServerConfigs.getTruststoreFilePath() != null) {
                     sslContextBuilder = addTrustStore(grpcServerConfigs.getTruststoreFilePath(), grpcServerConfigs.getTruststorePassword(),
                             grpcServerConfigs.getTruststoreAlgorithm(),
-                            sslContextBuilder, grpcServerConfigs.getTlsStoreType()).clientAuth(ClientAuth.REQUIRE);
+                            sslContextBuilder, grpcServerConfigs.getTlsStoreType(), siddhiAppContext, streamID).clientAuth(ClientAuth.REQUIRE);
                 }
                 serverBuilder.sslContext(sslContextBuilder.build());
             } catch (IOException | CertificateException | NoSuchAlgorithmException | UnrecoverableKeyException |
@@ -105,7 +105,7 @@ public class GrpcEventServiceServer {
 
     }
 
-    public void addServicesAndBuildServer() {
+    public void addServicesAndBuildServer(SiddhiAppContext siddhiAppContext, String streamID) {
         this.server = serverBuilder.addService(ServerInterceptors.intercept(
                 new EventServiceGrpc.EventServiceImplBase() {
                     @Override
@@ -116,6 +116,10 @@ public class GrpcEventServiceServer {
                                     "missing payload ");
                             responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
 
+                        } else if (!request.getHeadersMap().containsKey("streamID")) {
+                            logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request due to " +
+                                    "missing streamID ");
+                            responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
                         } else {
                             logger.error("server thread is: " + Thread.currentThread().getId());
                             try {
@@ -167,12 +171,12 @@ public class GrpcEventServiceServer {
                 }, serverInterceptor)).build();
     }
 
-    public void connectServer(Logger logger, Source.ConnectionCallback connectionCallback) {
+    public void connectServer(Logger logger, Source.ConnectionCallback connectionCallback, SiddhiAppContext siddhiAppContext, String streamID) {
         try {
             server.start();
-//            if (logger.isDebugEnabled()) {
-//                logger.debug(siddhiAppContext.getName() + ":" + streamID + ": gRPC Server started");
-//            }
+            if (logger.isDebugEnabled()) {
+                logger.debug(siddhiAppContext.getName() + ":" + streamID + ": gRPC Server started");
+            }
         } catch (IOException e) {
             if (e.getCause() instanceof BindException) {
                 throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID + ": Another " +
@@ -186,7 +190,7 @@ public class GrpcEventServiceServer {
         }
     }
 
-    public void disconnectServer(Logger logger) {
+    public void disconnectServer(Logger logger, SiddhiAppContext siddhiAppContext, String streamID) {
         try {
             if (server == null) {
                 if (logger.isDebugEnabled()) {
@@ -215,7 +219,7 @@ public class GrpcEventServiceServer {
         }
     }
 
-    private SslContextBuilder getSslContextBuilder(String filePath, String password, String algorithm, String storeType)
+    private SslContextBuilder getSslContextBuilder(String filePath, String password, String algorithm, String storeType, SiddhiAppContext siddhiAppContext, String streamID)
             throws KeyStoreException, NoSuchAlgorithmException, CertificateException,
             UnrecoverableKeyException {
         char[] passphrase = password.toCharArray();
@@ -233,7 +237,7 @@ public class GrpcEventServiceServer {
     }
 
     private SslContextBuilder addTrustStore(String filePath, String password, String algorithm,
-                                            SslContextBuilder sslContextBuilder, String storeType)
+                                            SslContextBuilder sslContextBuilder, String storeType, SiddhiAppContext siddhiAppContext, String streamID)
             throws NoSuchAlgorithmException, KeyStoreException, CertificateException {
         char[] passphrase = password.toCharArray();
         KeyStore keyStore = KeyStore.getInstance(storeType);
