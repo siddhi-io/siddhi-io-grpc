@@ -26,6 +26,7 @@ public class GrpcConstants {
     public static final String RECEIVER_URL = "receiver.url";
     public static final String PORT_SERVICE_SEPARATOR = "/";
     public static final String SINK_ID = "sink.id";
+    public static final String STREAM_ID = "stream.id";
     public static final String DEFAULT_METHOD_NAME_WITH_RESPONSE = "process";
     public static final String DEFAULT_METHOD_NAME_WITHOUT_RESPONSE = "consume";
     public static final String EMPTY_STRING = "";

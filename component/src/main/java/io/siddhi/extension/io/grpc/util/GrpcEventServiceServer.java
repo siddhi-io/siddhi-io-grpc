@@ -58,22 +58,17 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.extractHeaders;
 
 public class GrpcEventServiceServer {
     private static final Logger logger = Logger.getLogger(GrpcEventServiceServer.class.getName());
-//    protected String[] requestedTransportPropertyNames;
     protected Server server;
     private NettyServerBuilder serverBuilder;
     private GrpcServerConfigs grpcServerConfigs;
-//    private SiddhiAppContext siddhiAppContext;
-//    private String streamID;
     private SourceServerInterceptor serverInterceptor;
     public static ThreadLocal<Map<String, String>> metaDataMap = new ThreadLocal<>();
     private Map<String, GrpcSource> subscribersForConsume = new HashMap<>();
     private Map<String, GrpcServiceSource> subscribersForProcess = new HashMap<>();
     private int state = 0;
 
-    public GrpcEventServiceServer(GrpcServerConfigs grpcServerConfigs, SiddhiAppContext siddhiAppContext, String streamID) {
-//        this.requestedTransportPropertyNames = requestedTransportPropertyNames;
-//        this.siddhiAppContext = siddhiAppContext;
-//        this.streamID = streamID;
+    public GrpcEventServiceServer(GrpcServerConfigs grpcServerConfigs, SiddhiAppContext siddhiAppContext,
+                                  String streamID) {
         this.serverInterceptor = new SourceServerInterceptor();
         this.grpcServerConfigs = grpcServerConfigs;
         setServerPropertiesToBuilder(siddhiAppContext, streamID);
@@ -84,12 +79,15 @@ public class GrpcEventServiceServer {
         serverBuilder = NettyServerBuilder.forPort(grpcServerConfigs.getServiceConfigs().getPort());
         if (grpcServerConfigs.getKeystoreFilePath() != null) {
             try {
-                SslContextBuilder sslContextBuilder = getSslContextBuilder(grpcServerConfigs.getKeystoreFilePath(), grpcServerConfigs.getKeystorePassword(),
-                        grpcServerConfigs.getKeystoreAlgorithm(), grpcServerConfigs.getTlsStoreType(), siddhiAppContext, streamID);
+                SslContextBuilder sslContextBuilder = getSslContextBuilder(grpcServerConfigs.getKeystoreFilePath(),
+                        grpcServerConfigs.getKeystorePassword(),
+                        grpcServerConfigs.getKeystoreAlgorithm(), grpcServerConfigs.getTlsStoreType(), siddhiAppContext,
+                        streamID);
                 if (grpcServerConfigs.getTruststoreFilePath() != null) {
-                    sslContextBuilder = addTrustStore(grpcServerConfigs.getTruststoreFilePath(), grpcServerConfigs.getTruststorePassword(),
-                            grpcServerConfigs.getTruststoreAlgorithm(),
-                            sslContextBuilder, grpcServerConfigs.getTlsStoreType(), siddhiAppContext, streamID).clientAuth(ClientAuth.REQUIRE);
+                    sslContextBuilder = addTrustStore(grpcServerConfigs.getTruststoreFilePath(),
+                            grpcServerConfigs.getTruststorePassword(), grpcServerConfigs.getTruststoreAlgorithm(),
+                            sslContextBuilder, grpcServerConfigs.getTlsStoreType(), siddhiAppContext, streamID)
+                            .clientAuth(ClientAuth.REQUIRE);
                 }
                 serverBuilder.sslContext(sslContextBuilder.build());
             } catch (IOException | CertificateException | NoSuchAlgorithmException | UnrecoverableKeyException |
@@ -118,23 +116,25 @@ public class GrpcEventServiceServer {
                                     "missing payload ");
                             responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
 
-                        } else if (!request.getHeadersMap().containsKey("streamID")) {
+                        } else if (!request.getHeadersMap().containsKey(GrpcConstants.STREAM_ID)) {
                             logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request due to " +
-                                    "missing streamID ");
+                                    "missing stream.id ");
                             responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
-                        } else if (!subscribersForConsume.containsKey(request.getHeadersMap().get("streamID"))) {
+                        } else if (!subscribersForConsume.containsKey(request.getHeadersMap().get(GrpcConstants
+                                .STREAM_ID))) {
                             logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request because " +
-                                    "requested stream with streamID " + request.getHeadersMap().get("streamID") +
+                                    "requested stream with stream.id " + request.getHeadersMap().get("streamID") +
                                     " not subcribed to the gRPC server on port " +
                                     grpcServerConfigs.getServiceConfigs().getPort());
                             responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
                         } else {
                             logger.error("server thread is: " + Thread.currentThread().getId());
                             try {
-                                GrpcSource relevantSource = subscribersForConsume.get(request.getHeadersMap().get("streamID"));
-                                relevantSource.handleInjection(request.getPayload(), extractHeaders(request.getHeadersMap(),
-                                        metaDataMap.get(), relevantSource.getRequestedTransportPropertyNames())); //todo: do this onEvent in a worker thread. user set threadpool parameter and buffer size
-//                                sourceEventListener.onEvent();
+                                GrpcSource relevantSource = subscribersForConsume.get(request.getHeadersMap()
+                                        .get(GrpcConstants.STREAM_ID));
+                                relevantSource.handleInjection(request.getPayload(), extractHeaders(request
+                                                .getHeadersMap(), metaDataMap.get(),
+                                        relevantSource.getRequestedTransportPropertyNames())); //todo: do this onEvent in a worker thread. user set threadpool parameter and buffer size
                                 responseObserver.onNext(Empty.getDefaultInstance());
                                 responseObserver.onCompleted();
                             } catch (SiddhiAppRuntimeException e) {
@@ -154,14 +154,15 @@ public class GrpcEventServiceServer {
                             logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request due to " +
                                     "missing payload ");
                             responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
-                        } else if (!request.getHeadersMap().containsKey("streamID")) {
+                        } else if (!request.getHeadersMap().containsKey(GrpcConstants.STREAM_ID)) {
                             logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request due to " +
-                                    "missing streamID ");
+                                    "missing stream.id ");
                             responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
-                        } else if (!subscribersForProcess.containsKey(request.getHeadersMap().get("streamID"))) {
+                        } else if (!subscribersForProcess.containsKey(request.getHeadersMap().get(GrpcConstants
+                                .STREAM_ID))) {
                             logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request because " +
-                                    "requested stream with streamID " + request.getHeadersMap().get("streamID") +
-                                    " not subcribed to the gRPC server on port " +
+                                    "requested stream with stream.id " + request.getHeadersMap().get(GrpcConstants
+                                    .STREAM_ID) + " not subcribed to the gRPC server on port " +
                                     grpcServerConfigs.getServiceConfigs().getPort());
                             responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
                         } else {
@@ -170,10 +171,11 @@ public class GrpcEventServiceServer {
                             transportPropertyMap.put(GrpcConstants.MESSAGE_ID, messageId);
                             transportPropertyMap.putAll(request.getHeadersMap());
                             try {
-                                GrpcServiceSource relevantSource = subscribersForProcess.get(request.getHeadersMap().get("streamID"));
-                                relevantSource.handleInjection(request.getPayload(), extractHeaders(transportPropertyMap,
-                                        metaDataMap.get(), relevantSource.getRequestedTransportPropertyNames()));
-//                                sourceEventListener.onEvent();
+                                GrpcServiceSource relevantSource = subscribersForProcess.get(request.getHeadersMap()
+                                        .get(GrpcConstants.STREAM_ID));
+                                relevantSource.handleInjection(request.getPayload(), extractHeaders(
+                                        transportPropertyMap, metaDataMap.get(), relevantSource
+                                                .getRequestedTransportPropertyNames()));
                                 relevantSource.putStreamObserver(messageId, responseObserver);
                                 relevantSource.scheduleServiceTimeout(messageId);
                             } catch (SiddhiAppRuntimeException e) {
@@ -188,7 +190,8 @@ public class GrpcEventServiceServer {
                 }, serverInterceptor)).build();
     }
 
-    public void connectServer(Logger logger, Source.ConnectionCallback connectionCallback, SiddhiAppContext siddhiAppContext, String streamID) {
+    public void connectServer(Logger logger, Source.ConnectionCallback connectionCallback,
+                              SiddhiAppContext siddhiAppContext, String streamID) {
         try {
             server.start();
             state = 1;
@@ -219,14 +222,16 @@ public class GrpcEventServiceServer {
             }
             server.shutdown();
             if (getGrpcServerConfigs().getServerShutdownWaitingTimeInMillis() > 0) {
-                if (server.awaitTermination(getGrpcServerConfigs().getServerShutdownWaitingTimeInMillis(), TimeUnit.MILLISECONDS)) {
+                if (server.awaitTermination(getGrpcServerConfigs().getServerShutdownWaitingTimeInMillis(),
+                        TimeUnit.MILLISECONDS)) {
                     if (logger.isDebugEnabled()) {
                         logger.debug(siddhiAppContext.getName() + ": " + streamID + ": Server stopped");
                     }
                     return;
                 }
                 server.shutdownNow();
-                if (server.awaitTermination(getGrpcServerConfigs().getServerShutdownWaitingTimeInMillis(), TimeUnit.SECONDS)) {
+                if (server.awaitTermination(getGrpcServerConfigs().getServerShutdownWaitingTimeInMillis(),
+                        TimeUnit.MILLISECONDS)) {
                     return;
                 }
                 throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ":" + streamID + ": Unable to " +
@@ -238,7 +243,8 @@ public class GrpcEventServiceServer {
         }
     }
 
-    private SslContextBuilder getSslContextBuilder(String filePath, String password, String algorithm, String storeType, SiddhiAppContext siddhiAppContext, String streamID)
+    private SslContextBuilder getSslContextBuilder(String filePath, String password, String algorithm, String storeType,
+                                                   SiddhiAppContext siddhiAppContext, String streamID)
             throws KeyStoreException, NoSuchAlgorithmException, CertificateException,
             UnrecoverableKeyException {
         char[] passphrase = password.toCharArray();
@@ -256,7 +262,8 @@ public class GrpcEventServiceServer {
     }
 
     private SslContextBuilder addTrustStore(String filePath, String password, String algorithm,
-                                            SslContextBuilder sslContextBuilder, String storeType, SiddhiAppContext siddhiAppContext, String streamID)
+                                            SslContextBuilder sslContextBuilder, String storeType,
+                                            SiddhiAppContext siddhiAppContext, String streamID)
             throws NoSuchAlgorithmException, KeyStoreException, CertificateException {
         char[] passphrase = password.toCharArray();
         KeyStore keyStore = KeyStore.getInstance(storeType);
@@ -274,7 +281,8 @@ public class GrpcEventServiceServer {
         return grpcServerConfigs;
     }
 
-    public void subscribe(String streamID, AbstractGrpcSource source, String methodName) {
+    public void subscribe(String streamID, AbstractGrpcSource source, String methodName,
+                          SiddhiAppContext siddhiAppContext) {
         if (methodName.equalsIgnoreCase(GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE)) {
             if (source instanceof GrpcSource) {
                 subscribersForConsume.putIfAbsent(streamID, (GrpcSource) source);
@@ -284,13 +292,21 @@ public class GrpcEventServiceServer {
                 subscribersForProcess.putIfAbsent(streamID, (GrpcServiceSource) source);
             }
         } else {
-            //todo throw error
+            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": " + streamID + ": method name " +
+                    "should be either process or consume but given as " + methodName);
         }
     }
 
-//    public Server getCoreServer() {
-//        return server;
-//    }
+    public void unsubscribe(String streamID, String methodName, SiddhiAppContext siddhiAppContext) {
+        if (methodName.equalsIgnoreCase(GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE)) {
+            subscribersForConsume.remove(streamID);
+        } else if (methodName.equalsIgnoreCase(GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE)) {
+            subscribersForProcess.remove(streamID);
+        } else {
+            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": " + streamID + ": method name " +
+                    "should be either process or consume but given as " + methodName);
+        }
+    }
 
     public boolean isShutDown() {
         return server.isShutdown();
@@ -298,5 +314,9 @@ public class GrpcEventServiceServer {
 
     public int getState() {
         return state;
+    }
+
+    public int getNumSubscribers() {
+        return subscribersForConsume.size() + subscribersForProcess.size();
     }
 }

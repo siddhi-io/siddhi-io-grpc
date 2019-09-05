@@ -17,26 +17,17 @@
  */
 package io.siddhi.extension.io.grpc.source;
 
-import com.google.protobuf.Empty;
 import io.grpc.Server;
-import io.grpc.ServerInterceptors;
-import io.grpc.Status;
-import io.grpc.stub.StreamObserver;
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
 import io.siddhi.annotation.Parameter;
 import io.siddhi.annotation.util.DataType;
 import io.siddhi.core.exception.ConnectionUnavailableException;
-import io.siddhi.core.exception.SiddhiAppRuntimeException;
 import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
 import io.siddhi.extension.io.grpc.util.GrpcServerManager;
 import org.apache.log4j.Logger;
-import org.wso2.grpc.Event;
-import org.wso2.grpc.EventServiceGrpc;
-
-import static io.siddhi.extension.io.grpc.util.GrpcUtils.extractHeaders;
 
 /**
  * This handles receiving requests from grpc clients and populating the stream
@@ -143,54 +134,20 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.extractHeaders;
 )
 public class GrpcSource extends AbstractGrpcSource {
     private static final Logger logger = Logger.getLogger(GrpcSource.class.getName());
-    protected String[] requestedTransportPropertyNames;
     protected Server server;
-
-//    @Override
-//    public void addServicesAndBuildServer(int port) {
-//        if (isDefaultMode) {
-//            this.server = serverBuilder.addService(ServerInterceptors.intercept(
-//                    new EventServiceGrpc.EventServiceImplBase() {
-//                @Override
-//                public void consume(Event request,
-//                                    StreamObserver<Empty> responseObserver) {
-//                    if (request.getPayload() == null) {
-//                        logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request due to " +
-//                                "missing payload ");
-//                        responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
-//
-//                    } else {
-//                        logger.error("server thread is: " + Thread.currentThread().getId());
-//                        try {
-//                            sourceEventListener.onEvent(request.getPayload(), extractHeaders(request.getHeadersMap(),
-//                                    metaDataMap.get(), requestedTransportPropertyNames)); //todo: do this onEvent in a worker thread. user set threadpool parameter and buffer size
-//                            responseObserver.onNext(Empty.getDefaultInstance());
-//                            responseObserver.onCompleted();
-//                        } catch (SiddhiAppRuntimeException e) {
-//                            logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request. "
-//                                    + e.getMessage());
-//                            responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
-//                        } finally {
-//                            metaDataMap.remove();
-//                        }
-//                    }
-//                }
-//            }, serverInterceptor)).build();
-//        } else {
-//
-//        }
-//    }
 
     @Override
     public void initSource(OptionHolder optionHolder, String[] requestedTransportPropertyNames) {
-//        this.requestedTransportPropertyNames = requestedTransportPropertyNames.clone();
-        GrpcServerManager.getInstance().registerSource(grpcServerConfigs, this, GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE, siddhiAppContext, streamID);
+        GrpcServerManager.getInstance().registerSource(grpcServerConfigs, this,
+                GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE, siddhiAppContext, streamID);
     }
 
     @Override
     public void connect(ConnectionCallback connectionCallback, State state) throws ConnectionUnavailableException {
-        if (GrpcServerManager.getInstance().getServer(grpcServerConfigs.getServiceConfigs().getPort()).getState() == 0) {
-            GrpcServerManager.getInstance().getServer(grpcServerConfigs.getServiceConfigs().getPort()).connectServer(logger, connectionCallback, siddhiAppContext, streamID);
+        if (GrpcServerManager.getInstance().getServer(grpcServerConfigs.getServiceConfigs().getPort())
+                .getState() == 0) {
+            GrpcServerManager.getInstance().getServer(grpcServerConfigs.getServiceConfigs().getPort())
+                    .connectServer(logger, connectionCallback, siddhiAppContext, streamID);
         }
     }
 
@@ -199,6 +156,7 @@ public class GrpcSource extends AbstractGrpcSource {
      */
     @Override
     public void disconnect() {
-        GrpcServerManager.getInstance().getServer(grpcServerConfigs.getServiceConfigs().getPort()).disconnectServer(logger, siddhiAppContext, streamID);
+        GrpcServerManager.getInstance().unregisterSource(grpcServerConfigs.getServiceConfigs().getPort(), streamID,
+                GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE, logger, siddhiAppContext);
     }
 }

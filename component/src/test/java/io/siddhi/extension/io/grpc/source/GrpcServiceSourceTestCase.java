@@ -87,7 +87,7 @@ public class GrpcServiceSourceTestCase {
                 Event.Builder requestBuilder = Event.newBuilder();
                 String json = "{ \"message\": \"Benjamin Watson\"}";
                 requestBuilder.setPayload(json);
-                requestBuilder.putHeaders("streamID", "FooStream");
+                requestBuilder.putHeaders("stream.id", "FooStream");
                 Event sequenceCallRequest = requestBuilder.build();
                 ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:" + port).usePlaintext().build();
                 EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
@@ -148,6 +148,7 @@ public class GrpcServiceSourceTestCase {
                 String json = "{ \"message\": \"Benjamin Watson\"}";
 
                 requestBuilder.setPayload(json);
+                requestBuilder.putHeaders("stream.id", "FooStream");
                 Event sequenceCallRequest = requestBuilder.build();
                 ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:" + port).usePlaintext().build();
                 EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
@@ -196,10 +197,10 @@ public class GrpcServiceSourceTestCase {
         Thread client = new Thread() {
             public void run() {
                 Event.Builder requestBuilder = Event.newBuilder();
-
                 String json = "{ \"message\": \"Benjamin Watson\"}";
 
                 requestBuilder.setPayload(json);
+                requestBuilder.putHeaders("stream.id", "FooStream");
                 Event sequenceCallRequest = requestBuilder.build();
                 ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:" + port).usePlaintext().build();
                 EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
@@ -273,10 +274,10 @@ public class GrpcServiceSourceTestCase {
         Thread client = new Thread() {
             public void run() {
                 Event.Builder requestBuilder = Event.newBuilder();
-
                 String json = "{ \"message\": \"Benjamin Watson\"}";
 
                 requestBuilder.setPayload(json);
+                requestBuilder.putHeaders("stream.id", "FooStream");
                 Event sequenceCallRequest = requestBuilder.build();
                 ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:" + port).usePlaintext().build();
                 EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
@@ -337,6 +338,7 @@ public class GrpcServiceSourceTestCase {
                 String json = "{ \"message\": \"Benjamin Watson\"}";
 
                 requestBuilder.setPayload(json);
+                requestBuilder.putHeaders("stream.id", "FooStream");
                 requestBuilder.putHeaders("name", "john");
                 requestBuilder.putHeaders("age", "24");
                 Event sequenceCallRequest = requestBuilder.build();
@@ -386,6 +388,7 @@ public class GrpcServiceSourceTestCase {
                 String json = "{ \"message\": \"Benjamin Watson\"}";
 
                 requestBuilder.setPayload(json);
+                requestBuilder.putHeaders("stream.id", "FooStream");
                 requestBuilder.putHeaders("name", "john");
                 Event sequenceCallRequest = requestBuilder.build();
                 ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:" + port).usePlaintext().build();

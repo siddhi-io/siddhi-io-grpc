@@ -18,7 +18,6 @@
 package io.siddhi.extension.io.grpc.source;
 
 import io.grpc.Server;
-import io.grpc.ServerInterceptors;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import io.siddhi.annotation.Example;
@@ -34,16 +33,12 @@ import io.siddhi.extension.io.grpc.util.GrpcServerManager;
 import io.siddhi.extension.io.grpc.util.GrpcSourceRegistry;
 import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
-import org.wso2.grpc.EventServiceGrpc;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.UUID;
-
-import static io.siddhi.extension.io.grpc.util.GrpcUtils.extractHeaders;
 
 /**
  * This extension handles receiving requests from grpc clients/stubs and sending back responses
@@ -185,44 +180,8 @@ public class GrpcServiceSource extends AbstractGrpcSource {
     private Map<String, StreamObserver<Event>> streamObserverMap = Collections.synchronizedMap(new HashMap<>());
     private String sourceId;
     private long serviceTimeout;
-    protected String[] requestedTransportPropertyNames;
     protected Server server;
     private Timer timer;
-
-//    @Override
-//    public void initializeGrpcServer(int port) {
-//        if (isDefaultMode) {
-//            this.server = serverBuilder.addService(ServerInterceptors.intercept(
-//                    new EventServiceGrpc.EventServiceImplBase() {
-//                @Override
-//                public void process(Event request,
-//                                    StreamObserver<Event> responseObserver) {
-//                    if (request.getPayload() == null) {
-//                        logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request due to " +
-//                                "missing payload ");
-//                        responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
-//                    } else {
-//                        String messageId = UUID.randomUUID().toString();
-//                        Map<String, String> transportPropertyMap = new HashMap<>();
-//                        transportPropertyMap.put(GrpcConstants.MESSAGE_ID, messageId);
-//                        transportPropertyMap.putAll(request.getHeadersMap());
-//                        try {
-//                            sourceEventListener.onEvent(request.getPayload(), extractHeaders(transportPropertyMap,
-//                                    metaDataMap.get(), requestedTransportPropertyNames));
-//                            metaDataMap.remove();
-//                            streamObserverMap.put(messageId, responseObserver);
-//                            timer.schedule(new ServiceSourceTimeoutChecker(messageId,
-//                                    siddhiAppContext.getTimestampGenerator().currentTime()), serviceTimeout);
-//                        } catch (SiddhiAppRuntimeException e) {
-//                        logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request. "
-//                                + e.getMessage());
-//                        responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
-//                        }
-//                    }
-//                }
-//            }, serverInterceptor)).build();
-//        }
-//    }
 
     public void scheduleServiceTimeout(String messageId) {
         timer.schedule(new GrpcServiceSource.ServiceSourceTimeoutChecker(messageId,
@@ -277,7 +236,8 @@ public class GrpcServiceSource extends AbstractGrpcSource {
      */
     @Override
     public void disconnect() {
-//        disconnectGrpcServer(server, logger);
+        GrpcServerManager.getInstance().unregisterSource(grpcServerConfigs.getServiceConfigs().getPort(), streamID,
+                GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE, logger, siddhiAppContext);
     }
 
     public void handleCallback(String messageId, String responsePayload) {

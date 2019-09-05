@@ -19,6 +19,7 @@ package io.siddhi.extension.io.grpc.util;
 
 import io.siddhi.core.config.SiddhiAppContext;
 import io.siddhi.extension.io.grpc.source.AbstractGrpcSource;
+import org.apache.log4j.Logger;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -33,22 +34,25 @@ public class GrpcServerManager {
         return instance;
     }
 
-//    public boolean registerServer(int port, GrpcEventServiceServer server) {
-//        if (grpcPortServerMap.containsKey(port)) {
-//            return false;
-//        } else {
-//            grpcPortServerMap.put(port, server);
-//            return true;
-//        }
-//    }
-
-    public void registerSource(GrpcServerConfigs serverConfigs, AbstractGrpcSource source, String methodName, SiddhiAppContext siddhiAppContext, String streamID) {
+    public void registerSource(GrpcServerConfigs serverConfigs, AbstractGrpcSource source, String methodName,
+                               SiddhiAppContext siddhiAppContext, String streamID) {
         if (grpcPortServerMap.containsKey(serverConfigs.getServiceConfigs().getPort())) {
-            grpcPortServerMap.get(serverConfigs.getServiceConfigs().getPort()).subscribe(source.getStreamID(), source, methodName); //todo: validate for same server configs
+            grpcPortServerMap.get(serverConfigs.getServiceConfigs().getPort()).subscribe(source.getStreamID(), source,
+                    methodName, siddhiAppContext); //todo: validate for same server configs
         } else {
             GrpcEventServiceServer server = new GrpcEventServiceServer(serverConfigs, siddhiAppContext, streamID);
-            server.subscribe(source.getStreamID(), source, serverConfigs.getServiceConfigs().getMethodName());
+            server.subscribe(source.getStreamID(), source, serverConfigs.getServiceConfigs().getMethodName(),
+                    siddhiAppContext);
             grpcPortServerMap.put(serverConfigs.getServiceConfigs().getPort(), server);
+        }
+    }
+
+    public void unregisterSource(int port, String streamID, String methodName, Logger logger,
+                                 SiddhiAppContext siddhiAppContext) {
+        grpcPortServerMap.get(port).unsubscribe(streamID, methodName, siddhiAppContext);
+        if (grpcPortServerMap.get(port).getNumSubscribers() == 0) {
+            grpcPortServerMap.get(port).disconnectServer(logger, siddhiAppContext, streamID);
+            grpcPortServerMap.remove(port);
         }
     }
 
