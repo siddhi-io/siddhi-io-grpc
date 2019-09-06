@@ -132,7 +132,9 @@ public class GrpcEventServiceServer {
                             try {
                                 GrpcSource relevantSource = subscribersForConsume.get(request.getHeadersMap()
                                         .get(GrpcConstants.STREAM_ID));
-                                GrpcWorkerThread sourceWorker = new GrpcWorkerThread(relevantSource, request, metaDataMap.get(), responseObserver);
+                                GrpcWorkerThread sourceWorker = new GrpcWorkerThread(relevantSource,
+                                        request.getPayload(), request.getHeadersMap(), metaDataMap.get(),
+                                        responseObserver);
                                 sourceWorker.run();
 //                                relevantSource.handleInjection(request.getPayload(), extractHeaders(request
 //                                                .getHeadersMap(), metaDataMap.get(),
@@ -175,9 +177,13 @@ public class GrpcEventServiceServer {
                             try {
                                 GrpcServiceSource relevantSource = subscribersForProcess.get(request.getHeadersMap()
                                         .get(GrpcConstants.STREAM_ID));
-                                relevantSource.handleInjection(request.getPayload(), extractHeaders(
-                                        transportPropertyMap, metaDataMap.get(), relevantSource
-                                                .getRequestedTransportPropertyNames()));
+                                GrpcWorkerThread sourceWorker = new GrpcWorkerThread(relevantSource,
+                                        request.getPayload(), transportPropertyMap, metaDataMap.get(),
+                                        responseObserver);
+                                sourceWorker.run();
+//                                relevantSource.handleInjection(request.getPayload(), extractHeaders(
+//                                        transportPropertyMap, metaDataMap.get(), relevantSource
+//                                                .getRequestedTransportPropertyNames()));
                                 relevantSource.putStreamObserver(messageId, responseObserver);
                                 relevantSource.scheduleServiceTimeout(messageId);
                             } catch (SiddhiAppRuntimeException e) {

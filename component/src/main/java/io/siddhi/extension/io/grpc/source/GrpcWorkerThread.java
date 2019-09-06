@@ -17,7 +17,6 @@
  */
 package io.siddhi.extension.io.grpc.source;
 
-import com.google.protobuf.Empty;
 import io.grpc.stub.StreamObserver;
 import org.wso2.grpc.Event;
 
@@ -27,21 +26,23 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.extractHeaders;
 
 public class GrpcWorkerThread implements Runnable {
     private AbstractGrpcSource relevantSource;
-    private Event request;
+    private String payload;
+    private Map<String, String> headers;
     private Map<String, String> metaData;
     private StreamObserver responseObserver;
 
-    public GrpcWorkerThread(AbstractGrpcSource relevantSource, Event request, Map<String, String> metaData, StreamObserver responseObserver) {
+    public GrpcWorkerThread(AbstractGrpcSource relevantSource, String payload, Map<String, String> headers,
+                            Map<String, String> metaData, StreamObserver responseObserver) {
         this.relevantSource = relevantSource;
-        this.request = request;
+        this.payload = payload;
         this.metaData = metaData;
         this.responseObserver = responseObserver;
+        this.headers = headers;
     }
 
     @Override
     public void run() {
-        relevantSource.handleInjection(request.getPayload(), extractHeaders(request
-                        .getHeadersMap(), metaData,
+        relevantSource.handleInjection(payload, extractHeaders(headers, metaData,
                 relevantSource.getRequestedTransportPropertyNames())); //todo: do this onEvent in a worker thread. user set threadpool parameter and buffer size
     }
 }
