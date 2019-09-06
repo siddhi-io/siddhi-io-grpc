@@ -24,8 +24,6 @@ import io.grpc.ServerBuilder;
 import io.grpc.ServerInterceptors;
 import io.grpc.stub.StreamObserver;
 import org.apache.log4j.Logger;
-import org.wso2.grpc.Event;
-import org.wso2.grpc.EventServiceGrpc;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;

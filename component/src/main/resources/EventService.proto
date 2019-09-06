@@ -25,9 +25,9 @@ package org.wso2.grpc.eventservice;
 import "google/protobuf/empty.proto";
 
 service EventService {
-    rpc process(Event) returns (Event) {} //todo check if streaming calls is faster than individual rpcs
+    rpc process(Event) returns (Event) {}
 
-    rpc consume(Event) returns (google.protobuf.Empty) {}
+    rpc consume(stream Event) returns (google.protobuf.Empty) {}
 }
 
 message Event {

@@ -30,8 +30,6 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import org.wso2.grpc.Event;
-import org.wso2.grpc.EventServiceGrpc;
 
 import java.io.FileInputStream;
 import java.io.IOException;

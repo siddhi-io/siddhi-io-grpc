@@ -26,8 +26,6 @@ import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
 import io.grpc.netty.shaded.io.netty.handler.ssl.SslContextBuilder;
 import io.grpc.stub.StreamObserver;
 import org.apache.log4j.Logger;
-import org.wso2.grpc.Event;
-import org.wso2.grpc.EventServiceGrpc;
 
 import java.io.FileInputStream;
 import java.io.IOException;

@@ -56,8 +56,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import static io.siddhi.extension.io.grpc.util.GrpcUtils.extractHeaders;
-
 public class GrpcEventServiceServer {
     private static final Logger logger = Logger.getLogger(GrpcEventServiceServer.class.getName());
     protected Server server;
@@ -138,7 +136,7 @@ public class GrpcEventServiceServer {
                                         .get(GrpcConstants.STREAM_ID));
                                 executorService.execute(new GrpcWorkerThread(relevantSource,
                                         request.getPayload(), request.getHeadersMap(), metaDataMap.get(),
-                                        responseObserver)); //todo: do this onEvent in a worker thread. user set threadpool parameter and buffer size
+                                        responseObserver)); //todo:  buffer size
                                 responseObserver.onNext(Empty.getDefaultInstance());
                                 responseObserver.onCompleted();
                             } catch (SiddhiAppRuntimeException e) {

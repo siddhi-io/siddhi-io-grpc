@@ -18,7 +18,6 @@
 package io.siddhi.extension.io.grpc.source;
 
 import io.grpc.stub.StreamObserver;
-import org.wso2.grpc.Event;
 
 import java.util.Map;
 
