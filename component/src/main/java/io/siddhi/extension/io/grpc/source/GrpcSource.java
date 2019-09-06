@@ -26,7 +26,6 @@ import io.siddhi.core.exception.ConnectionUnavailableException;
 import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
-import io.siddhi.extension.io.grpc.util.GrpcServerManager;
 import org.apache.log4j.Logger;
 
 /**

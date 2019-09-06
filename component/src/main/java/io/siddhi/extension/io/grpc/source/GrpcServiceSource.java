@@ -29,7 +29,6 @@ import io.siddhi.core.exception.SiddhiAppRuntimeException;
 import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
-import io.siddhi.extension.io.grpc.util.GrpcServerManager;
 import io.siddhi.extension.io.grpc.util.GrpcSourceRegistry;
 import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;

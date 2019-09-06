@@ -15,10 +15,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.siddhi.extension.io.grpc.util;
+package io.siddhi.extension.io.grpc.source;
 
 import io.siddhi.core.config.SiddhiAppContext;
-import io.siddhi.extension.io.grpc.source.AbstractGrpcSource;
+import io.siddhi.extension.io.grpc.util.GrpcServerConfigs;
 import org.apache.log4j.Logger;
 
 import java.util.Collections;

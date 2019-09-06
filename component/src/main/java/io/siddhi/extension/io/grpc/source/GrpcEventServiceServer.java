@@ -15,7 +15,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.siddhi.extension.io.grpc.util;
+package io.siddhi.extension.io.grpc.source;
 
 import com.google.protobuf.Empty;
 import io.grpc.Server;
@@ -31,9 +31,9 @@ import io.siddhi.core.exception.ConnectionUnavailableException;
 import io.siddhi.core.exception.SiddhiAppCreationException;
 import io.siddhi.core.exception.SiddhiAppRuntimeException;
 import io.siddhi.core.stream.input.source.Source;
-import io.siddhi.extension.io.grpc.source.AbstractGrpcSource;
-import io.siddhi.extension.io.grpc.source.GrpcServiceSource;
-import io.siddhi.extension.io.grpc.source.GrpcSource;
+import io.siddhi.extension.io.grpc.util.GrpcConstants;
+import io.siddhi.extension.io.grpc.util.GrpcServerConfigs;
+import io.siddhi.extension.io.grpc.util.SourceServerInterceptor;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
@@ -132,9 +132,11 @@ public class GrpcEventServiceServer {
                             try {
                                 GrpcSource relevantSource = subscribersForConsume.get(request.getHeadersMap()
                                         .get(GrpcConstants.STREAM_ID));
-                                relevantSource.handleInjection(request.getPayload(), extractHeaders(request
-                                                .getHeadersMap(), metaDataMap.get(),
-                                        relevantSource.getRequestedTransportPropertyNames())); //todo: do this onEvent in a worker thread. user set threadpool parameter and buffer size
+                                GrpcWorkerThread sourceWorker = new GrpcWorkerThread(relevantSource, request, metaDataMap.get(), responseObserver);
+                                sourceWorker.run();
+//                                relevantSource.handleInjection(request.getPayload(), extractHeaders(request
+//                                                .getHeadersMap(), metaDataMap.get(),
+//                                        relevantSource.getRequestedTransportPropertyNames())); //todo: do this onEvent in a worker thread. user set threadpool parameter and buffer size
                                 responseObserver.onNext(Empty.getDefaultInstance());
                                 responseObserver.onCompleted();
                             } catch (SiddhiAppRuntimeException e) {
