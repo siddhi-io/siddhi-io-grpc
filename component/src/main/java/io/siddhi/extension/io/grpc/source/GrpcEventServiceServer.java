@@ -52,6 +52,8 @@ import java.security.cert.CertificateException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import static io.siddhi.extension.io.grpc.util.GrpcUtils.extractHeaders;
@@ -66,11 +68,13 @@ public class GrpcEventServiceServer {
     private Map<String, GrpcSource> subscribersForConsume = new HashMap<>();
     private Map<String, GrpcServiceSource> subscribersForProcess = new HashMap<>();
     private int state = 0;
+    private ExecutorService executorService;
 
     public GrpcEventServiceServer(GrpcServerConfigs grpcServerConfigs, SiddhiAppContext siddhiAppContext,
                                   String streamID) {
         this.serverInterceptor = new SourceServerInterceptor();
         this.grpcServerConfigs = grpcServerConfigs;
+        executorService = Executors.newFixedThreadPool(grpcServerConfigs.getThreadPoolSize());
         setServerPropertiesToBuilder(siddhiAppContext, streamID);
         addServicesAndBuildServer(siddhiAppContext, streamID);
     }
@@ -132,13 +136,9 @@ public class GrpcEventServiceServer {
                             try {
                                 GrpcSource relevantSource = subscribersForConsume.get(request.getHeadersMap()
                                         .get(GrpcConstants.STREAM_ID));
-                                GrpcWorkerThread sourceWorker = new GrpcWorkerThread(relevantSource,
+                                executorService.execute(new GrpcWorkerThread(relevantSource,
                                         request.getPayload(), request.getHeadersMap(), metaDataMap.get(),
-                                        responseObserver);
-                                sourceWorker.run();
-//                                relevantSource.handleInjection(request.getPayload(), extractHeaders(request
-//                                                .getHeadersMap(), metaDataMap.get(),
-//                                        relevantSource.getRequestedTransportPropertyNames())); //todo: do this onEvent in a worker thread. user set threadpool parameter and buffer size
+                                        responseObserver)); //todo: do this onEvent in a worker thread. user set threadpool parameter and buffer size
                                 responseObserver.onNext(Empty.getDefaultInstance());
                                 responseObserver.onCompleted();
                             } catch (SiddhiAppRuntimeException e) {
@@ -177,13 +177,9 @@ public class GrpcEventServiceServer {
                             try {
                                 GrpcServiceSource relevantSource = subscribersForProcess.get(request.getHeadersMap()
                                         .get(GrpcConstants.STREAM_ID));
-                                GrpcWorkerThread sourceWorker = new GrpcWorkerThread(relevantSource,
+                                executorService.execute(new GrpcWorkerThread(relevantSource,
                                         request.getPayload(), transportPropertyMap, metaDataMap.get(),
-                                        responseObserver);
-                                sourceWorker.run();
-//                                relevantSource.handleInjection(request.getPayload(), extractHeaders(
-//                                        transportPropertyMap, metaDataMap.get(), relevantSource
-//                                                .getRequestedTransportPropertyNames()));
+                                        responseObserver));
                                 relevantSource.putStreamObserver(messageId, responseObserver);
                                 relevantSource.scheduleServiceTimeout(messageId);
                             } catch (SiddhiAppRuntimeException e) {

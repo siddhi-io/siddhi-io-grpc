@@ -33,6 +33,7 @@ public class GrpcServerConfigs {
     private int maxInboundMessageSize = -1;
     private int maxInboundMetadataSize = -1;
     private long serverShutdownWaitingTimeInMillis = -1L;
+    private int threadPoolSize;
 
     public GrpcServerConfigs(OptionHolder optionHolder, SiddhiAppContext siddhiAppContext, String streamID) {
         this.serviceConfigs = new ServiceConfigs(optionHolder, siddhiAppContext, streamID);
@@ -68,6 +69,8 @@ public class GrpcServerConfigs {
             this.serverShutdownWaitingTimeInMillis = Long.parseLong(optionHolder.validateAndGetOption(
                     GrpcConstants.SERVER_SHUTDOWN_WAITING_TIME).getValue());
         }
+        this.threadPoolSize = Integer.parseInt(optionHolder.getOrCreateOption(GrpcConstants.THREADPOOL_SIZE,
+                GrpcConstants.THREADPOOL_SIZE_default).getValue());
     }
 
     public ServiceConfigs getServiceConfigs() {
@@ -100,6 +103,10 @@ public class GrpcServerConfigs {
 
     public String getTlsStoreType() {
         return tlsStoreType;
+    }
+
+    public int getThreadPoolSize() {
+        return threadPoolSize;
     }
 
     public int getMaxInboundMessageSize() {

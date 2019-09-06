@@ -53,6 +53,8 @@ public class GrpcConstants {
     public static final String TRUSTSTORE_ALGORITHM = "truststore.algorithm";
     public static final String SEQUENCE_HEADER_KEY = "sequence";
     public static final String METADATA = "metadata";
+    public static final String THREADPOOL_SIZE = "threadpool.size";
+    public static final String THREADPOOL_SIZE_default = "100";
 
     public static final int PATH_SERVICE_NAME_POSITION = 0;
     public static final int PATH_METHOD_NAME_POSITION = 1;
