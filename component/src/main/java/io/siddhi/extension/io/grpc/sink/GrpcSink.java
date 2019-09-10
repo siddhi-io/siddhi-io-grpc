@@ -200,6 +200,7 @@ import java.util.concurrent.TimeUnit;
 public class GrpcSink extends AbstractGrpcSink {
     private static final Logger logger = Logger.getLogger(GrpcSink.class.getName());
     private AbstractStub asyncStub;
+    private StreamObserver<Event> requestObserver;
 
     @Override
     public void initSink(OptionHolder optionHolder) {
@@ -210,24 +211,6 @@ public class GrpcSink extends AbstractGrpcSink {
                 throw new SiddhiAppValidationException(siddhiAppName + ": " + streamID + ": In default " +
                         "mode grpc-sink when using EventService the method name should be '" +
                         GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE + "' but given " + methodName);
-            }
-        }
-    }
-
-    @Override
-    public void publish(Object payload, DynamicOptions dynamicOptions, State state)
-            throws ConnectionUnavailableException {
-        if (isDefaultMode) {
-            Event.Builder eventBuilder = Event.newBuilder().setPayload(payload.toString());
-            EventServiceGrpc.EventServiceStub currentAsyncStub = (EventServiceGrpc.EventServiceStub) asyncStub;
-
-            if (headersOption != null || sequenceName != null) {
-                eventBuilder = addHeadersToEventBuilder(dynamicOptions, eventBuilder);
-            }
-
-            if (metadataOption != null) {
-                currentAsyncStub = (EventServiceGrpc.EventServiceStub) attachMetaDataToStub(dynamicOptions,
-                        currentAsyncStub);
             }
             StreamObserver<Empty> responseObserver = new StreamObserver<Empty>() {
                 //try to send all the siddhi events using one stream observer - impossible without adding client
@@ -250,7 +233,48 @@ public class GrpcSink extends AbstractGrpcSink {
                 public void onCompleted() {
                 }
             };
-            currentAsyncStub.consume(eventBuilder.build(), responseObserver);
+//            if (metadataOption != null) {
+//                asyncStub = (EventServiceGrpc.EventServiceStub) attachMetaDataToStub(dynamicOptions,
+//                        asyncStub);
+//            }
+//            requestObserver = asyncStub.consume(responseObserver);
+        }
+    }
+
+    @Override
+    public void publish(Object payload, DynamicOptions dynamicOptions, State state)
+            throws ConnectionUnavailableException {
+        if (isDefaultMode) {
+            Event.Builder eventBuilder = Event.newBuilder().setPayload(payload.toString());
+
+            if (headersOption != null || sequenceName != null) {
+                eventBuilder = addHeadersToEventBuilder(dynamicOptions, eventBuilder);
+            }
+
+
+//            StreamObserver<Empty> responseObserver = new StreamObserver<Empty>() {
+//                //try to send all the siddhi events using one stream observer - impossible without adding client
+//                // side streaming in protobuf definition
+//                @Override
+//                public void onNext(Empty event) {}
+//
+//                @Override //todo latch based error???
+//                public void onError(Throwable t) { //parent method doest have error in its signature. so cant throw
+//                    // from here todo
+////                    if (((StatusRuntimeException) t).getStatus().getCode().equals(Status.UNAVAILABLE)) {
+////                        throw new ConnectionUnavailableException(siddhiAppName.getName() + ": " + streamID + ": "
+////                        + t.getMessage());
+////                    }
+//                    logger.error(siddhiAppName + ":" + streamID + ": " + t.getMessage() + " caused by "
+//                            + t.getCause(), t); //todo: all exceptions t.getmessage, and pass throwable
+//                }
+//
+//                @Override
+//                public void onCompleted() {
+//                }
+//            };
+//            StreamObserver<Event> requestObserver = currentAsyncStub.consume(responseObserver);
+            requestObserver.onNext(eventBuilder.build());
         } else {
 
         }
@@ -282,6 +306,7 @@ public class GrpcSink extends AbstractGrpcSink {
     @Override
     public void disconnect() {
         try {
+            requestObserver.onCompleted();
             if (channelTerminationWaitingTimeInMillis > 0L) {
                 channel.shutdown().awaitTermination(channelTerminationWaitingTimeInMillis, TimeUnit.MILLISECONDS);
             } else {

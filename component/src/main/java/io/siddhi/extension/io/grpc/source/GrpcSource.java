@@ -133,7 +133,7 @@ import org.apache.log4j.Logger;
 )
 public class GrpcSource extends AbstractGrpcSource {
     private static final Logger logger = Logger.getLogger(GrpcSource.class.getName());
-    protected Server server;
+//    protected Server server;
 
     @Override
     public void initSource(OptionHolder optionHolder, String[] requestedTransportPropertyNames) {

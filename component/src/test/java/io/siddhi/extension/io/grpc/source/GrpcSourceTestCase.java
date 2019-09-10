@@ -33,6 +33,8 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.spi.LoggingEvent;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import org.wso2.grpc.Event;
+import org.wso2.grpc.EventServiceGrpc;
 
 import java.util.ArrayList;
 import java.util.List;
