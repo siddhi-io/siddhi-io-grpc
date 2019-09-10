@@ -235,6 +235,8 @@ public class GrpcSink extends AbstractGrpcSink {
 //                asyncStub = (EventServiceGrpc.EventServiceStub) attachMetaDataToStub(dynamicOptions,
 //                        asyncStub);
 //            }
+            this.channel = managedChannelBuilder.build();
+            this.asyncStub = EventServiceGrpc.newStub(channel);
             requestObserver = ((EventServiceGrpc.EventServiceStub) asyncStub).consume(responseObserver);
         }
     }
@@ -262,14 +264,16 @@ public class GrpcSink extends AbstractGrpcSink {
      */
     @Override
     public void connect() throws ConnectionUnavailableException {
-        this.channel = managedChannelBuilder.build();
-        this.asyncStub = EventServiceGrpc.newStub(channel);
-        if (!channel.isShutdown()) {
-            logger.info(siddhiAppName + ": gRPC service on " + streamID + " has successfully connected to "
-                    + serviceConfigs.getUrl());
-        } else {
-            throw new ConnectionUnavailableException(siddhiAppName + ": gRPC service on" + streamID + " could not " +
-                    "connect to " + serviceConfigs.getUrl());
+        if (channel == null || channel.isShutdown()) {
+            this.channel = managedChannelBuilder.build();
+            this.asyncStub = EventServiceGrpc.newStub(channel);
+            if (!channel.isShutdown()) {
+                logger.info(siddhiAppName + ": gRPC service on " + streamID + " has successfully connected to "
+                        + serviceConfigs.getUrl());
+            } else {
+                throw new ConnectionUnavailableException(siddhiAppName + ": gRPC service on" + streamID + " could not " +
+                        "connect to " + serviceConfigs.getUrl());
+            }
         }
     }
 

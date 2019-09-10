@@ -38,7 +38,13 @@ public class ServiceConfigs {
     private String fullyQualifiedServiceName;
 
     public ServiceConfigs(OptionHolder optionHolder, SiddhiAppContext siddhiAppContext, String streamID) {
-        this.url = optionHolder.validateAndGetOption(GrpcConstants.RECEIVER_URL).getValue();
+        if (optionHolder.isOptionExists(GrpcConstants.RECEIVER_URL)) {
+            this.url = optionHolder.validateAndGetOption(GrpcConstants.RECEIVER_URL).getValue();
+        } else if (optionHolder.isOptionExists(GrpcConstants.PUBLISHER_URL)) {
+            this.url = optionHolder.validateAndGetOption(GrpcConstants.PUBLISHER_URL).getValue();
+        } else {
+            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID + ": either receiver.url or publisher.url should be given. But found neither");
+        }
         if (!url.startsWith(GrpcConstants.GRPC_PROTOCOL_NAME)) {
             throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID + ": The url must " +
                     "begin with \"" + GrpcConstants.GRPC_PROTOCOL_NAME + "\" for all grpc sinks");
