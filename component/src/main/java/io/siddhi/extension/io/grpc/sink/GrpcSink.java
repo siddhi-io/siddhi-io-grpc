@@ -204,17 +204,15 @@ public class GrpcSink extends AbstractGrpcSink {
 
     @Override
     public void initSink(OptionHolder optionHolder) {
-        if (isDefaultMode) {
-            if (methodName == null) {
-                methodName = GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE;
-            } else if (!methodName.equalsIgnoreCase(GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE)) {
+        if (serviceConfigs.isDefaultService()) {
+            if (serviceConfigs.getMethodName() == null) {
+//                serviceConfigs.getMethodName() = GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE;
+            } else if (!serviceConfigs.getMethodName().equalsIgnoreCase(GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE)) {
                 throw new SiddhiAppValidationException(siddhiAppName + ": " + streamID + ": In default " +
                         "mode grpc-sink when using EventService the method name should be '" +
-                        GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE + "' but given " + methodName);
+                        GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE + "' but given " + serviceConfigs.getMethodName());
             }
             StreamObserver<Empty> responseObserver = new StreamObserver<Empty>() {
-                //try to send all the siddhi events using one stream observer - impossible without adding client
-                // side streaming in protobuf definition
                 @Override
                 public void onNext(Empty event) {}
 
@@ -237,43 +235,19 @@ public class GrpcSink extends AbstractGrpcSink {
 //                asyncStub = (EventServiceGrpc.EventServiceStub) attachMetaDataToStub(dynamicOptions,
 //                        asyncStub);
 //            }
-//            requestObserver = asyncStub.consume(responseObserver);
+            requestObserver = ((EventServiceGrpc.EventServiceStub) asyncStub).consume(responseObserver);
         }
     }
 
     @Override
     public void publish(Object payload, DynamicOptions dynamicOptions, State state)
             throws ConnectionUnavailableException {
-        if (isDefaultMode) {
+        if (serviceConfigs.isDefaultService()) {
             Event.Builder eventBuilder = Event.newBuilder().setPayload(payload.toString());
 
-            if (headersOption != null || sequenceName != null) {
+            if (headersOption != null || serviceConfigs.getSequenceName() != null) {
                 eventBuilder = addHeadersToEventBuilder(dynamicOptions, eventBuilder);
             }
-
-
-//            StreamObserver<Empty> responseObserver = new StreamObserver<Empty>() {
-//                //try to send all the siddhi events using one stream observer - impossible without adding client
-//                // side streaming in protobuf definition
-//                @Override
-//                public void onNext(Empty event) {}
-//
-//                @Override //todo latch based error???
-//                public void onError(Throwable t) { //parent method doest have error in its signature. so cant throw
-//                    // from here todo
-////                    if (((StatusRuntimeException) t).getStatus().getCode().equals(Status.UNAVAILABLE)) {
-////                        throw new ConnectionUnavailableException(siddhiAppName.getName() + ": " + streamID + ": "
-////                        + t.getMessage());
-////                    }
-//                    logger.error(siddhiAppName + ":" + streamID + ": " + t.getMessage() + " caused by "
-//                            + t.getCause(), t); //todo: all exceptions t.getmessage, and pass throwable
-//                }
-//
-//                @Override
-//                public void onCompleted() {
-//                }
-//            };
-//            StreamObserver<Event> requestObserver = currentAsyncStub.consume(responseObserver);
             requestObserver.onNext(eventBuilder.build());
         } else {
 
@@ -292,10 +266,10 @@ public class GrpcSink extends AbstractGrpcSink {
         this.asyncStub = EventServiceGrpc.newStub(channel);
         if (!channel.isShutdown()) {
             logger.info(siddhiAppName + ": gRPC service on " + streamID + " has successfully connected to "
-                    + url);
+                    + serviceConfigs.getUrl());
         } else {
             throw new ConnectionUnavailableException(siddhiAppName + ": gRPC service on" + streamID + " could not " +
-                    "connect to " + url);
+                    "connect to " + serviceConfigs.getUrl());
         }
     }
 

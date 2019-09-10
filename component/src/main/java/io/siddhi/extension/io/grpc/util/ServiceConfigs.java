@@ -100,7 +100,15 @@ public class ServiceConfigs {
         return isDefaultService;
     }
 
-//    @Override
+    public String getUrl() {
+        return url;
+    }
+
+    public void setMethodName(String methodName) {
+        this.methodName = methodName;
+    }
+
+    //    @Override
 //    public boolean equals(Object obj) {
 //
 //    }

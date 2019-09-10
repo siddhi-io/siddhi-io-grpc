@@ -26,6 +26,8 @@ import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
 import io.grpc.netty.shaded.io.netty.handler.ssl.SslContextBuilder;
 import io.grpc.stub.StreamObserver;
 import org.apache.log4j.Logger;
+import org.wso2.grpc.Event;
+import org.wso2.grpc.EventServiceGrpc;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -97,15 +99,30 @@ public class TestTLSServer {
                                 responseObserver.onCompleted();
                             }
 
+                    @Override
+                    public StreamObserver<Event> consume(StreamObserver<Empty> responseObserver) {
+                        return new StreamObserver<Event>() {
                             @Override
-                            public void consume(Event request,
-                                                StreamObserver<Empty> responseObserver) {
+                            public void onNext(Event request) {
                                 if (logger.isDebugEnabled()) {
-                                    logger.debug("Server consume hit with " + request.getPayload());
+                                    logger.debug("Server consume hit with payload = " + request.getPayload() + " and Headers = {"
+                                            + request.getHeadersMap().toString() + "}");
                                 }
+                                System.out.println(request.getPayload());
+                            }
+
+                            @Override
+                            public void onError(Throwable t) {
+
+                            }
+
+                            @Override
+                            public void onCompleted() {
                                 responseObserver.onNext(Empty.getDefaultInstance());
                                 responseObserver.onCompleted();
                             }
+                        };
+                    }
                         })
                 .sslContext(getCarbonSslContext())
                 .build();

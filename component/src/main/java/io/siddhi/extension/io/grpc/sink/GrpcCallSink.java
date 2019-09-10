@@ -234,13 +234,13 @@ public class GrpcCallSink extends AbstractGrpcSink {
 
     @Override
     public void initSink(OptionHolder optionHolder) {
-        if (isDefaultMode) {
-            if (methodName == null) {
-                methodName = GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE;
-            } else if (!methodName.equalsIgnoreCase(GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE)) {
+        if (serviceConfigs.isDefaultService()) {
+            if (serviceConfigs.getMethodName() == null) {
+                serviceConfigs.setMethodName(GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE);
+            } else if (!serviceConfigs.getMethodName().equalsIgnoreCase(GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE)) {
                 throw new SiddhiAppValidationException(siddhiAppName + ": " + streamID + ": In default " +
                         "mode grpc-call-sink when using EventService the method name should be '" +
-                        GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE + "' but given " + methodName);
+                        GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE + "' but given " + serviceConfigs.getMethodName());
             }
         }
         if (optionHolder.isOptionExists(GrpcConstants.MAX_INBOUND_MESSAGE_SIZE)) {
@@ -257,12 +257,12 @@ public class GrpcCallSink extends AbstractGrpcSink {
     @Override
     public void publish(Object payload, DynamicOptions dynamicOptions, State state)
             throws ConnectionUnavailableException {
-        if (isDefaultMode) {
+        if (serviceConfigs.isDefaultService()) {
             Event.Builder eventBuilder = Event.newBuilder().setPayload(payload.toString());
             EventServiceGrpc.EventServiceFutureStub currentFutureStub = (EventServiceGrpc.EventServiceFutureStub)
                     futureStub;
 
-            if (headersOption != null || sequenceName != null) {
+            if (headersOption != null || serviceConfigs.getSequenceName() != null) {
                 eventBuilder = addHeadersToEventBuilder(dynamicOptions, eventBuilder);
             }
 
@@ -312,7 +312,7 @@ public class GrpcCallSink extends AbstractGrpcSink {
         this.channel = managedChannelBuilder.build();
         this.futureStub = EventServiceGrpc.newFutureStub(channel);
         logger.info(siddhiAppName + ": gRPC service on " + streamID + " has successfully connected to "
-                + url);
+                + serviceConfigs.getUrl());
         if (GrpcSourceRegistry.getInstance().getGrpcCallResponseSource(sinkID) == null) {
             throw new SiddhiAppRuntimeException(siddhiAppName + ": " + streamID + ": For grpc-call sink " +
                     "to work a grpc-call-response source should be available with the same sink.id. In this case " +

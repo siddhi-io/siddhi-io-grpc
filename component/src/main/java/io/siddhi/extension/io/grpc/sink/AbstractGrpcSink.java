@@ -35,6 +35,7 @@ import io.siddhi.core.util.transport.DynamicOptions;
 import io.siddhi.core.util.transport.Option;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
+import io.siddhi.extension.io.grpc.util.ServiceConfigs;
 import io.siddhi.query.api.definition.StreamDefinition;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.log4j.Logger;
@@ -62,16 +63,12 @@ public abstract class AbstractGrpcSink extends Sink {
     private static final Logger logger = Logger.getLogger(AbstractGrpcSink.class.getName());
     protected String siddhiAppName;
     protected ManagedChannel channel;
-    protected String methodName;
-    protected String sequenceName;
-    protected boolean isDefaultMode = false;
-    protected String url;
     protected String streamID;
-    protected String hostPort;
     protected Option headersOption;
     protected Option metadataOption;
     protected ManagedChannelBuilder managedChannelBuilder;
     protected long channelTerminationWaitingTimeInMillis = -1L;
+    protected ServiceConfigs serviceConfigs;
     protected StreamDefinition streamDefinition;
 
     /**
@@ -117,34 +114,15 @@ public abstract class AbstractGrpcSink extends Sink {
     protected StateFactory init(StreamDefinition streamDefinition, OptionHolder optionHolder, ConfigReader configReader,
                                 SiddhiAppContext siddhiAppContext) {
         this.siddhiAppName = siddhiAppContext.getName();
-        this.streamDefinition = streamDefinition;
-        this.url = optionHolder.validateAndGetOption(GrpcConstants.PUBLISHER_URL).getValue().trim();
         this.streamID = streamDefinition.getId();
+        this.streamDefinition = streamDefinition;
         if (optionHolder.isOptionExists(GrpcConstants.HEADERS)) {
             this.headersOption = optionHolder.validateAndGetOption(GrpcConstants.HEADERS);
         }
         if (optionHolder.isOptionExists(GrpcConstants.METADATA)) {
             this.metadataOption = optionHolder.validateAndGetOption(GrpcConstants.METADATA);
         }
-        if (!url.startsWith(GrpcConstants.GRPC_PROTOCOL_NAME)) {
-            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID +
-                    ": The url must begin with \"" + GrpcConstants.GRPC_PROTOCOL_NAME + "\" for all grpc sinks");
-        }
-        URL aURL;
-        try {
-            aURL = new URL(GrpcConstants.DUMMY_PROTOCOL_NAME + url.substring(4));
-        } catch (MalformedURLException e) {
-            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID +
-                    ": Error in URL format. Expected format is `grpc://0.0.0.0:<port>/<serviceName>/<methodName>` " +
-                    "but the provided url is " + url + ". ", e);
-        }
-//        String serviceName = getServiceName(aURL.getPath());
-//        this.methodName = getMethodName(aURL.getPath());
-        this.hostPort = aURL.getAuthority(); //todo get from util object
-        if (optionHolder.isOptionExists(GrpcConstants.CHANNEL_TERMINATION_WAITING_TIME_MILLIS)) {
-            this.channelTerminationWaitingTimeInMillis = Long.parseLong(optionHolder.validateAndGetOption(
-                    GrpcConstants.CHANNEL_TERMINATION_WAITING_TIME_MILLIS).getValue());
-        }
+        this.serviceConfigs = new ServiceConfigs(optionHolder, siddhiAppContext, streamID);
 
         String truststoreFilePath = null;
         String truststorePassword = null;
@@ -172,7 +150,7 @@ public abstract class AbstractGrpcSink extends Sink {
                     GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
         }
 
-        managedChannelBuilder = NettyChannelBuilder.forTarget(hostPort);
+        managedChannelBuilder = NettyChannelBuilder.forTarget(serviceConfigs.getHostPort());
 
         if (truststoreFilePath != null || keystoreFilePath != null) {
             SslContextBuilder sslContextBuilder = GrpcSslContexts.forClient();
@@ -299,8 +277,8 @@ public abstract class AbstractGrpcSink extends Sink {
                 eventBuilder.putHeaders(headerKeyValueArray[0], headerKeyValueArray[1]);
             }
         }
-        if (sequenceName != null) {
-            eventBuilder.putHeaders(GrpcConstants.SEQUENCE_HEADER_KEY, sequenceName);
+        if (serviceConfigs.getSequenceName() != null) {
+            eventBuilder.putHeaders(GrpcConstants.SEQUENCE_HEADER_KEY, serviceConfigs.getSequenceName());
         }
         return eventBuilder;
     }

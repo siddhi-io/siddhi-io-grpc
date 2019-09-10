@@ -24,6 +24,8 @@ import io.grpc.ServerBuilder;
 import io.grpc.ServerInterceptors;
 import io.grpc.stub.StreamObserver;
 import org.apache.log4j.Logger;
+import org.wso2.grpc.Event;
+import org.wso2.grpc.EventServiceGrpc;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
@@ -51,14 +53,28 @@ public class TestServer {
         }
 
         @Override
-        public void consume(Event request,
-                            StreamObserver<Empty> responseObserver) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("Server consume hit with payload = " + request.getPayload() + " and Headers = {"
-                        + request.getHeadersMap().toString() + "}");
-            }
-            responseObserver.onNext(Empty.getDefaultInstance());
-            responseObserver.onCompleted();
+        public StreamObserver<Event> consume(StreamObserver<Empty> responseObserver) {
+            return new StreamObserver<Event>() {
+                @Override
+                public void onNext(Event request) {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Server consume hit with payload = " + request.getPayload() + " and Headers = {"
+                                + request.getHeadersMap().toString() + "}");
+                    }
+                    System.out.println(request.getPayload());
+                }
+
+                @Override
+                public void onError(Throwable t) {
+
+                }
+
+                @Override
+                public void onCompleted() {
+                    responseObserver.onNext(Empty.getDefaultInstance());
+                    responseObserver.onCompleted();
+                }
+            };
         }
     };
 
