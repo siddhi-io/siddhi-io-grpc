@@ -52,6 +52,14 @@ public class GrpcConstants {
     public static final String SEQUENCE_HEADER_KEY = "sequence";
     public static final String METADATA = "metadata";
 
+    public static final String BLOCKING_STUB_NAME = "BlockingStub";
+    public static final String FUTURE_STUB_NAME = "FutureStub";
+    public static final String FUTURE_STUB_METHOD_NAME = "newFutureStub";
+    public static final String GRPC_PROTOCOL_NAME_UPPERCAMELCASE = "Grpc";
+    public static final String DOLLAR_SIGN = "$";
+    public static final String NEW_STUB_NAME = "newStub";
+    public static final String PARSE_FROM_METHOD_NAME = "parseFrom";
+
     public static final int PATH_SERVICE_NAME_POSITION = 0;
     public static final int PATH_METHOD_NAME_POSITION = 1;
     public static final int PATH_SEQUENCE_NAME_POSITION = 2;

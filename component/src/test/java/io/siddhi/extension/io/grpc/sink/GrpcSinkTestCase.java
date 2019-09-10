@@ -40,6 +40,7 @@ public class GrpcSinkTestCase {
     private static final Logger log = Logger.getLogger(GrpcSinkTestCase.class.getName());
     private TestServer server = new TestServer(8888);
 
+
     @BeforeTest
     public void init() throws IOException {
         server.start();
@@ -357,19 +358,6 @@ public class GrpcSinkTestCase {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
         server.start();
-
-        final List<LoggingEvent> log = appender.getLog();
-        List<String> logMessages = new ArrayList<>();
-        for (LoggingEvent logEvent : log) {
-            String message = String.valueOf(logEvent.getMessage());
-            if (message.contains("FooStream: ")) {
-                message = message.split("FooStream: ")[1];
-            }
-            logMessages.add(message);
-        }
-        Assert.assertTrue(logMessages.contains("UNAVAILABLE: io exception caused by io.grpc.netty.shaded.io.netty" +
-                ".channel.AbstractChannel$AnnotatedConnectException: Connection refused: localhost/0:0:0:0:0:0:0:1" +
-                ":8888"));
     }
 
     @Test
@@ -416,4 +404,8 @@ public class GrpcSinkTestCase {
         Assert.assertTrue(logMessages.contains("Server consume hit with payload = [Request 1] and Headers = {{}}"));
         Assert.assertTrue(logMessages.contains("Server consume hit with payload = [Request 2] and Headers = {{}}"));
     }
+
+
+
+
 }

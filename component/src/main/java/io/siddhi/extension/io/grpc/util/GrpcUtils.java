@@ -17,9 +17,11 @@
  */
 package io.siddhi.extension.io.grpc.util;
 
+import io.siddhi.core.exception.SiddhiAppCreationException;
 import io.siddhi.core.exception.SiddhiAppRuntimeException;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -73,15 +75,79 @@ public class GrpcUtils {
             if (headersMap.containsKey(requestedTransportPropertyNames[i])) {
                 headersArray[i] = headersMap.get(requestedTransportPropertyNames[i]);
             }
-            if (metaDataMap.containsKey(requestedTransportPropertyNames[i])) {
+            if (metaDataMap != null && metaDataMap.containsKey(requestedTransportPropertyNames[i])) {
                 headersArray[i] = metaDataMap.get(requestedTransportPropertyNames[i]);
             }
         }
         List headersArrayList = Arrays.asList(headersArray);
         if (headersArrayList.contains(null)) {
             throw new SiddhiAppRuntimeException("Requested transport property '" +
-                requestedTransportPropertyNames[headersArrayList.indexOf(null)] + "' not present in received event");
+                    requestedTransportPropertyNames[headersArrayList.indexOf(null)] + "' not present in received " +
+                    "event");
         }
         return headersArray;
+    }
+
+    public static String getFullServiceName(String path) {
+        List<String> urlParts = new ArrayList<>(Arrays.asList(path.substring(1).split(GrpcConstants
+                .PORT_SERVICE_SEPARATOR)));
+        if (urlParts.contains(GrpcConstants.EMPTY_STRING)) {
+            throw new SiddhiAppValidationException("Malformed URL. There should not be any empty parts in the URL " +
+                    "between two '/'");
+        }
+        if (urlParts.size() < 2) {
+            throw new SiddhiAppValidationException("Malformed URL. After port number at least two sections should " +
+                    "be available separated by '/' as in 'grpc://<host>:<port>/<ServiceName>/<MethodName>'");
+        }
+        return urlParts.get(GrpcConstants.PATH_SERVICE_NAME_POSITION);
+    }
+
+    public static Class getRequestClass(String serviceNameWithPackgName, String methodName)
+            throws ClassNotFoundException {
+        String[] serviceNameWithPackgNameArray = serviceNameWithPackgName.split("\\.");
+        String stubName = serviceNameWithPackgNameArray[serviceNameWithPackgNameArray.length - 1] + "BlockingStub";
+        Method[] methods = Class.forName((serviceNameWithPackgName) + "Grpc" + "$" + stubName).getMethods();
+        for (Method m : methods) {
+            if (m.getName().equals(methodName)) {
+                return m.getParameterTypes()[0];
+            }
+        }
+        return null;
+    }
+
+    public static Class getResponseClass(String serviceNameWithPackgName) throws ClassNotFoundException {
+        String stubName = getServiceName(serviceNameWithPackgName) + "BlockingStub";
+        Method[] methods = Class.forName(serviceNameWithPackgName + "Grpc" + "$" + stubName).getMethods();
+        for (Method m : methods) {
+            if (m.getName().equals(getMethodName(serviceNameWithPackgName))) {
+                return m.getParameterTypes()[0];
+            }
+        }
+        return null;
+    }
+
+    public static List<String> getRPCmethodList(String serviceReference, String siddhiAppName) { //require full
+        // serviceName
+        List<String> rpcMethodNameList = new ArrayList<>();
+        String blockingStubReference = serviceReference + GrpcConstants.GRPC_PROTOCOL_NAME_UPPERCAMELCASE
+                + GrpcConstants.DOLLAR_SIGN + serviceReference + GrpcConstants.BLOCKING_STUB_NAME;
+        String[] serviceReferenceArray = serviceReference.split("\\.");
+        String serviceName = serviceReferenceArray[serviceReference.length() - 1];
+        Method[] methodsInBlockingStub; // the place where
+        try {
+            methodsInBlockingStub = Class.forName(blockingStubReference).getMethods();
+        } catch (ClassNotFoundException e) {
+            throw new SiddhiAppCreationException(siddhiAppName + ": " +
+                    "Invalid service name provided in url, provided service name : '" + serviceName + "'", e);
+        }
+        // ClassNotFound Exception will be thrown
+        for (Method method : methodsInBlockingStub) {
+            if (method.getDeclaringClass().getName().equals(blockingStubReference)) { // check if the method belogs
+            // to blocking stub, other methods that does not belongs to blocking stub are not rpc methods
+
+                rpcMethodNameList.add(method.getName());
+            }
+        }
+        return rpcMethodNameList;
     }
 }

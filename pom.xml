@@ -113,6 +113,12 @@
                 <version>${testng.version}</version>
                 <scope>test</scope>
             </dependency>
+            <dependency>
+                <groupId>io.siddhi.extension.map.protobuf</groupId>
+                <artifactId>siddhi-map-protobuf</artifactId>
+                <version>${siddhi.map.protobuf.version}</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
     <build>
@@ -193,6 +199,7 @@
         </plugins>
     </build>
     <properties>
+        <siddhi.map.protobuf.version>1.0.0-SNAPSHOT</siddhi.map.protobuf.version>
         <testng.version>6.11</testng.version>
         <grpc.version>1.22.1</grpc.version>
         <transport.http.version>6.0.294</transport.http.version>
