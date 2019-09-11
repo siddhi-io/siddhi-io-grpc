@@ -206,7 +206,7 @@ public class GrpcSink extends AbstractGrpcSink {
     public void initSink(OptionHolder optionHolder) {
         if (serviceConfigs.isDefaultService()) {
             if (serviceConfigs.getMethodName() == null) {
-//                serviceConfigs.getMethodName() = GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE;
+                serviceConfigs.setMethodName(GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE);
             } else if (!serviceConfigs.getMethodName().equalsIgnoreCase(GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE)) {
                 throw new SiddhiAppValidationException(siddhiAppName + ": " + streamID + ": In default " +
                         "mode grpc-sink when using EventService the method name should be '" +
@@ -216,27 +216,28 @@ public class GrpcSink extends AbstractGrpcSink {
                 @Override
                 public void onNext(Empty event) {}
 
-                @Override //todo latch based error???
+                @Override
                 public void onError(Throwable t) { //parent method doest have error in its signature. so cant throw
-                    // from here todo
+                    // from here
 //                    if (((StatusRuntimeException) t).getStatus().getCode().equals(Status.UNAVAILABLE)) {
 //                        throw new ConnectionUnavailableException(siddhiAppName.getName() + ": " + streamID + ": "
 //                        + t.getMessage());
 //                    }
                     logger.error(siddhiAppName + ":" + streamID + ": " + t.getMessage() + " caused by "
-                            + t.getCause(), t); //todo: all exceptions t.getmessage, and pass throwable
+                            + t.getMessage(), t);
                 }
 
                 @Override
                 public void onCompleted() {
                 }
             };
-//            if (metadataOption != null) {
-//                asyncStub = (EventServiceGrpc.EventServiceStub) attachMetaDataToStub(dynamicOptions,
-//                        asyncStub);
-//            }
             this.channel = managedChannelBuilder.build();
             this.asyncStub = EventServiceGrpc.newStub(channel);
+            if (metadataOption != null) {
+                if (metadataOption.isStatic()) {
+                    asyncStub = attachMetaDataToStub(null, asyncStub);
+                }
+            }
             requestObserver = ((EventServiceGrpc.EventServiceStub) asyncStub).consume(responseObserver);
         }
     }

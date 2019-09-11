@@ -79,23 +79,24 @@ public class GrpcEventServiceServer {
 
     public void setServerPropertiesToBuilder(SiddhiAppContext siddhiAppContext, String streamID) {
         serverBuilder = NettyServerBuilder.forPort(grpcServerConfigs.getServiceConfigs().getPort());
-        if (grpcServerConfigs.getKeystoreFilePath() != null) {
+        if (grpcServerConfigs.getServiceConfigs().getKeystoreFilePath() != null) {
             try {
-                SslContextBuilder sslContextBuilder = getSslContextBuilder(grpcServerConfigs.getKeystoreFilePath(),
-                        grpcServerConfigs.getKeystorePassword(),
-                        grpcServerConfigs.getKeystoreAlgorithm(), grpcServerConfigs.getTlsStoreType(), siddhiAppContext,
-                        streamID);
-                if (grpcServerConfigs.getTruststoreFilePath() != null) {
-                    sslContextBuilder = addTrustStore(grpcServerConfigs.getTruststoreFilePath(),
-                            grpcServerConfigs.getTruststorePassword(), grpcServerConfigs.getTruststoreAlgorithm(),
-                            sslContextBuilder, grpcServerConfigs.getTlsStoreType(), siddhiAppContext, streamID)
-                            .clientAuth(ClientAuth.REQUIRE);
+                SslContextBuilder sslContextBuilder = getSslContextBuilder(grpcServerConfigs.getServiceConfigs()
+                                .getKeystoreFilePath(), grpcServerConfigs.getServiceConfigs().getKeystorePassword(),
+                        grpcServerConfigs.getServiceConfigs().getKeystoreAlgorithm(), grpcServerConfigs
+                                .getServiceConfigs().getTlsStoreType(), siddhiAppContext, streamID);
+                if (grpcServerConfigs.getServiceConfigs().getTruststoreFilePath() != null) {
+                    sslContextBuilder = addTrustStore(grpcServerConfigs.getServiceConfigs().getTruststoreFilePath(),
+                            grpcServerConfigs.getServiceConfigs().getTruststorePassword(), grpcServerConfigs
+                                    .getServiceConfigs().getTruststoreAlgorithm(),
+                            sslContextBuilder, grpcServerConfigs.getServiceConfigs().getTlsStoreType(),
+                            siddhiAppContext, streamID).clientAuth(ClientAuth.REQUIRE);
                 }
                 serverBuilder.sslContext(sslContextBuilder.build());
             } catch (IOException | CertificateException | NoSuchAlgorithmException | UnrecoverableKeyException |
                     KeyStoreException e) {
                 throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " + streamID + ": Error while " +
-                        "creating SslContext. ", e);
+                        "creating SslContext. " + e.getMessage(), e);
             }
         }
         if (grpcServerConfigs.getMaxInboundMessageSize() != -1) {
@@ -182,7 +183,7 @@ public class GrpcEventServiceServer {
                                 relevantSource.scheduleServiceTimeout(messageId);
                             } catch (SiddhiAppRuntimeException e) {
                                 logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request. "
-                                        + e.getMessage());
+                                        + e.getMessage(), e);
                                 responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
                             } finally {
                                 metaDataMap.remove();
@@ -207,7 +208,7 @@ public class GrpcEventServiceServer {
                         ". Please provide a different port");
             } else {
                 connectionCallback.onError(new ConnectionUnavailableException(siddhiAppContext.getName() + ":" +
-                        streamID + ": Error when starting the server. ", e));
+                        streamID + ": Error when starting the server. " + e.getMessage(), e));
             }
             throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": " + streamID + ": ", e);
         }
@@ -241,7 +242,8 @@ public class GrpcEventServiceServer {
             }
             state = 2;
         } catch (InterruptedException e) {
-            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": " + streamID + ": ", e);
+            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": " + streamID + ": " + e.getMessage(),
+                    e);
         }
     }
 
@@ -254,7 +256,8 @@ public class GrpcEventServiceServer {
         try (FileInputStream fis = new FileInputStream(filePath)) {
             keyStore.load(fis, passphrase);
         } catch (IOException e) {
-            throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " + streamID + ": ", e);
+            throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " + streamID + ": " + e.getMessage(),
+                    e);
         }
         KeyManagerFactory kmf = KeyManagerFactory.getInstance(algorithm);
         kmf.init(keyStore, passphrase);
@@ -272,7 +275,8 @@ public class GrpcEventServiceServer {
         try (FileInputStream fis = new FileInputStream(filePath)) {
             keyStore.load(fis, passphrase);
         } catch (IOException e) {
-            throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " + streamID + ": ", e);
+            throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " + streamID + ": " + e.getMessage(),
+                    e);
         }
         TrustManagerFactory tmf = TrustManagerFactory.getInstance(algorithm);
         tmf.init(keyStore);

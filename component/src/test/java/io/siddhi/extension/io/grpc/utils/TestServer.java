@@ -61,7 +61,6 @@ public class TestServer {
                         logger.debug("Server consume hit with payload = " + request.getPayload() + " and Headers = {"
                                 + request.getHeadersMap().toString() + "}");
                     }
-                    System.out.println(request.getPayload());
                 }
 
                 @Override

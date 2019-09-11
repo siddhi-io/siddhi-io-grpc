@@ -18,6 +18,7 @@
 package io.siddhi.extension.io.grpc.util;
 
 import io.siddhi.core.config.SiddhiAppContext;
+import io.siddhi.core.exception.SiddhiAppCreationException;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
 
@@ -36,6 +37,13 @@ public class ServiceConfigs {
     private String sequenceName;
     private boolean isDefaultService = false;
     private String fullyQualifiedServiceName;
+    private String truststoreFilePath;
+    private String truststorePassword;
+    private String keystoreFilePath;
+    private String keystorePassword;
+    private String truststoreAlgorithm;
+    private String keystoreAlgorithm;
+    private String tlsStoreType;
 
     public ServiceConfigs(OptionHolder optionHolder, SiddhiAppContext siddhiAppContext, String streamID) {
         if (optionHolder.isOptionExists(GrpcConstants.RECEIVER_URL)) {
@@ -43,7 +51,8 @@ public class ServiceConfigs {
         } else if (optionHolder.isOptionExists(GrpcConstants.PUBLISHER_URL)) {
             this.url = optionHolder.validateAndGetOption(GrpcConstants.PUBLISHER_URL).getValue();
         } else {
-            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID + ": either receiver.url or publisher.url should be given. But found neither");
+            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID + ": either " +
+                    "receiver.url or publisher.url should be given. But found neither");
         }
         if (!url.startsWith(GrpcConstants.GRPC_PROTOCOL_NAME)) {
             throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID + ": The url must " +
@@ -80,6 +89,28 @@ public class ServiceConfigs {
                 }
             }
         }
+
+        if (optionHolder.isOptionExists(GrpcConstants.KEYSTORE_FILE)) {
+            keystoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_FILE).getValue();
+            keystorePassword = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_PASSWORD).getValue();
+            keystoreAlgorithm = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_ALGORITHM).getValue();
+            tlsStoreType = optionHolder.getOrCreateOption(GrpcConstants.TLS_STORE_TYPE,
+                    GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
+        }
+
+        if (optionHolder.isOptionExists(GrpcConstants.TRUSTSTORE_FILE)) {
+            if (!optionHolder.isOptionExists(GrpcConstants.KEYSTORE_FILE)) {
+                throw new SiddhiAppCreationException(siddhiAppContext.getName() + ":" + streamID + ": Truststore " +
+                        "configurations given without keystore configurations. Please provide keystore");
+            }
+            truststoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_FILE).getValue();
+            if (optionHolder.isOptionExists(GrpcConstants.TRUSTSTORE_PASSWORD)) {
+                truststorePassword = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_PASSWORD).getValue();
+            }
+            truststoreAlgorithm = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_ALGORITHM).getValue();
+            tlsStoreType = optionHolder.getOrCreateOption(GrpcConstants.TLS_STORE_TYPE,
+                    GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
+        }
     }
 
     public String getServiceName() {
@@ -113,6 +144,35 @@ public class ServiceConfigs {
     public void setMethodName(String methodName) {
         this.methodName = methodName;
     }
+
+    public String getTruststoreFilePath() {
+        return truststoreFilePath;
+    }
+
+    public String getTruststorePassword() {
+        return truststorePassword;
+    }
+
+    public String getKeystoreFilePath() {
+        return keystoreFilePath;
+    }
+
+    public String getKeystorePassword() {
+        return keystorePassword;
+    }
+
+    public String getTruststoreAlgorithm() {
+        return truststoreAlgorithm;
+    }
+
+    public String getKeystoreAlgorithm() {
+        return keystoreAlgorithm;
+    }
+
+    public String getTlsStoreType() {
+        return tlsStoreType;
+    }
+
 
     //    @Override
 //    public boolean equals(Object obj) {

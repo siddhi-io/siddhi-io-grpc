@@ -307,16 +307,16 @@ public class GrpcSinkTestCase {
         String inStreamDefinition = ""
                 + "@sink(type='grpc', " +
                 "publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
-                "metadata='{{metadata}}', " +
-                "@map(type='json', @payload('{{message}}'))) " +
-                "define stream FooStream (message String, metadata String);";
+                "metadata = \"'Name:John','Age:23','Content-Type:text'\", " +
+                "@map(type='json')) " +
+                "define stream FooStream (message String);";
 
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
         InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
 
         siddhiAppRuntime.start();
-        fooStream.send(new Object[]{"Request 1", "'Name:John','Age:23','Content-Type:text'"});
-        fooStream.send(new Object[]{"Request 2", "'Name:Nash','Age:54','Content-Type:json'"});
+        fooStream.send(new Object[]{"Request 1"});
+//        fooStream.send(new Object[]{"Request 2", "'Name:Nash','Age:54','Content-Type:json'"});
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
@@ -326,12 +326,9 @@ public class GrpcSinkTestCase {
             String message = String.valueOf(logEvent.getMessage());
             logMessages.add(message);
         }
-        Assert.assertTrue(logMessages.contains("Server consume hit with payload = [Request 1] and Headers = {{}}"));
-        Assert.assertTrue(logMessages.contains("Server consume hit with payload = [Request 2] and Headers = {{}}"));
+        Assert.assertTrue(logMessages.contains("Server consume hit with payload = [{\"event\":{\"message\":\"Request 1\"}}] and Headers = {{}}"));
         Assert.assertTrue(logMessages.contains("Metadata received: name: John"));
         Assert.assertTrue(logMessages.contains("Metadata received: age: 23"));
-        Assert.assertTrue(logMessages.contains("Metadata received: name: Nash"));
-        Assert.assertTrue(logMessages.contains("Metadata received: age: 54"));
     }
 
     @Test

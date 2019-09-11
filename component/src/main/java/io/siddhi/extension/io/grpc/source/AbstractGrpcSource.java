@@ -31,7 +31,7 @@ import io.siddhi.extension.io.grpc.util.*;
  * This is an abstract class extended by GrpcSource and GrpcServiceSource. This provides most of initialization
  * implementations common for both sources
  */
-public abstract class AbstractGrpcSource extends Source { //todo: have thread workers and handover to the worker after receiving from source
+public abstract class AbstractGrpcSource extends Source {
     protected SiddhiAppContext siddhiAppContext;
     protected SourceEventListener sourceEventListener;
     private String[] requestedTransportPropertyNames;
@@ -65,7 +65,8 @@ public abstract class AbstractGrpcSource extends Source { //todo: have thread wo
         this.grpcServerConfigs = new GrpcServerConfigs(optionHolder, siddhiAppContext,streamID);
         initSource(optionHolder, requestedTransportPropertyNames);
         this.serviceDeploymentInfo = new ServiceDeploymentInfo(grpcServerConfigs.getServiceConfigs().getPort(),
-                grpcServerConfigs.getTruststoreFilePath() != null || grpcServerConfigs.getKeystoreFilePath() != null);
+                grpcServerConfigs.getServiceConfigs().getTruststoreFilePath() != null ||
+                        grpcServerConfigs.getServiceConfigs().getKeystoreFilePath() != null);
         return null;
     }
 

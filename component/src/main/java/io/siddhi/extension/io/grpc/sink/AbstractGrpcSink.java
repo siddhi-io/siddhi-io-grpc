@@ -37,14 +37,11 @@ import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
 import io.siddhi.extension.io.grpc.util.ServiceConfigs;
 import io.siddhi.query.api.definition.StreamDefinition;
-import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -80,7 +77,7 @@ public abstract class AbstractGrpcSink extends Sink {
      */
     @Override
     public Class[] getSupportedInputEventClasses() {
-        return new Class[]{com.google.protobuf.GeneratedMessageV3.class, String.class}; // TODO: 2019-09-04 restrict text mapper
+        return new Class[]{com.google.protobuf.GeneratedMessageV3.class, String.class}; // TODO: 2019-09-04 restrict text mapper - how?
         // in default case json mapper will inject String. In custom gRPC service
         // case protobuf mapper will inject gRPC message class
     }
@@ -124,50 +121,24 @@ public abstract class AbstractGrpcSink extends Sink {
         }
         this.serviceConfigs = new ServiceConfigs(optionHolder, siddhiAppContext, streamID);
 
-        String truststoreFilePath = null;
-        String truststorePassword = null;
-        String keystoreFilePath = null;
-        String keystorePassword = null;
-        String truststoreAlgorithm = null;
-        String keystoreAlgorithm = null;
-        String tlsStoreType = null;
-
-        if (optionHolder.isOptionExists(GrpcConstants.TRUSTSTORE_FILE)) {
-            truststoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_FILE).getValue();
-            if (optionHolder.isOptionExists(GrpcConstants.TRUSTSTORE_PASSWORD)) {
-                truststorePassword = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_PASSWORD).getValue();
-            }
-            truststoreAlgorithm = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_ALGORITHM).getValue();
-            tlsStoreType = optionHolder.getOrCreateOption(GrpcConstants.TLS_STORE_TYPE,
-                    GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
-        }
-
-        if (optionHolder.isOptionExists(GrpcConstants.KEYSTORE_FILE)) {
-            keystoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_FILE).getValue();
-            keystorePassword = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_PASSWORD).getValue();
-            keystoreAlgorithm = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_ALGORITHM).getValue();
-            tlsStoreType = optionHolder.getOrCreateOption(GrpcConstants.TLS_STORE_TYPE,
-                    GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
-        }
-
         managedChannelBuilder = NettyChannelBuilder.forTarget(serviceConfigs.getHostPort());
 
-        if (truststoreFilePath != null || keystoreFilePath != null) {
+        if (serviceConfigs.getTruststoreFilePath() != null || serviceConfigs.getKeystoreFilePath() != null) {
             SslContextBuilder sslContextBuilder = GrpcSslContexts.forClient();
-            if (truststoreFilePath != null) {
-                sslContextBuilder.trustManager(getTrustManagerFactory(truststoreFilePath, truststorePassword,
-                        truststoreAlgorithm, tlsStoreType));
+            if (serviceConfigs.getTruststoreFilePath() != null) {
+                sslContextBuilder.trustManager(getTrustManagerFactory(serviceConfigs.getTruststoreFilePath(), serviceConfigs.getKeystorePassword(),
+                        serviceConfigs.getTruststoreAlgorithm(), serviceConfigs.getTlsStoreType()));
             }
-            if (keystoreFilePath != null) {
-                sslContextBuilder.keyManager(getKeyManagerFactory(keystoreFilePath, keystorePassword,
-                        keystoreAlgorithm, tlsStoreType));
+            if (serviceConfigs.getKeystoreFilePath() != null) {
+                sslContextBuilder.keyManager(getKeyManagerFactory(serviceConfigs.getKeystoreFilePath(), serviceConfigs.getKeystorePassword(),
+                        serviceConfigs.getKeystoreAlgorithm(), serviceConfigs.getTlsStoreType()));
             }
             try {
                 managedChannelBuilder = ((NettyChannelBuilder) managedChannelBuilder).sslContext(sslContextBuilder
                         .build());
             } catch (SSLException e) {
                 throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " + streamID + ": Error while " +
-                        "creating gRPC channel. ", e);
+                        "creating gRPC channel. " + e.getMessage(), e);
             }
         } else {
                 managedChannelBuilder = managedChannelBuilder.usePlaintext();
@@ -205,15 +176,6 @@ public abstract class AbstractGrpcSink extends Sink {
                         GrpcConstants.PER_RPC_BUFFER_SIZE).getValue()));
             }
         }
-
-//        if (serviceName.equals(GrpcConstants.DEFAULT_SERVICE_NAME)) { //todo: move it to utils class when extracting the parts set isdefault true
-//            this.isDefaultMode = true;
-//            if (isSequenceNamePresent(aURL.getPath())) {
-//                this.sequenceName = getSequenceName(aURL.getPath());
-//            }
-//        } else {
-//
-//        }
         initSink(optionHolder);
         return null;
     }
@@ -226,7 +188,7 @@ public abstract class AbstractGrpcSink extends Sink {
             try (FileInputStream fis = new FileInputStream(filePath)) {
                 keyStore.load(fis, passphrase);
             } catch (IOException e) {
-                throw new SiddhiAppCreationException(siddhiAppName + ": " + streamID + ": ", e); //todo: add e.getmessage also in the string
+                throw new SiddhiAppCreationException(siddhiAppName + ": " + streamID + ": " + e.getMessage(), e);
             }
             TrustManagerFactory tmf = TrustManagerFactory.getInstance(algorithm);
             tmf.init(keyStore);
@@ -245,7 +207,7 @@ public abstract class AbstractGrpcSink extends Sink {
             try (FileInputStream fis = new FileInputStream(filePath)) {
                 keyStore.load(fis, passphrase);
             } catch (IOException e) {
-                throw new SiddhiAppCreationException(siddhiAppName + ": " + streamID + ": ", e);
+                throw new SiddhiAppCreationException(siddhiAppName + ": " + streamID + ": " + e.getMessage(), e);
             }
             KeyManagerFactory kmf = KeyManagerFactory.getInstance(algorithm);
             kmf.init(keyStore, passphrase);
@@ -285,7 +247,12 @@ public abstract class AbstractGrpcSink extends Sink {
 
     public AbstractStub attachMetaDataToStub(DynamicOptions dynamicOptions, AbstractStub stub) {
         Metadata metadata = new Metadata();
-        String metadataString = metadataOption.getValue(dynamicOptions);
+        String metadataString;
+        if (metadataOption.isStatic()) {
+            metadataString = metadataOption.getValue();
+        } else {
+            metadataString = metadataOption.getValue();
+        }
         metadataString = metadataString.replaceAll(GrpcConstants.INVERTED_COMMA_STRING, GrpcConstants.EMPTY_STRING);
         String[] metadataArray = metadataString.split(GrpcConstants.COMMA_STRING);
         for (String metadataKeyValue: metadataArray) {

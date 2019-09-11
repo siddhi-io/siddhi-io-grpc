@@ -202,7 +202,8 @@ public class GrpcServiceSource extends AbstractGrpcSource {
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
-                    throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": " + streamID + ": ", e);
+                    throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": " + streamID + ": " +
+                            e.getMessage(), e);
                 }
             }
             StreamObserver streamObserver = streamObserverMap.remove(messageId);
@@ -220,13 +221,16 @@ public class GrpcServiceSource extends AbstractGrpcSource {
                 GrpcConstants.SERVICE_TIMEOUT_DEFAULT).getValue());
         this.timer = new Timer();
         GrpcSourceRegistry.getInstance().putGrpcServiceSource(sourceId, this);
-        GrpcServerManager.getInstance().registerSource(grpcServerConfigs, this, GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE, siddhiAppContext, streamID);
+        GrpcServerManager.getInstance().registerSource(grpcServerConfigs, this, GrpcConstants
+                .DEFAULT_METHOD_NAME_WITH_RESPONSE, siddhiAppContext, streamID);
     }
 
     @Override
     public void connect(ConnectionCallback connectionCallback, State state) throws ConnectionUnavailableException {
-        if (GrpcServerManager.getInstance().getServer(grpcServerConfigs.getServiceConfigs().getPort()).getState() == 0) {
-            GrpcServerManager.getInstance().getServer(grpcServerConfigs.getServiceConfigs().getPort()).connectServer(logger, connectionCallback, siddhiAppContext, streamID);
+        if (GrpcServerManager.getInstance().getServer(grpcServerConfigs.getServiceConfigs().getPort()).getState() == 0)
+        {
+            GrpcServerManager.getInstance().getServer(grpcServerConfigs.getServiceConfigs().getPort()).connectServer(
+                    logger, connectionCallback, siddhiAppContext, streamID);
         }
     }
 

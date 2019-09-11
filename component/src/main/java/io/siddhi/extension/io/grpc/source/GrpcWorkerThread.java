@@ -42,6 +42,6 @@ public class GrpcWorkerThread implements Runnable {
     @Override
     public void run() {
         relevantSource.handleInjection(payload, extractHeaders(headers, metaData,
-                relevantSource.getRequestedTransportPropertyNames())); //todo: do this onEvent in a worker thread. user set threadpool parameter and buffer size
+                relevantSource.getRequestedTransportPropertyNames()));
     }
 }
