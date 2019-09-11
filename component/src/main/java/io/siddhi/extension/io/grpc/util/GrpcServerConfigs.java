@@ -18,7 +18,6 @@
 package io.siddhi.extension.io.grpc.util;
 
 import io.siddhi.core.config.SiddhiAppContext;
-import io.siddhi.core.exception.SiddhiAppCreationException;
 import io.siddhi.core.util.transport.OptionHolder;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -29,6 +28,7 @@ public class GrpcServerConfigs {
     private int maxInboundMetadataSize = -1;
     private long serverShutdownWaitingTimeInMillis = -1L;
     private int threadPoolSize;
+    private int threadPoolBufferSize;
 
     public GrpcServerConfigs(OptionHolder optionHolder, SiddhiAppContext siddhiAppContext, String streamID) {
         this.serviceConfigs = new ServiceConfigs(optionHolder, siddhiAppContext, streamID);
@@ -46,7 +46,9 @@ public class GrpcServerConfigs {
                     GrpcConstants.SERVER_SHUTDOWN_WAITING_TIME).getValue());
         }
         this.threadPoolSize = Integer.parseInt(optionHolder.getOrCreateOption(GrpcConstants.THREADPOOL_SIZE,
-                GrpcConstants.THREADPOOL_SIZE_default).getValue());
+                GrpcConstants.THREADPOOL_SIZE_DEFAULT).getValue());
+        this.threadPoolBufferSize = Integer.parseInt(optionHolder.getOrCreateOption(GrpcConstants
+                        .THREADPOOL_BUFFER_SIZE, GrpcConstants.THREADPOOL_BUFFER_SIZE_DEFAULT).getValue());
     }
 
     public ServiceConfigs getServiceConfigs() {
@@ -67,6 +69,10 @@ public class GrpcServerConfigs {
 
     public long getServerShutdownWaitingTimeInMillis() {
         return serverShutdownWaitingTimeInMillis;
+    }
+
+    public int getThreadPoolBufferSize() {
+        return threadPoolBufferSize;
     }
 
     @Override

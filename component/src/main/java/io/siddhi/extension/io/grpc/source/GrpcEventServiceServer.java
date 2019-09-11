@@ -52,9 +52,7 @@ import java.security.cert.CertificateException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 public class GrpcEventServiceServer {
     private static final Logger logger = Logger.getLogger(GrpcEventServiceServer.class.getName());
@@ -72,7 +70,9 @@ public class GrpcEventServiceServer {
                                   String streamID) {
         this.serverInterceptor = new SourceServerInterceptor();
         this.grpcServerConfigs = grpcServerConfigs;
-        executorService = Executors.newFixedThreadPool(grpcServerConfigs.getThreadPoolSize()); //todo: use ThreadPoolExecutor() with fixed buffer size
+        this.executorService = new ThreadPoolExecutor(grpcServerConfigs.getThreadPoolSize(),
+                grpcServerConfigs.getThreadPoolSize(), 0L, TimeUnit.MILLISECONDS,
+                new LinkedBlockingQueue<>(grpcServerConfigs.getThreadPoolBufferSize()));
         setServerPropertiesToBuilder(siddhiAppContext, streamID);
         addServicesAndBuildServer(siddhiAppContext, streamID);
     }

@@ -54,7 +54,9 @@ public class GrpcConstants {
     public static final String SEQUENCE_HEADER_KEY = "sequence";
     public static final String METADATA = "metadata";
     public static final String THREADPOOL_SIZE = "threadpool.size";
-    public static final String THREADPOOL_SIZE_default = "100";
+    public static final String THREADPOOL_SIZE_DEFAULT = "100";
+    public static final String THREADPOOL_BUFFER_SIZE = "threadpool.buffer.size";
+    public static final String THREADPOOL_BUFFER_SIZE_DEFAULT = "100";
     public static final String ENABLE_SSL = "enable.ssl";
     public static final String DEFAULT_TRUSTSTORE_FILE_PATH = "security/wso2carbon.jks";
     public static final String DEFAULT_TRUSTSTORE_PASSWORD = "wso2carbon";
