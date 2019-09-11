@@ -1,121 +1,120 @@
-///*
-// * Copyright (c)  2019, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
-// *
-// * WSO2 Inc. licenses this file to you under the Apache License,
-// * Version 2.0 (the "License"); you may not use this file except
-// * in compliance with the License.
-// * You may obtain a copy of the License at
-// *
-// *     http://www.apache.org/licenses/LICENSE-2.0
-// *
-// * Unless required by applicable law or agreed to in writing,
-// * software distributed under the License is distributed on an
-// * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// * KIND, either express or implied. See the License for the
-// * specific language governing permissions and limitations
-// * under the License.
-// */
-//package io.siddhi.extension.io.grpc.source;
-//
-//import com.google.protobuf.Empty;
-//import io.grpc.ManagedChannel;
-//import io.grpc.ManagedChannelBuilder;
-//import io.grpc.Metadata;
-//import io.grpc.StatusRuntimeException;
-//import io.grpc.stub.MetadataUtils;
-//import io.grpc.stub.StreamObserver;
-//import io.siddhi.core.SiddhiAppRuntime;
-//import io.siddhi.core.SiddhiManager;
-//import io.siddhi.core.query.output.callback.QueryCallback;
-//import io.siddhi.core.util.EventPrinter;
-//import io.siddhi.extension.io.grpc.utils.TestAppender;
-//import org.apache.log4j.Level;
-//import org.apache.log4j.Logger;
-//import org.apache.log4j.spi.LoggingEvent;
-//import org.testng.Assert;
-//import org.testng.annotations.Test;
-//import org.wso2.grpc.Event;
-//import org.wso2.grpc.EventServiceGrpc;
-//
-//import java.util.ArrayList;
-//import java.util.List;
-//import java.util.concurrent.atomic.AtomicInteger;
-//
-//public class GrpcSourceTestCase {
-//    private static final Logger logger = Logger.getLogger(GrpcSourceTestCase.class.getName());
-//    private AtomicInteger eventCount = new AtomicInteger(0);
-//    private String port = "8181";
-//
-//    @Test
-//    public void basicSourceTest() throws Exception {
-//        logger.info("Test case to call process");
-//        logger.setLevel(Level.DEBUG);
-//        SiddhiManager siddhiManager = new SiddhiManager();
-//
-//        String stream2 = "@source(type='grpc', receiver.url = 'grpc://localhost:" + port +
-//                "/org.wso2.grpc.EventService/consume', " +
-//                "@map(type='json')) " +
-//                "define stream BarStream (message String);";
-//        String query = "@info(name = 'query') "
-//                + "from BarStream "
-//                + "select *  "
-//                + "insert into outputStream;";
-//
-//        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(stream2 + query);
-//        siddhiAppRuntime.addCallback("query", new QueryCallback() {
-//            @Override
-//            public void receive(long timeStamp, io.siddhi.core.event.Event[] inEvents,
-//                                io.siddhi.core.event.Event[] removeEvents) {
-//                EventPrinter.print(timeStamp, inEvents, removeEvents);
-//                for (int i = 0; i < inEvents.length; i++) {
-//                    eventCount.incrementAndGet();
-//                    switch (i) {
-//                        case 0:
-//                            Assert.assertEquals((String) inEvents[i].getData()[0], "Benjamin Watson");
-//                            break;
-//                        default:
-//                            Assert.fail();
-//                    }
-//                }
-//            }
-//        });
-//
-//        Event.Builder requestBuilder = Event.newBuilder();
-//
-//        String json = "{ \"message\": \"Benjamin Watson\"}";
-//
-//        requestBuilder.setPayload(json);
-//        requestBuilder.putHeaders("stream.id", "BarStream");
-//        Event sequenceCallRequest = requestBuilder.build();
-//        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:" + port).usePlaintext().build();
-//        EventServiceGrpc.EventServiceStub blockingStub = EventServiceGrpc.newStub(channel);
-//
-//        StreamObserver<Empty> responseObserver = new StreamObserver<Empty>() {
-//            @Override
-//            public void onNext(Empty event) {}
-//
-//            @Override
-//            public void onError(Throwable t) { //parent method doest have error in its signature. so cant throw
-//                // from here
-////                    if (((StatusRuntimeException) t).getStatus().getCode().equals(Status.UNAVAILABLE)) {
-////                        throw new ConnectionUnavailableException(siddhiAppName.getName() + ": " + streamID + ": "
-////                        + t.getMessage());
-////                    }
-//                logger.error(siddhiAppName + ":" + streamID + ": " + t.getMessage() + " caused by "
-//                        + t.getMessage(), t);
-//            }
-//
-//            @Override
-//            public void onCompleted() {
-//            }
-//        };
-//
-//        siddhiAppRuntime.start();
-//        StreamObserver  = blockingStub.consume(sequenceCallRequest);
-//        Thread.sleep(1000);
-//        siddhiAppRuntime.shutdown();
-//    }
-//
+/*
+ * Copyright (c)  2019, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *
+ * WSO2 Inc. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package io.siddhi.extension.io.grpc.source;
+
+import com.google.protobuf.Empty;
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
+import io.grpc.Metadata;
+import io.grpc.StatusRuntimeException;
+import io.grpc.stub.MetadataUtils;
+import io.grpc.stub.StreamObserver;
+import io.siddhi.core.SiddhiAppRuntime;
+import io.siddhi.core.SiddhiManager;
+import io.siddhi.core.query.output.callback.QueryCallback;
+import io.siddhi.core.util.EventPrinter;
+import io.siddhi.extension.io.grpc.utils.TestAppender;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.apache.log4j.spi.LoggingEvent;
+import org.testng.Assert;
+import org.testng.annotations.Test;
+import org.wso2.grpc.Event;
+import org.wso2.grpc.EventServiceGrpc;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class GrpcSourceTestCase {
+    private static final Logger logger = Logger.getLogger(GrpcSourceTestCase.class.getName());
+    private AtomicInteger eventCount = new AtomicInteger(0);
+    private String port = "8181";
+
+    @Test
+    public void basicSourceTest() throws Exception {
+        logger.info("Test case to call process");
+        logger.setLevel(Level.DEBUG);
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String stream2 = "@source(type='grpc', receiver.url = 'grpc://localhost:" + port +
+                "/org.wso2.grpc.EventService/consume', " +
+                "@map(type='json')) " +
+                "define stream BarStream (message String);";
+        String query = "@info(name = 'query') "
+                + "from BarStream "
+                + "select *  "
+                + "insert into outputStream;";
+
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(stream2 + query);
+        siddhiAppRuntime.addCallback("query", new QueryCallback() {
+            @Override
+            public void receive(long timeStamp, io.siddhi.core.event.Event[] inEvents,
+                                io.siddhi.core.event.Event[] removeEvents) {
+                EventPrinter.print(timeStamp, inEvents, removeEvents);
+                for (int i = 0; i < inEvents.length; i++) {
+                    eventCount.incrementAndGet();
+                    switch (i) {
+                        case 0:
+                            Assert.assertEquals((String) inEvents[i].getData()[0], "Benjamin Watson");
+                            break;
+                        default:
+                            Assert.fail();
+                    }
+                }
+            }
+        });
+
+        Event.Builder requestBuilder = Event.newBuilder();
+
+        String json = "{ \"message\": \"Benjamin Watson\"}";
+
+        requestBuilder.setPayload(json);
+        requestBuilder.putHeaders("stream.id", "BarStream");
+        Event sequenceCallRequest = requestBuilder.build();
+        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:" + port).usePlaintext().build();
+        EventServiceGrpc.EventServiceStub asyncStub = EventServiceGrpc.newStub(channel);
+
+        StreamObserver<Empty> responseObserver = new StreamObserver<Empty>() {
+            @Override
+            public void onNext(Empty event) {
+                System.out.println("next");
+            }
+
+            @Override
+            public void onError(Throwable t) {
+            }
+
+            @Override
+            public void onCompleted() {
+                System.out.println("completed");
+            }
+        };
+
+        siddhiAppRuntime.start();
+        StreamObserver requestObserver  = asyncStub.consume(responseObserver);
+        requestObserver.onNext(sequenceCallRequest);
+        Thread.sleep(1000);
+        requestObserver.onCompleted();
+        Thread.sleep(1000);
+        siddhiAppRuntime.shutdown();
+    }
+
 //    @Test
 //    public void testWithMetaData() throws Exception {
 //        logger.info("Test case to call process");
@@ -346,4 +345,4 @@
 //        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(stream1 + stream2 + query);
 //        siddhiAppRuntime.start();
 //    }
-//}
+}

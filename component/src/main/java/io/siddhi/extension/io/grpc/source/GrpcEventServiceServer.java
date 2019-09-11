@@ -72,7 +72,7 @@ public class GrpcEventServiceServer {
                                   String streamID) {
         this.serverInterceptor = new SourceServerInterceptor();
         this.grpcServerConfigs = grpcServerConfigs;
-        executorService = Executors.newFixedThreadPool(grpcServerConfigs.getThreadPoolSize()); //todo: use ThreadPoolExecutor()
+        executorService = Executors.newFixedThreadPool(grpcServerConfigs.getThreadPoolSize()); //todo: use ThreadPoolExecutor() with fixed buffer size
         setServerPropertiesToBuilder(siddhiAppContext, streamID);
         addServicesAndBuildServer(siddhiAppContext, streamID);
     }
@@ -111,44 +111,58 @@ public class GrpcEventServiceServer {
     public void addServicesAndBuildServer(SiddhiAppContext siddhiAppContext, String streamID) {
         this.server = serverBuilder.addService(ServerInterceptors.intercept(
                 new EventServiceGrpc.EventServiceImplBase() {
-//                    @Override
-//                    public StreamObserver<Event> consume(StreamObserver<Empty> responseObserver) {
-//                        if (request.getPayload() == null) {
-//                            logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request due to " +
-//                                    "missing payload ");
-//                            responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
-//
-//                        } else if (!request.getHeadersMap().containsKey(GrpcConstants.STREAM_ID)) {
-//                            logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request due to " +
-//                                    "missing stream.id ");
-//                            responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
-//                        } else if (!subscribersForConsume.containsKey(request.getHeadersMap().get(GrpcConstants
-//                                .STREAM_ID))) {
-//                            logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request because " +
-//                                    "requested stream with stream.id " + request.getHeadersMap().get("streamID") +
-//                                    " not subcribed to the gRPC server on port " +
-//                                    grpcServerConfigs.getServiceConfigs().getPort());
-//                            responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
-//                        } else {
-//                            logger.error("server thread is: " + Thread.currentThread().getId());
-//                            try {
-//                                GrpcSource relevantSource = subscribersForConsume.get(request.getHeadersMap()
-//                                        .get(GrpcConstants.STREAM_ID));
-//                                executorService.execute(new GrpcWorkerThread(relevantSource,
-//                                        request.getPayload(), request.getHeadersMap(), metaDataMap.get(),
-//                                        responseObserver)); //todo:  buffer size
-//                                responseObserver.onNext(Empty.getDefaultInstance());
-//                                responseObserver.onCompleted();
-//                            } catch (SiddhiAppRuntimeException e) {
-//                                logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request. "
-//                                        + e.getMessage());
-//                                responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
-//                            } finally {
-//                                metaDataMap.remove();
-//                            }
-//                        }
-//                        return null;
-//                    }
+                    @Override
+                    public StreamObserver<Event> consume(StreamObserver<Empty> responseObserver) {
+                        return new StreamObserver<Event>() {
+                            @Override
+                            public void onNext(Event request) {
+                                if (request.getPayload() == null) {
+                                    logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request due to " +
+                                            "missing payload ");
+                                    responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
+
+                                } else if (!request.getHeadersMap().containsKey(GrpcConstants.STREAM_ID)) {
+                                    logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request due to " +
+                                            "missing stream.id ");
+                                    responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
+                                } else if (!subscribersForConsume.containsKey(request.getHeadersMap().get(GrpcConstants
+                                        .STREAM_ID))) {
+                                    logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request because " +
+                                            "requested stream with stream.id " + request.getHeadersMap().get("streamID") +
+                                            " not subcribed to the gRPC server on port " +
+                                            grpcServerConfigs.getServiceConfigs().getPort());
+                                    responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
+                                } else {
+                                    logger.error("server thread is: " + Thread.currentThread().getId());
+                                    try {
+                                        GrpcSource relevantSource = subscribersForConsume.get(request.getHeadersMap()
+                                                .get(GrpcConstants.STREAM_ID));
+                                        executorService.execute(new GrpcWorkerThread(relevantSource,
+                                                request.getPayload(), request.getHeadersMap(), metaDataMap.get(),
+                                                responseObserver));
+                                        responseObserver.onNext(Empty.getDefaultInstance());
+                                        responseObserver.onCompleted();
+                                    } catch (SiddhiAppRuntimeException e) {
+                                        logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping request. "
+                                                + e.getMessage());
+                                        responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
+                                    } finally {
+                                        metaDataMap.remove();
+                                    }
+                                }
+                            }
+
+                            @Override
+                            public void onError(Throwable t) {
+
+                            }
+
+                            @Override
+                            public void onCompleted() {
+
+                            }
+                        };
+                    }
 
                     @Override
                     public void process(Event request,
