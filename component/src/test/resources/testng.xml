@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+
+<suite name="Siddhi-IO-Grpc-Test-Suite">
+    <test name="Siddhi-io-grpc-tests" enabled="true" preserve-order="true" parallel="false">
+        <classes>
+            <class name="io.siddhi.extension.io.grpc.sink.GrpcSinkTestCase"/>
+            <class name="io.siddhi.extension.io.grpc.sink.GrpcCallSinkTestCase"/>
+            <class name="io.siddhi.extension.io.grpc.source.GrpcSourceTestCase"/>
+            <class name="io.siddhi.extension.io.grpc.source.GrpcServiceSourceTestCase"/>
+        </classes>
+    </test>
+</suite>
