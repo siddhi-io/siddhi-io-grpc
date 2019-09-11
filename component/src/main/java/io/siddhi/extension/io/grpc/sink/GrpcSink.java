@@ -249,7 +249,11 @@ public class GrpcSink extends AbstractGrpcSink {
             Event.Builder eventBuilder = Event.newBuilder().setPayload(payload.toString());
 
             if (headersOption != null || serviceConfigs.getSequenceName() != null) {
-                eventBuilder = addHeadersToEventBuilder(dynamicOptions, eventBuilder);
+                if (headersOption.isStatic()) {
+                    eventBuilder.putAllHeaders(headersMap);
+                } else {
+                    eventBuilder = addHeadersToEventBuilder(dynamicOptions, eventBuilder);
+                }
             }
             requestObserver.onNext(eventBuilder.build());
         } else {

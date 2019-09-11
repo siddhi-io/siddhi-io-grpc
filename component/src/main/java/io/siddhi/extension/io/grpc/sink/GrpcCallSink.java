@@ -263,7 +263,11 @@ public class GrpcCallSink extends AbstractGrpcSink {
                     futureStub;
 
             if (headersOption != null || serviceConfigs.getSequenceName() != null) {
-                eventBuilder = addHeadersToEventBuilder(dynamicOptions, eventBuilder);
+                if (headersOption.isStatic()) {
+                    eventBuilder.putAllHeaders(headersMap);
+                } else {
+                    eventBuilder = addHeadersToEventBuilder(dynamicOptions, eventBuilder);
+                }
             }
 
             if (metadataOption != null) {
@@ -311,13 +315,18 @@ public class GrpcCallSink extends AbstractGrpcSink {
     public void connect() throws ConnectionUnavailableException {
         this.channel = managedChannelBuilder.build();
         this.futureStub = EventServiceGrpc.newFutureStub(channel);
-        logger.info(siddhiAppName + ": gRPC service on " + streamID + " has successfully connected to "
-                + serviceConfigs.getUrl());
+        if (!channel.isShutdown()) {
+            logger.info(siddhiAppName + ": gRPC service on " + streamID + " has successfully connected to "
+                    + serviceConfigs.getUrl());
+        } else {
+            throw new ConnectionUnavailableException(siddhiAppName + ": gRPC service on" + streamID + " could not " +
+                    "connect to " + serviceConfigs.getUrl());
+        }
         if (GrpcSourceRegistry.getInstance().getGrpcCallResponseSource(sinkID) == null) {
             throw new SiddhiAppRuntimeException(siddhiAppName + ": " + streamID + ": For grpc-call sink " +
                     "to work a grpc-call-response source should be available with the same sink.id. In this case " +
                     "sink.id is " + sinkID + ". Please provide a grpc-call-response source with the sink.id " + sinkID);
-        } //todo same fixes as grpc sink
+        }
     }
 
     /**
@@ -326,8 +335,8 @@ public class GrpcCallSink extends AbstractGrpcSink {
      */
     @Override
     public void disconnect() {
-        try { //todo same fixes as grpc sink
-            if (channelTerminationWaitingTimeInMillis != -1L) {
+        try {
+            if (channelTerminationWaitingTimeInMillis > 0L) {
                 channel.shutdown().awaitTermination(channelTerminationWaitingTimeInMillis, TimeUnit.MILLISECONDS);
             } else {
                 if (channel != null) {
@@ -336,8 +345,8 @@ public class GrpcCallSink extends AbstractGrpcSink {
             }
             channel = null;
         } catch (InterruptedException e) {
-            throw new SiddhiAppRuntimeException(siddhiAppName + ":" + streamID + ": Error in shutting " +
-                    "down the channel. ", e);
+            logger.error(siddhiAppName + ":" + streamID + ": Error in shutting " + "down the channel. " +
+                    e.getMessage(), e);
         }
     }
 }

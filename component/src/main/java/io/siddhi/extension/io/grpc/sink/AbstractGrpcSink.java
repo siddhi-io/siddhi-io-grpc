@@ -47,6 +47,8 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLException;
@@ -67,6 +69,7 @@ public abstract class AbstractGrpcSink extends Sink {
     protected long channelTerminationWaitingTimeInMillis = -1L;
     protected ServiceConfigs serviceConfigs;
     protected StreamDefinition streamDefinition;
+    protected Map<String, String> headersMap;
 
     /**
      * Returns the list of classes which this sink can consume.
@@ -177,6 +180,19 @@ public abstract class AbstractGrpcSink extends Sink {
             }
         }
         initSink(optionHolder);
+        if (headersOption.isStatic()) {
+            headersMap = new HashMap<>();
+            String headers = headersOption.getValue();
+            headers = headers.replaceAll(GrpcConstants.INVERTED_COMMA_STRING, GrpcConstants.EMPTY_STRING);
+            String[] headersArray = headers.split(GrpcConstants.COMMA_STRING);
+            for (String headerKeyValue: headersArray) {
+                String[] headerKeyValueArray = headerKeyValue.split(GrpcConstants.SEMI_COLON_STRING);
+                headersMap.put(headerKeyValueArray[0], headerKeyValueArray[1]);
+            }
+            if (serviceConfigs.getSequenceName() != null) {
+                headersMap.put(GrpcConstants.SEQUENCE_HEADER_KEY, serviceConfigs.getSequenceName());
+            }
+        }
         return null;
     }
 
@@ -230,7 +246,7 @@ public abstract class AbstractGrpcSink extends Sink {
     }
 
     public Event.Builder addHeadersToEventBuilder(DynamicOptions dynamicOptions, Event.Builder eventBuilder) {
-        if (headersOption != null) { //todo: check if headeroption.isstatic true then do it in init and store
+        if (headersOption != null) {
             String headers = headersOption.getValue(dynamicOptions);
             headers = headers.replaceAll(GrpcConstants.INVERTED_COMMA_STRING, GrpcConstants.EMPTY_STRING);
             String[] headersArray = headers.split(GrpcConstants.COMMA_STRING);
