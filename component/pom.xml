@@ -84,6 +84,10 @@
             <artifactId>org.wso2.transport.http.netty</artifactId>
             <version>${transport.http.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
     </dependencies>
 
     <profiles>

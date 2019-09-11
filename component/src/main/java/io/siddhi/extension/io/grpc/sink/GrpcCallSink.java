@@ -59,8 +59,11 @@ import java.util.concurrent.TimeUnit;
                 @Parameter(
                         name = "publisher.url",
                         description = "The url to which the outgoing events should be published via this extension. " +
-                                "This url should consist the host hostPort, port, service name, method name in the " +
-                                "following format. `grpc://0.0.0.0:9763/<serviceName>/<methodName>`" ,
+                                "This url should consist the host hostPort, port, fully qualified service name, " +
+                                "method name in the following format. `grpc://0.0.0.0:9763/<serviceName>/" +
+                                "<methodName>`\n" +
+                                "For example:\n" +
+                                "grpc://0.0.0.0:9763/org.wso2.grpc.EventService/consume" ,
                         type = {DataType.STRING}),
                 @Parameter(
                         name = "sink.id",

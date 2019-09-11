@@ -72,7 +72,7 @@ public class GrpcEventServiceServer {
                                   String streamID) {
         this.serverInterceptor = new SourceServerInterceptor();
         this.grpcServerConfigs = grpcServerConfigs;
-        executorService = Executors.newFixedThreadPool(grpcServerConfigs.getThreadPoolSize());
+        executorService = Executors.newFixedThreadPool(grpcServerConfigs.getThreadPoolSize()); //todo: use ThreadPoolExecutor()
         setServerPropertiesToBuilder(siddhiAppContext, streamID);
         addServicesAndBuildServer(siddhiAppContext, streamID);
     }

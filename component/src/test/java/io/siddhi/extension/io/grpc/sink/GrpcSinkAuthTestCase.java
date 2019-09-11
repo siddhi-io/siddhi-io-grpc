@@ -55,7 +55,8 @@ public class GrpcSinkAuthTestCase {
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inStreamDefinition = ""
-                + "@sink(type='grpc', publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume'," +
+                + "@sink(type='grpc', publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
+                "enable.ssl = 'true', " +
                 "truststore.file = 'src/test/resources/security/wso2carbon.jks'," +
                 "truststore.password = 'wso2carbon', " +
                 "truststore.algorithm = 'SunX509', " +
@@ -84,6 +85,7 @@ public class GrpcSinkAuthTestCase {
 
         String inStreamDefinition = ""
                 + "@sink(type='grpc', publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume'," +
+                "enable.ssl = 'true', " +
                 "truststore.file = 'src/test/resources/security/wso2carbon.jks'," +
                 "truststore.password = 'wso2carbon', " +
                 "truststore.algorithm = 'SunX509', " +
@@ -116,6 +118,7 @@ public class GrpcSinkAuthTestCase {
         String inStreamDefinition = ""
                 + "@sink(type='grpc-call', " +
                 "publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/process'," +
+                "enable.ssl = 'true', " +
                 "truststore.file = 'src/test/resources/security/wso2carbon.jks'," +
                 "truststore.password = 'wso2carbon', " +
                 "truststore.algorithm = 'SunX509', " +
@@ -201,6 +204,7 @@ public class GrpcSinkAuthTestCase {
         String inStreamDefinition = ""
                 + "@sink(type='grpc-call', " +
                 "publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/process'," +
+                "enable.ssl = 'true', " +
                 "truststore.file = 'src/test/resources/security/wso2carbon.jks'," +
                 "truststore.password = 'wso2carbon', " +
                 "truststore.algorithm = 'SunX509', " +

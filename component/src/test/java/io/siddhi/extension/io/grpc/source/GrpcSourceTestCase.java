@@ -23,6 +23,7 @@
 //import io.grpc.Metadata;
 //import io.grpc.StatusRuntimeException;
 //import io.grpc.stub.MetadataUtils;
+//import io.grpc.stub.StreamObserver;
 //import io.siddhi.core.SiddhiAppRuntime;
 //import io.siddhi.core.SiddhiManager;
 //import io.siddhi.core.query.output.callback.QueryCallback;
@@ -87,10 +88,30 @@
 //        requestBuilder.putHeaders("stream.id", "BarStream");
 //        Event sequenceCallRequest = requestBuilder.build();
 //        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:" + port).usePlaintext().build();
-//        EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
+//        EventServiceGrpc.EventServiceStub blockingStub = EventServiceGrpc.newStub(channel);
+//
+//        StreamObserver<Empty> responseObserver = new StreamObserver<Empty>() {
+//            @Override
+//            public void onNext(Empty event) {}
+//
+//            @Override
+//            public void onError(Throwable t) { //parent method doest have error in its signature. so cant throw
+//                // from here
+////                    if (((StatusRuntimeException) t).getStatus().getCode().equals(Status.UNAVAILABLE)) {
+////                        throw new ConnectionUnavailableException(siddhiAppName.getName() + ": " + streamID + ": "
+////                        + t.getMessage());
+////                    }
+//                logger.error(siddhiAppName + ":" + streamID + ": " + t.getMessage() + " caused by "
+//                        + t.getMessage(), t);
+//            }
+//
+//            @Override
+//            public void onCompleted() {
+//            }
+//        };
 //
 //        siddhiAppRuntime.start();
-//        Empty emptyResponse = blockingStub.consume(sequenceCallRequest);
+//        StreamObserver  = blockingStub.consume(sequenceCallRequest);
 //        Thread.sleep(1000);
 //        siddhiAppRuntime.shutdown();
 //    }

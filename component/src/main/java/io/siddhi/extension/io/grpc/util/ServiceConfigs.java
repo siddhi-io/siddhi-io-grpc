@@ -21,12 +21,14 @@ import io.siddhi.core.config.SiddhiAppContext;
 import io.siddhi.core.exception.SiddhiAppCreationException;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public class ServiceConfigs {
     private String url;
@@ -44,6 +46,7 @@ public class ServiceConfigs {
     private String truststoreAlgorithm;
     private String keystoreAlgorithm;
     private String tlsStoreType;
+    private boolean isSslEnabled;
 
     public ServiceConfigs(OptionHolder optionHolder, SiddhiAppContext siddhiAppContext, String streamID) {
         if (optionHolder.isOptionExists(GrpcConstants.RECEIVER_URL)) {
@@ -76,7 +79,9 @@ public class ServiceConfigs {
                     "between two '/'");
         }
         if (urlPathParts.size() < 2) {
-            //todo set to default
+            this.fullyQualifiedServiceName = GrpcConstants.DEFAULT_FULLY_QUALIFIED_SERVICE_NAME;
+            this.serviceName = GrpcConstants.DEFAULT_SERVICE_NAME;
+            this.sequenceName = urlPathParts.get(0);
         } else {
             this.methodName = urlPathParts.get(GrpcConstants.PATH_METHOD_NAME_POSITION);
             this.fullyQualifiedServiceName = urlPathParts.get(GrpcConstants.PATH_SERVICE_NAME_POSITION);
@@ -90,24 +95,34 @@ public class ServiceConfigs {
             }
         }
 
-        if (optionHolder.isOptionExists(GrpcConstants.KEYSTORE_FILE)) {
-            keystoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_FILE).getValue();
-            keystorePassword = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_PASSWORD).getValue();
-            keystoreAlgorithm = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_ALGORITHM).getValue();
-            tlsStoreType = optionHolder.getOrCreateOption(GrpcConstants.TLS_STORE_TYPE,
-                    GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
+        if (optionHolder.isOptionExists(GrpcConstants.ENABLE_SSL)) {
+            isSslEnabled = Boolean.parseBoolean(optionHolder.validateAndGetOption(GrpcConstants.ENABLE_SSL).getValue());
         }
 
-        if (optionHolder.isOptionExists(GrpcConstants.TRUSTSTORE_FILE)) {
-            if (!optionHolder.isOptionExists(GrpcConstants.KEYSTORE_FILE)) {
-                throw new SiddhiAppCreationException(siddhiAppContext.getName() + ":" + streamID + ": Truststore " +
-                        "configurations given without keystore configurations. Please provide keystore");
+        if (isSslEnabled) {
+            if (optionHolder.isOptionExists(GrpcConstants.TRUSTSTORE_FILE)) {
+//                if (!optionHolder.isOptionExists(GrpcConstants.KEYSTORE_FILE)) {
+//                    throw new SiddhiAppCreationException(siddhiAppContext.getName() + ":" + streamID + ": Truststore " +
+//                            "configurations given without keystore configurations. Please provide keystore");
+//                }
+                truststoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_FILE).getValue();
+                if (optionHolder.isOptionExists(GrpcConstants.TRUSTSTORE_PASSWORD)) {
+                    truststorePassword = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_PASSWORD).getValue();
+                }
+                truststoreAlgorithm = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_ALGORITHM).getValue();
+                tlsStoreType = optionHolder.getOrCreateOption(GrpcConstants.TLS_STORE_TYPE,
+                        GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
+            } else {
+                truststoreFilePath = GrpcConstants.DEFAULT_TRUSTSTORE_FILE_PATH;
+                truststorePassword = GrpcConstants.DEFAULT_TRUSTSTORE_PASSWORD;
+                truststoreAlgorithm = GrpcConstants.DEFAULT_TRUSTSTORE_ALGORITHM;
             }
-            truststoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_FILE).getValue();
-            if (optionHolder.isOptionExists(GrpcConstants.TRUSTSTORE_PASSWORD)) {
-                truststorePassword = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_PASSWORD).getValue();
+
+            if (optionHolder.isOptionExists(GrpcConstants.KEYSTORE_FILE)) {
+                keystoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_FILE).getValue();
+                keystorePassword = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_PASSWORD).getValue();
+                keystoreAlgorithm = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_ALGORITHM).getValue();
             }
-            truststoreAlgorithm = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_ALGORITHM).getValue();
             tlsStoreType = optionHolder.getOrCreateOption(GrpcConstants.TLS_STORE_TYPE,
                     GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
         }
@@ -174,8 +189,74 @@ public class ServiceConfigs {
     }
 
 
-    //    @Override
-//    public boolean equals(Object obj) {
-//
-//    }
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+
+        if (!ServiceConfigs.class.isAssignableFrom(obj.getClass())) {
+            return false;
+        }
+
+        final ServiceConfigs other = (ServiceConfigs) obj;
+        if (!Objects.equals(this.url, other.url)) {
+            return false;
+        }
+        if (!Objects.equals(this.serviceName, other.serviceName)) {
+            return false;
+        }
+        if (this.port != other.port) {
+            return false;
+        }
+        if (!Objects.equals(this.methodName, other.methodName)) {
+            return false;
+        }
+        if (!Objects.equals(this.hostPort, other.hostPort)) {
+            return false;
+        }
+        if (!Objects.equals(this.sequenceName, other.sequenceName)) {
+            return false;
+        }
+        if (this.isDefaultService != other.isDefaultService) {
+            return false;
+        }
+        if (!Objects.equals(this.fullyQualifiedServiceName, other.fullyQualifiedServiceName)) {
+            return false;
+        }
+        if (!Objects.equals(this.truststoreFilePath, other.truststoreFilePath)) {
+            return false;
+        }
+        if (!Objects.equals(this.truststorePassword, other.truststorePassword)) {
+            return false;
+        }
+        if (!Objects.equals(this.keystoreFilePath, other.keystoreFilePath)) {
+            return false;
+        }
+        if (!Objects.equals(this.keystorePassword, other.keystorePassword)) {
+            return false;
+        }
+        if (!Objects.equals(this.truststoreAlgorithm, other.truststoreAlgorithm)) {
+            return false;
+        }
+        if (!Objects.equals(this.keystoreAlgorithm, other.keystoreAlgorithm)) {
+            return false;
+        }
+        if (!Objects.equals(this.tlsStoreType, other.tlsStoreType)) {
+            return false;
+        }
+        if (this.isSslEnabled != other.isSslEnabled) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(17, 31).append(url).append(serviceName).append(port).append(methodName)
+                .append(hostPort).append(sequenceName).append(isDefaultService).append(fullyQualifiedServiceName)
+                .append(truststoreFilePath).append(truststorePassword).append(keystoreFilePath).append(keystorePassword)
+                .append(truststoreAlgorithm).append(keystoreAlgorithm).append(tlsStoreType).append(isSslEnabled)
+                .toHashCode();
+    }
 }

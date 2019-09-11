@@ -80,7 +80,7 @@ public abstract class AbstractGrpcSink extends Sink {
      */
     @Override
     public Class[] getSupportedInputEventClasses() {
-        return new Class[]{com.google.protobuf.GeneratedMessageV3.class, String.class}; // TODO: 2019-09-04 restrict text mapper - how?
+        return new Class[]{com.google.protobuf.GeneratedMessageV3.class, String.class};
         // in default case json mapper will inject String. In custom gRPC service
         // case protobuf mapper will inject gRPC message class
     }
@@ -129,7 +129,7 @@ public abstract class AbstractGrpcSink extends Sink {
         if (serviceConfigs.getTruststoreFilePath() != null || serviceConfigs.getKeystoreFilePath() != null) {
             SslContextBuilder sslContextBuilder = GrpcSslContexts.forClient();
             if (serviceConfigs.getTruststoreFilePath() != null) {
-                sslContextBuilder.trustManager(getTrustManagerFactory(serviceConfigs.getTruststoreFilePath(), serviceConfigs.getKeystorePassword(),
+                sslContextBuilder.trustManager(getTrustManagerFactory(serviceConfigs.getTruststoreFilePath(), serviceConfigs.getTruststorePassword(),
                         serviceConfigs.getTruststoreAlgorithm(), serviceConfigs.getTlsStoreType()));
             }
             if (serviceConfigs.getKeystoreFilePath() != null) {
@@ -180,7 +180,7 @@ public abstract class AbstractGrpcSink extends Sink {
             }
         }
         initSink(optionHolder);
-        if (headersOption.isStatic()) {
+        if (headersOption != null && headersOption.isStatic()) {
             headersMap = new HashMap<>();
             String headers = headersOption.getValue();
             headers = headers.replaceAll(GrpcConstants.INVERTED_COMMA_STRING, GrpcConstants.EMPTY_STRING);

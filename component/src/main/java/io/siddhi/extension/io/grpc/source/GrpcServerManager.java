@@ -19,6 +19,7 @@ package io.siddhi.extension.io.grpc.source;
 
 import io.siddhi.core.config.SiddhiAppContext;
 import io.siddhi.extension.io.grpc.util.GrpcServerConfigs;
+import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.log4j.Logger;
 
 import java.util.Collections;
@@ -37,8 +38,15 @@ public class GrpcServerManager {
     public void registerSource(GrpcServerConfigs serverConfigs, AbstractGrpcSource source, String methodName,
                                SiddhiAppContext siddhiAppContext, String streamID) {
         if (grpcPortServerMap.containsKey(serverConfigs.getServiceConfigs().getPort())) {
+            if (!grpcPortServerMap.get(serverConfigs.getServiceConfigs().getPort()).getGrpcServerConfigs()
+                    .equals(serverConfigs)) {
+                throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": " + streamID + ": A server " +
+                        "with different configuration is already running on port " + serverConfigs.getServiceConfigs()
+                        .getPort() + ". Please provide a different port or provide same configurations as server " +
+                        "running on the given port.");
+            }
             grpcPortServerMap.get(serverConfigs.getServiceConfigs().getPort()).subscribe(source.getStreamID(), source,
-                    methodName, siddhiAppContext); //todo: validate for same server configs
+                    methodName, siddhiAppContext);
         } else {
             GrpcEventServiceServer server = new GrpcEventServiceServer(serverConfigs, siddhiAppContext, streamID);
             server.subscribe(source.getStreamID(), source, serverConfigs.getServiceConfigs().getMethodName(),

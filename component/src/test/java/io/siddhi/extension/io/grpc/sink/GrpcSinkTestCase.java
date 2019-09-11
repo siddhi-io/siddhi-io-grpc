@@ -296,7 +296,7 @@ public class GrpcSinkTestCase {
     }
 
     @Test
-    public void testWithMetaData() throws Exception { //todo: check for concurrency issues if not there remove headers
+    public void testWithMetaData() throws Exception { //todo: check for concurrency issues
         log.info("Test case to call consume with headers");
         final TestAppender appender = new TestAppender();
         final Logger rootLogger = Logger.getRootLogger();

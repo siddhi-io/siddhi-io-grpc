@@ -20,6 +20,8 @@ package io.siddhi.extension.io.grpc.util;
 import io.siddhi.core.config.SiddhiAppContext;
 import io.siddhi.core.exception.SiddhiAppCreationException;
 import io.siddhi.core.util.transport.OptionHolder;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 public class GrpcServerConfigs {
     private ServiceConfigs serviceConfigs;
@@ -65,5 +67,30 @@ public class GrpcServerConfigs {
 
     public long getServerShutdownWaitingTimeInMillis() {
         return serverShutdownWaitingTimeInMillis;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+
+        if (!GrpcServerConfigs.class.isAssignableFrom(obj.getClass())) {
+            return false;
+        }
+
+        final GrpcServerConfigs other = (GrpcServerConfigs) obj;
+        return new EqualsBuilder().appendSuper(this.getServiceConfigs().equals(other.getServiceConfigs()))
+                .append(this.maxInboundMessageSize, other.maxInboundMessageSize).append(this.maxInboundMetadataSize,
+                        other.maxInboundMetadataSize).append(this.serverShutdownWaitingTimeInMillis,
+                        other.serverShutdownWaitingTimeInMillis).append(this.threadPoolSize, other.threadPoolSize)
+                .isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(3, 29).appendSuper(this.serviceConfigs.hashCode()).append(maxInboundMessageSize)
+                .append(maxInboundMetadataSize).append(serverShutdownWaitingTimeInMillis).append(threadPoolSize)
+                .toHashCode();
     }
 }

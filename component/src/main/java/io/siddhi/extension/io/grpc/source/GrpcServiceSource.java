@@ -55,8 +55,11 @@ import java.util.TimerTask;
                 @Parameter(
                         name = "receiver.url",
                         description = "The url which can be used by a client to access the grpc server in this " +
-                                "extension. This url should consist the host hostPort, port, service name, method " +
-                                "name in the following format. `grpc://0.0.0.0:9763/<serviceName>/<methodName>`" ,
+                                "extension. This url should consist the host hostPort, port, fully qualified service " +
+                                "name, method name in the following format. `grpc://0.0.0.0:9763/<serviceName>/" +
+                                "<methodName>`\n" +
+                                "For example:\n" +
+                                "grpc://0.0.0.0:9763/org.wso2.grpc.EventService/consume" ,
                         type = {DataType.STRING}),
                 @Parameter(
                         name = "max.inbound.message.size",
