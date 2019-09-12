@@ -111,7 +111,7 @@ public class GrpcCallResponseSource extends Source {
             if (siddhiRequestEventData.containsKey(requestedTransportPropertyNames[i])) {
                 transportProperties[i] = siddhiRequestEventData.get(requestedTransportPropertyNames[i]);
             }
-        } //todo: check if we are not getting the requested transport properties. do valid in init
+        }
         return transportProperties;
     }
 

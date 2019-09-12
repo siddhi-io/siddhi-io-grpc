@@ -267,4 +267,9 @@ public class GrpcServiceSource extends AbstractGrpcSource {
     public void destroy() {
         GrpcSourceRegistry.getInstance().removeGrpcServiceSource(sourceId);
     }
+
+    @Override
+    public void logError(String message) {
+        logger.error(siddhiAppContext.getName() + ": " + streamID + ": " + message);
+    }
 }

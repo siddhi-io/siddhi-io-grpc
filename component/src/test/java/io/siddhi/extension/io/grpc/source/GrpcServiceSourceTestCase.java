@@ -227,9 +227,8 @@ public class GrpcServiceSourceTestCase {
             }
             logMessages.add(message);
         }
-//        Assert.assertTrue(logMessages.contains("Dropping request. Requested transport property 'name' not present
-//        in " + //todo
-//                "received event"));
+        Assert.assertTrue(logMessages.contains("Dropping request. Requested transport property 'name' not present in " +
+                "received event"));
     }
 
     @Test
@@ -413,9 +412,7 @@ public class GrpcServiceSourceTestCase {
             }
             logMessages.add(message);
         }
-        // TODO: 2019-09-12 error message comes in different thread
-//        Assert.assertTrue(logMessages.contains("Dropping request. Requested transport property 'age' not present
-//        in " +
-//                "received event"));
+        Assert.assertTrue(logMessages.contains("Dropping request. Requested transport property 'age' not present in " +
+                "received event"));
     }
 }

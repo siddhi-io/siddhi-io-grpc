@@ -317,7 +317,6 @@ public class GrpcSinkTestCase {
 
         siddhiAppRuntime.start();
         fooStream.send(new Object[]{"Request 1"});
-//        fooStream.send(new Object[]{"Request 2", "'Name:Nash','Age:54','Content-Type:json'"});
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 

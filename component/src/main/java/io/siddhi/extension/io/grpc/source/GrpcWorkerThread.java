@@ -17,6 +17,8 @@
  */
 package io.siddhi.extension.io.grpc.source;
 
+import io.siddhi.core.exception.SiddhiAppRuntimeException;
+
 import java.util.Map;
 
 import static io.siddhi.extension.io.grpc.util.GrpcUtils.extractHeaders;
@@ -34,13 +36,18 @@ public class GrpcWorkerThread implements Runnable {
                             Map<String, String> metaData) {
         this.relevantSource = relevantSource;
         this.payload = payload;
-        this.metaData = metaData;
         this.headers = headers;
+        this.metaData = metaData;
     }
 
     @Override
     public void run() {
-        relevantSource.handleInjection(payload, extractHeaders(headers, metaData,
-                relevantSource.getRequestedTransportPropertyNames()));
+        try {
+            String[] headersArray = extractHeaders(headers, metaData, relevantSource.getRequestedTransportPropertyNames());
+            relevantSource.handleInjection(payload, headersArray);
+        } catch (SiddhiAppRuntimeException e) {
+            relevantSource.logError("Dropping request. " + e.getMessage());
+        }
+
     }
 }

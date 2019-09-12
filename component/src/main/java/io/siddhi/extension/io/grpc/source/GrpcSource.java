@@ -143,6 +143,11 @@ public class GrpcSource extends AbstractGrpcSource {
     }
 
     @Override
+    public void logError(String message) {
+        logger.error(siddhiAppContext.getName() + ": " + streamID + ": " + message);
+    }
+
+    @Override
     public void connect(ConnectionCallback connectionCallback, State state) throws ConnectionUnavailableException {
         if (GrpcServerManager.getInstance().getServer(grpcServerConfigs.getServiceConfigs().getPort())
                 .getState() == 0) {
