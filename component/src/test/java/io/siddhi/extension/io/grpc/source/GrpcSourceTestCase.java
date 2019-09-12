@@ -152,6 +152,77 @@ public class GrpcSourceTestCase {
 
         requestBuilder.setPayload(json);
         requestBuilder.putHeaders("stream.id", "BarStream");
+        requestBuilder.putHeaders("name", "benjamin");
+        requestBuilder.putHeaders("age", "24");
+        Event sequenceCallRequest = requestBuilder.build();
+        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:" + port).usePlaintext().build();
+        EventServiceGrpc.EventServiceStub asyncStub = EventServiceGrpc.newStub(channel);
+
+        StreamObserver<Empty> responseObserver = new StreamObserver<Empty>() {
+            @Override
+            public void onNext(Empty event) {
+            }
+
+            @Override
+            public void onError(Throwable t) {
+            }
+
+            @Override
+            public void onCompleted() {
+            }
+        };
+
+        siddhiAppRuntime.start();
+        StreamObserver requestObserver  = asyncStub.consume(responseObserver);
+        requestObserver.onNext(sequenceCallRequest);
+        Thread.sleep(10);
+        requestObserver.onCompleted();
+        Thread.sleep(1000);
+        siddhiAppRuntime.shutdown();
+    }
+
+    @Test
+    public void testToCheckForAllReqTrpInStreamDef() throws Exception {
+        logger.info("Test case to call process");
+        logger.setLevel(Level.DEBUG);
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String stream2 = "@source(type='grpc', receiver.url = 'grpc://localhost:" + port +
+                "/org.wso2.grpc.EventService/consume', " +
+                "@map(type='json', @attributes(name='trp:name', age='trp:age', message='message'))) " +
+                "define stream BarStream (message String, name String);";
+        String query = "@info(name = 'query') "
+                + "from BarStream "
+                + "select *  "
+                + "insert into outputStream;";
+
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(stream2 + query);
+        siddhiAppRuntime.addCallback("query", new QueryCallback() {
+            @Override
+            public void receive(long timeStamp, io.siddhi.core.event.Event[] inEvents,
+                                io.siddhi.core.event.Event[] removeEvents) {
+                EventPrinter.print(timeStamp, inEvents, removeEvents);
+                for (int i = 0; i < inEvents.length; i++) {
+                    eventCount.incrementAndGet();
+                    switch (i) {
+                        case 0:
+                            Assert.assertEquals((String) inEvents[i].getData()[0], "Hello !");
+                            break;
+                        default:
+                            Assert.fail();
+                    }
+                }
+            }
+        });
+
+        Event.Builder requestBuilder = Event.newBuilder();
+
+        String json = "{ \"message\": \"Hello !\"}";
+
+        requestBuilder.setPayload(json);
+        requestBuilder.putHeaders("stream.id", "BarStream");
+        requestBuilder.putHeaders("name", "benjamin");
+        requestBuilder.putHeaders("age", "24");
         Event sequenceCallRequest = requestBuilder.build();
         ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:" + port).usePlaintext().build();
         EventServiceGrpc.EventServiceStub asyncStub = EventServiceGrpc.newStub(channel);

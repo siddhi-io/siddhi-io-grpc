@@ -26,6 +26,10 @@ import io.siddhi.core.util.config.ConfigReader;
 import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.*;
+import io.siddhi.query.api.exception.SiddhiAppValidationException;
+
+import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * This is an abstract class extended by GrpcSource and GrpcServiceSource. This provides most of initialization
@@ -67,6 +71,15 @@ public abstract class AbstractGrpcSource extends Source {
         this.serviceDeploymentInfo = new ServiceDeploymentInfo(grpcServerConfigs.getServiceConfigs().getPort(),
                 grpcServerConfigs.getServiceConfigs().getTruststoreFilePath() != null ||
                         grpcServerConfigs.getServiceConfigs().getKeystoreFilePath() != null);
+//        ArrayList<String> attributeList = new ArrayList<>(Arrays.asList(sourceEventListener.getStreamDefinition()
+//                .getAttributeNameArray())); // is req trp name not in strm def it doesnt come in the reqtrp array
+//        for (String requestedTransportProperty: requestedTransportPropertyNames) {
+//            if (!attributeList.contains(requestedTransportProperty)) {
+//                throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": " + streamID + ": The " +
+//                        "requested transport property " + requestedTransportProperty + " not found in stream " +
+//                        "definition.");
+//            }
+//        }
         return null;
     }
 
