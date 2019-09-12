@@ -105,10 +105,9 @@ public class TestTLSServer {
                             @Override
                             public void onNext(Event request) {
                                 if (logger.isDebugEnabled()) {
-                                    logger.debug("Server consume hit with payload = " + request.getPayload() + " and Headers = {"
-                                            + request.getHeadersMap().toString() + "}");
+                                    logger.debug("Server consume hit with payload = " + request.getPayload() +
+                                            " and Headers = {" + request.getHeadersMap().toString() + "}");
                                 }
-                                System.out.println(request.getPayload());
                             }
 
                             @Override

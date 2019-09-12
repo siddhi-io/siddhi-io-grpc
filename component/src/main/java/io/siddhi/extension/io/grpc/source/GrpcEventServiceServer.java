@@ -39,8 +39,6 @@ import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
 
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.TrustManagerFactory;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.BindException;
@@ -52,8 +50,16 @@ import java.security.cert.CertificateException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.TrustManagerFactory;
 
+/**
+ * grpc server for default service. Sources can subscribe to this server with respective stream id
+ */
 public class GrpcEventServiceServer {
     private static final Logger logger = Logger.getLogger(GrpcEventServiceServer.class.getName());
     protected Server server;
@@ -138,8 +144,7 @@ public class GrpcEventServiceServer {
                                         GrpcSource relevantSource = subscribersForConsume.get(request.getHeadersMap()
                                                 .get(GrpcConstants.STREAM_ID));
                                         executorService.execute(new GrpcWorkerThread(relevantSource,
-                                                request.getPayload(), request.getHeadersMap(), metaDataMap.get(),
-                                                responseObserver));
+                                                request.getPayload(), request.getHeadersMap(), metaDataMap.get()));
                                         responseObserver.onNext(Empty.getDefaultInstance());
                                         responseObserver.onCompleted();
                                     } catch (SiddhiAppRuntimeException e) {
@@ -191,8 +196,7 @@ public class GrpcEventServiceServer {
                                 GrpcServiceSource relevantSource = subscribersForProcess.get(request.getHeadersMap()
                                         .get(GrpcConstants.STREAM_ID));
                                 executorService.execute(new GrpcWorkerThread(relevantSource,
-                                        request.getPayload(), transportPropertyMap, metaDataMap.get(),
-                                        responseObserver));
+                                        request.getPayload(), transportPropertyMap, metaDataMap.get()));
                                 relevantSource.putStreamObserver(messageId, responseObserver);
                                 relevantSource.scheduleServiceTimeout(messageId);
                             } catch (SiddhiAppRuntimeException e) {

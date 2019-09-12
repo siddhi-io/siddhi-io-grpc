@@ -26,6 +26,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * class to manage sources subscribing and unsubscribing to grpc servers on different ports
+ */
 public class GrpcServerManager {
     private static GrpcServerManager instance = new GrpcServerManager();
     private Map<Integer, GrpcEventServiceServer> grpcPortServerMap = Collections.synchronizedMap(

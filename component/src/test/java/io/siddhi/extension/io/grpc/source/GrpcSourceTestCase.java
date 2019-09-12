@@ -314,7 +314,8 @@ public class GrpcSourceTestCase {
             }
             logMessages.add(message);
         }
-//        Assert.assertTrue(logMessages.contains("Dropping request. Requested transport property 'age' not present in " +
+//        Assert.assertTrue(logMessages.contains("Dropping request. Requested transport property 'age' not
+//        present in " +
 //                "received event"));
     }
 
@@ -445,7 +446,8 @@ public class GrpcSourceTestCase {
             }
             logMessages.add(message);
         }
-//        Assert.assertTrue(logMessages.contains("Dropping request. Requested transport property 'name' not present in " +
+//        Assert.assertTrue(logMessages.contains("Dropping request. Requested transport property 'name' not
+//        present in " +
 //                "received event"));
     }
 

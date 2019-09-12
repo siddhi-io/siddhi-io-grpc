@@ -230,8 +230,8 @@ public class GrpcServiceSource extends AbstractGrpcSource {
 
     @Override
     public void connect(ConnectionCallback connectionCallback, State state) throws ConnectionUnavailableException {
-        if (GrpcServerManager.getInstance().getServer(grpcServerConfigs.getServiceConfigs().getPort()).getState() == 0)
-        {
+        if (GrpcServerManager.getInstance().getServer(grpcServerConfigs.getServiceConfigs().getPort())
+                .getState() == 0) {
             GrpcServerManager.getInstance().getServer(grpcServerConfigs.getServiceConfigs().getPort()).connectServer(
                     logger, connectionCallback, siddhiAppContext, streamID);
         }
@@ -247,7 +247,7 @@ public class GrpcServiceSource extends AbstractGrpcSource {
     }
 
     public void handleCallback(String messageId, String responsePayload) {
-        if (isDefaultMode) {
+        if (grpcServerConfigs.getServiceConfigs().isDefaultService()) {
             StreamObserver<Event> streamObserver = streamObserverMap.remove(messageId);
             if (streamObserver != null) {
                 Event.Builder responseBuilder = Event.newBuilder();

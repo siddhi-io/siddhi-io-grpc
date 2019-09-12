@@ -269,7 +269,7 @@ public abstract class AbstractGrpcSink extends Sink {
         if (metadataOption.isStatic()) {
             metadataString = metadataOption.getValue();
         } else {
-            metadataString = metadataOption.getValue();
+            metadataString = metadataOption.getValue(dynamicOptions);
         }
         metadataString = metadataString.replaceAll(GrpcConstants.INVERTED_COMMA_STRING, GrpcConstants.EMPTY_STRING);
         String[] metadataArray = metadataString.split(GrpcConstants.COMMA_STRING);

@@ -17,8 +17,6 @@
  */
 package io.siddhi.extension.io.grpc.source;
 
-import io.grpc.stub.StreamObserver;
-
 import java.util.Map;
 
 import static io.siddhi.extension.io.grpc.util.GrpcUtils.extractHeaders;
@@ -31,14 +29,12 @@ public class GrpcWorkerThread implements Runnable {
     private String payload;
     private Map<String, String> headers;
     private Map<String, String> metaData;
-    private StreamObserver responseObserver;
 
     public GrpcWorkerThread(AbstractGrpcSource relevantSource, String payload, Map<String, String> headers,
-                            Map<String, String> metaData, StreamObserver responseObserver) {
+                            Map<String, String> metaData) {
         this.relevantSource = relevantSource;
         this.payload = payload;
         this.metaData = metaData;
-        this.responseObserver = responseObserver;
         this.headers = headers;
     }
 

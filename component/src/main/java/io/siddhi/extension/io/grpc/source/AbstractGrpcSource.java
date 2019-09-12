@@ -35,7 +35,6 @@ public abstract class AbstractGrpcSource extends Source {
     protected SiddhiAppContext siddhiAppContext;
     protected SourceEventListener sourceEventListener;
     private String[] requestedTransportPropertyNames;
-    protected boolean isDefaultMode;
     protected String streamID;
     private ServiceDeploymentInfo serviceDeploymentInfo;
     protected GrpcServerConfigs grpcServerConfigs;
@@ -62,7 +61,7 @@ public abstract class AbstractGrpcSource extends Source {
         this.siddhiAppContext = siddhiAppContext;
         this.sourceEventListener = sourceEventListener;
         this.requestedTransportPropertyNames = requestedTransportPropertyNames.clone();
-        this.grpcServerConfigs = new GrpcServerConfigs(optionHolder, siddhiAppContext,streamID);
+        this.grpcServerConfigs = new GrpcServerConfigs(optionHolder, siddhiAppContext, streamID);
         initSource(optionHolder, requestedTransportPropertyNames);
         this.serviceDeploymentInfo = new ServiceDeploymentInfo(grpcServerConfigs.getServiceConfigs().getPort(),
                 grpcServerConfigs.getServiceConfigs().getTruststoreFilePath() != null ||
@@ -121,7 +120,7 @@ public abstract class AbstractGrpcSource extends Source {
     }
 
     public String[] getRequestedTransportPropertyNames() {
-        return requestedTransportPropertyNames;
+        return requestedTransportPropertyNames.clone();
     }
 
     public String getStreamID() {

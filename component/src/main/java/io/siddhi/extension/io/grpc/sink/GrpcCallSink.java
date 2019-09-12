@@ -268,7 +268,7 @@ public class GrpcCallSink extends AbstractGrpcSink {
                     futureStub;
 
             if (headersOption != null || serviceConfigs.getSequenceName() != null) {
-                if (headersOption.isStatic()) {
+                if (headersOption != null && headersOption.isStatic()) {
                     eventBuilder.putAllHeaders(headersMap);
                 } else {
                     eventBuilder = addHeadersToEventBuilder(dynamicOptions, eventBuilder);
