@@ -210,10 +210,12 @@ public class GrpcSink extends AbstractGrpcSink {
         if (serviceConfigs.isDefaultService()) {
             if (serviceConfigs.getMethodName() == null) {
                 serviceConfigs.setMethodName(GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE);
-            } else if (!serviceConfigs.getMethodName().equalsIgnoreCase(GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE)) {
+            } else if (!serviceConfigs.getMethodName().equalsIgnoreCase(GrpcConstants
+                    .DEFAULT_METHOD_NAME_WITHOUT_RESPONSE)) {
                 throw new SiddhiAppValidationException(siddhiAppName + ": " + streamID + ": In default " +
                         "mode grpc-sink when using EventService the method name should be '" +
-                        GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE + "' but given " + serviceConfigs.getMethodName());
+                        GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE + "' but given " + serviceConfigs
+                        .getMethodName());
             }
             StreamObserver<Empty> responseObserver = new StreamObserver<Empty>() {
                 @Override
@@ -279,8 +281,8 @@ public class GrpcSink extends AbstractGrpcSink {
                 logger.info(siddhiAppName + ": gRPC service on " + streamID + " has successfully connected to "
                         + serviceConfigs.getUrl());
             } else {
-                throw new ConnectionUnavailableException(siddhiAppName + ": gRPC service on" + streamID + " could not " +
-                        "connect to " + serviceConfigs.getUrl());
+                throw new ConnectionUnavailableException(siddhiAppName + ": gRPC service on" + streamID +
+                        " could not connect to " + serviceConfigs.getUrl());
             }
         }
     }

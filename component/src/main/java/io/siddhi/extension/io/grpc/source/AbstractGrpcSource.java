@@ -25,11 +25,7 @@ import io.siddhi.core.stream.input.source.SourceEventListener;
 import io.siddhi.core.util.config.ConfigReader;
 import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.core.util.transport.OptionHolder;
-import io.siddhi.extension.io.grpc.util.*;
-import io.siddhi.query.api.exception.SiddhiAppValidationException;
-
-import java.util.ArrayList;
-import java.util.Arrays;
+import io.siddhi.extension.io.grpc.util.GrpcServerConfigs;
 
 /**
  * This is an abstract class extended by GrpcSource and GrpcServiceSource. This provides most of initialization

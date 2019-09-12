@@ -18,7 +18,6 @@
 package io.siddhi.extension.io.grpc.util;
 
 import io.siddhi.core.config.SiddhiAppContext;
-import io.siddhi.core.exception.SiddhiAppCreationException;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -30,6 +29,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * class to hold grpc service configs
+ */
 public class ServiceConfigs {
     private String url;
     private String serviceName;
@@ -99,30 +101,27 @@ public class ServiceConfigs {
             isSslEnabled = Boolean.parseBoolean(optionHolder.validateAndGetOption(GrpcConstants.ENABLE_SSL).getValue());
         }
 
-        if (isSslEnabled) {
-            if (optionHolder.isOptionExists(GrpcConstants.TRUSTSTORE_FILE)) {
-//                if (!optionHolder.isOptionExists(GrpcConstants.KEYSTORE_FILE)) {
-//                    throw new SiddhiAppCreationException(siddhiAppContext.getName() + ":" + streamID + ": Truststore " +
-//                            "configurations given without keystore configurations. Please provide keystore");
-//                }
-                truststoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_FILE).getValue();
-                if (optionHolder.isOptionExists(GrpcConstants.TRUSTSTORE_PASSWORD)) {
-                    truststorePassword = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_PASSWORD).getValue();
-                }
-                truststoreAlgorithm = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_ALGORITHM).getValue();
-                tlsStoreType = optionHolder.getOrCreateOption(GrpcConstants.TLS_STORE_TYPE,
-                        GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
-            } else {
-                truststoreFilePath = GrpcConstants.DEFAULT_TRUSTSTORE_FILE_PATH;
-                truststorePassword = GrpcConstants.DEFAULT_TRUSTSTORE_PASSWORD;
-                truststoreAlgorithm = GrpcConstants.DEFAULT_TRUSTSTORE_ALGORITHM;
-            }
+        if (isSslEnabled && !optionHolder.isOptionExists(GrpcConstants.TRUSTSTORE_FILE)) {
+            truststoreFilePath = GrpcConstants.DEFAULT_TRUSTSTORE_FILE_PATH;
+            truststorePassword = GrpcConstants.DEFAULT_TRUSTSTORE_PASSWORD;
+            truststoreAlgorithm = GrpcConstants.DEFAULT_TRUSTSTORE_ALGORITHM;
+        }
 
-            if (optionHolder.isOptionExists(GrpcConstants.KEYSTORE_FILE)) {
-                keystoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_FILE).getValue();
-                keystorePassword = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_PASSWORD).getValue();
-                keystoreAlgorithm = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_ALGORITHM).getValue();
+        if (optionHolder.isOptionExists(GrpcConstants.TRUSTSTORE_FILE)) {
+            truststoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_FILE).getValue();
+            if (optionHolder.isOptionExists(GrpcConstants.TRUSTSTORE_PASSWORD)) {
+                truststorePassword = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_PASSWORD)
+                        .getValue();
             }
+            truststoreAlgorithm = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_ALGORITHM).getValue();
+            tlsStoreType = optionHolder.getOrCreateOption(GrpcConstants.TLS_STORE_TYPE,
+                    GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
+        }
+
+        if (optionHolder.isOptionExists(GrpcConstants.KEYSTORE_FILE)) {
+            keystoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_FILE).getValue();
+            keystorePassword = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_PASSWORD).getValue();
+            keystoreAlgorithm = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_ALGORITHM).getValue();
             tlsStoreType = optionHolder.getOrCreateOption(GrpcConstants.TLS_STORE_TYPE,
                     GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
         }

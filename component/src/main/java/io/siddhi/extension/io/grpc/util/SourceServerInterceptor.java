@@ -47,6 +47,7 @@ public class SourceServerInterceptor implements ServerInterceptor {
       metaDataMap.put(key, metadata.get(Metadata.Key.of(key, io.grpc.Metadata.ASCII_STRING_MARSHALLER)));
     }
     GrpcEventServiceServer.metaDataMap.set(metaDataMap);
-    return Contexts.interceptCall(Context.ROOT, serverCall, metadata, serverCallHandler); //todo check if this line is there in the stacktrace when debugging reading from the threadlocal
+    return Contexts.interceptCall(Context.ROOT, serverCall, metadata, serverCallHandler);
+    //todo check if this line is there in the stacktrace when debugging reading from the threadlocal
   }
 }

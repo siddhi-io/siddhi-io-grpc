@@ -326,7 +326,8 @@ public class GrpcSinkTestCase {
             String message = String.valueOf(logEvent.getMessage());
             logMessages.add(message);
         }
-        Assert.assertTrue(logMessages.contains("Server consume hit with payload = [{\"event\":{\"message\":\"Request 1\"}}] and Headers = {{}}"));
+        Assert.assertTrue(logMessages.contains("Server consume hit with payload = " +
+                "[{\"event\":{\"message\":\"Request 1\"}}] and Headers = {{}}"));
         Assert.assertTrue(logMessages.contains("Metadata received: name: John"));
         Assert.assertTrue(logMessages.contains("Metadata received: age: 23"));
     }

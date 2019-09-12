@@ -58,7 +58,7 @@ public class GrpcConstants {
     public static final String THREADPOOL_BUFFER_SIZE = "threadpool.buffer.size";
     public static final String THREADPOOL_BUFFER_SIZE_DEFAULT = "100";
     public static final String ENABLE_SSL = "enable.ssl";
-    public static final String DEFAULT_TRUSTSTORE_FILE_PATH = "security/wso2carbon.jks";
+    public static final String DEFAULT_TRUSTSTORE_FILE_PATH = "src/main/resources/security/wso2carbon.jks";
     public static final String DEFAULT_TRUSTSTORE_PASSWORD = "wso2carbon";
     public static final String DEFAULT_TRUSTSTORE_ALGORITHM = "SunX509";
 

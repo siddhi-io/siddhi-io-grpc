@@ -240,10 +240,12 @@ public class GrpcCallSink extends AbstractGrpcSink {
         if (serviceConfigs.isDefaultService()) {
             if (serviceConfigs.getMethodName() == null) {
                 serviceConfigs.setMethodName(GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE);
-            } else if (!serviceConfigs.getMethodName().equalsIgnoreCase(GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE)) {
+            } else if (!serviceConfigs.getMethodName().equalsIgnoreCase(GrpcConstants
+                    .DEFAULT_METHOD_NAME_WITH_RESPONSE)) {
                 throw new SiddhiAppValidationException(siddhiAppName + ": " + streamID + ": In default " +
                         "mode grpc-call-sink when using EventService the method name should be '" +
-                        GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE + "' but given " + serviceConfigs.getMethodName());
+                        GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE + "' but given " + serviceConfigs
+                        .getMethodName());
             }
         }
         if (optionHolder.isOptionExists(GrpcConstants.MAX_INBOUND_MESSAGE_SIZE)) {

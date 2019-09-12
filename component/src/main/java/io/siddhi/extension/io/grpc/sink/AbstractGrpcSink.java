@@ -129,12 +129,14 @@ public abstract class AbstractGrpcSink extends Sink {
         if (serviceConfigs.getTruststoreFilePath() != null || serviceConfigs.getKeystoreFilePath() != null) {
             SslContextBuilder sslContextBuilder = GrpcSslContexts.forClient();
             if (serviceConfigs.getTruststoreFilePath() != null) {
-                sslContextBuilder.trustManager(getTrustManagerFactory(serviceConfigs.getTruststoreFilePath(), serviceConfigs.getTruststorePassword(),
-                        serviceConfigs.getTruststoreAlgorithm(), serviceConfigs.getTlsStoreType()));
+                sslContextBuilder.trustManager(getTrustManagerFactory(serviceConfigs.getTruststoreFilePath(),
+                        serviceConfigs.getTruststorePassword(), serviceConfigs.getTruststoreAlgorithm(),
+                        serviceConfigs.getTlsStoreType()));
             }
             if (serviceConfigs.getKeystoreFilePath() != null) {
-                sslContextBuilder.keyManager(getKeyManagerFactory(serviceConfigs.getKeystoreFilePath(), serviceConfigs.getKeystorePassword(),
-                        serviceConfigs.getKeystoreAlgorithm(), serviceConfigs.getTlsStoreType()));
+                sslContextBuilder.keyManager(getKeyManagerFactory(serviceConfigs.getKeystoreFilePath(),
+                        serviceConfigs.getKeystorePassword(), serviceConfigs.getKeystoreAlgorithm(),
+                        serviceConfigs.getTlsStoreType()));
             }
             try {
                 managedChannelBuilder = ((NettyChannelBuilder) managedChannelBuilder).sslContext(sslContextBuilder

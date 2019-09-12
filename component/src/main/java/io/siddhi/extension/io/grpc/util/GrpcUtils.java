@@ -18,11 +18,8 @@
 package io.siddhi.extension.io.grpc.util;
 
 import io.siddhi.core.exception.SiddhiAppRuntimeException;
-import io.siddhi.query.api.exception.SiddhiAppValidationException;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
