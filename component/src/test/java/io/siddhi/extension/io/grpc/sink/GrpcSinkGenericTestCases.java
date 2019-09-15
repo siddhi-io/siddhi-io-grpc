@@ -136,6 +136,10 @@ public class GrpcSinkGenericTestCases {
         log.info("Test case to call send");
         log.setLevel(Level.DEBUG);
         SiddhiManager siddhiManager = new SiddhiManager();
+        final TestAppender appender = new TestAppender();
+        final Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(Level.DEBUG);
+        rootLogger.addAppender(appender);
 
         String inStreamDefinition = ""
                 + "@sink(type='grpc', " +
@@ -154,6 +158,24 @@ public class GrpcSinkGenericTestCases {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
+        final List<LoggingEvent> log = appender.getLog();
+        List<String> logMessages = new ArrayList<>();
+        for (LoggingEvent logEvent : log) {
+            String message = String.valueOf(logEvent.getMessage());
+            logMessages.add(message);
+        }
+        Assert.assertTrue(logMessages.contains("Server hits with request :\n" +
+                "stringValue: \"Test 01\"\n" +
+                "intValue: 60\n" +
+                "map {\n" +
+                "  key: \"Key 01\"\n" +
+                "  value: \"Value 01\"\n" +
+                "}\n" +
+                "map {\n" +
+                "  key: \"Key 02\"\n" +
+                "  value: \"Value 02\"\n" +
+                "}\n"));
+
     }
 
     @Test
@@ -161,11 +183,15 @@ public class GrpcSinkGenericTestCases {
         log.info("Test case to call send");
         log.setLevel(Level.DEBUG);
         SiddhiManager siddhiManager = new SiddhiManager();
+        final TestAppender appender = new TestAppender();
+        final Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(Level.DEBUG);
+        rootLogger.addAppender(appender);
 
         String inStreamDefinition = ""
                 + "@sink(type='grpc', " +
-                "publisher.url = 'grpc://localhost:8888/org.wso2.grpc.test.MyService/send', " +
-                "metadata='{{metadata}}', " +
+                "publisher.url = 'grpc://localhost:8888/" + packageName + ".MyService/send', " +
+                "metadata = \"'Name:John','Age:23','Content-Type:text'\", " +
                 "@map(type='protobuf', " +
                 "@payload(stringValue='a',longValue='b',intValue='c',booleanValue='d',floatValue = 'e', doubleValue =" +
                 " 'f'))) " +
@@ -174,13 +200,19 @@ public class GrpcSinkGenericTestCases {
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
         InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
         siddhiAppRuntime.start();
-        fooStream.send(new Object[]{"Test 01", 10000L, 60, true, 522.7586f, 34.5668, "'Name:Sahan','Age:21'," +
-                "'Content-Type:json'"});
+        fooStream.send(new Object[]{"Test 01", 10000L, 60, true, 522.7586f, 34.5668});
         Thread.sleep(1000);
-        fooStream.send(new Object[]{"Test 02", 10000L, 60, false, 768.987f, 34.5668, "'Name:Sahan','Age:21'," +
-                "'Content-Type:json'"});
+        fooStream.send(new Object[]{"Test 02", 10000L, 60, false, 768.987f, 34.5668});
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
+
+        final List<LoggingEvent> log = appender.getLog();
+        List<String> logMessages = new ArrayList<>();
+        for (LoggingEvent logEvent : log) {
+            String message = String.valueOf(logEvent.getMessage());
+            logMessages.add(message);
+        }
+        Assert.assertTrue(logMessages.contains("Metadata received: name: John"));
 
     }
 
@@ -209,8 +241,8 @@ public class GrpcSinkGenericTestCases {
         for (int i = 1; i <= 50; i++) {
             fooStream.send(new Object[]{"Test " + i, i, i * 1000L, true, 10.456f * i, 34.5668 * i});
         }
-        Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
+        Thread.sleep(1000);
 
         final List<LoggingEvent> log = appender.getLog();
         List<String> logMessages = new ArrayList<>();
@@ -246,10 +278,11 @@ public class GrpcSinkGenericTestCases {
         for (int i = 1; i <= 20; i++) {
             map.put("Key " + i, "Value " + i);
             fooStream.send(new Object[]{"Test " + i, i, map});
-            Thread.sleep(100);
+            Thread.sleep(10);
             map.clear();
         }
         siddhiAppRuntime.shutdown();
+        Thread.sleep(1000);
         final List<LoggingEvent> log = appender.getLog();
         List<String> logMessages = new ArrayList<>();
         for (LoggingEvent logEvent : log) {
