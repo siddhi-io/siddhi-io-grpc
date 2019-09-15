@@ -18,6 +18,7 @@
 package io.siddhi.extension.io.grpc.sink;
 
 import com.google.protobuf.Empty;
+import io.grpc.Channel;
 import io.grpc.stub.AbstractStub;
 import io.grpc.stub.StreamObserver;
 import io.siddhi.annotation.Example;
@@ -34,7 +35,11 @@ import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
+
+import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
 
 /**
  * {@code GrpcSink} Handle the gRPC publishing tasks.
@@ -55,18 +60,18 @@ import java.util.concurrent.TimeUnit;
                                 "method name in the following format. `grpc://0.0.0.0:9763/<serviceName>/" +
                                 "<methodName>`\n" +
                                 "For example:\n" +
-                                "grpc://0.0.0.0:9763/org.wso2.grpc.EventService/consume" ,
+                                "grpc://0.0.0.0:9763/org.wso2.grpc.EventService/consume",
                         type = {DataType.STRING}),
                 @Parameter(
                         name = "headers",
                         description = "GRPC Request headers in format `\"'<key>:<value>','<key>:<value>'\"`. " +
-                                "If header parameter is not provided just the payload is sent" ,
+                                "If header parameter is not provided just the payload is sent",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "-"),
                 @Parameter(
                         name = "idle.timeout",
-                        description = "Set the duration in seconds without ongoing RPCs before going to idle mode." ,
+                        description = "Set the duration in seconds without ongoing RPCs before going to idle mode.",
                         type = {DataType.LONG},
                         optional = true,
                         defaultValue = "1800"),
@@ -74,27 +79,27 @@ import java.util.concurrent.TimeUnit;
                         name = "keep.alive.time",
                         description = "Sets the time in seconds without read activity before sending a keepalive " +
                                 "ping. Keepalives can increase the load on services so must be used with caution. By " +
-                                "default set to Long.MAX_VALUE which disables keep alive pinging." ,
+                                "default set to Long.MAX_VALUE which disables keep alive pinging.",
                         type = {DataType.LONG},
                         optional = true,
                         defaultValue = "Long.MAX_VALUE"),
                 @Parameter(
                         name = "keep.alive.timeout",
                         description = "Sets the time in seconds waiting for read activity after sending a keepalive " +
-                                "ping." ,
+                                "ping.",
                         type = {DataType.LONG},
                         optional = true,
                         defaultValue = "20"),
                 @Parameter(
                         name = "keep.alive.without.calls",
                         description = "Sets whether keepalive will be performed when there are no outstanding RPC " +
-                                "on a connection." ,
+                                "on a connection.",
                         type = {DataType.BOOL},
                         optional = true,
                         defaultValue = "false"),
                 @Parameter(
                         name = "enable.retry",
-                        description = "Enables the retry mechanism provided by the gRPC library." ,
+                        description = "Enables the retry mechanism provided by the gRPC library.",
                         type = {DataType.BOOL},
                         optional = true,
                         defaultValue = "false"),
@@ -102,7 +107,7 @@ import java.util.concurrent.TimeUnit;
                         name = "max.retry.attempts",
                         description = "Sets max number of retry attempts. The total number of retry attempts for " +
                                 "each RPC will not exceed this number even if service config may allow a higher " +
-                                "number." ,
+                                "number.",
                         type = {DataType.INT},
                         optional = true,
                         defaultValue = "5"),
@@ -110,66 +115,66 @@ import java.util.concurrent.TimeUnit;
                         name = "retry.buffer.size",
                         description = "Sets the retry buffer size in bytes. If the buffer limit is exceeded, no " +
                                 "RPC could retry at the moment, and in hedging case all hedges but one of the same " +
-                                "RPC will cancel." ,
+                                "RPC will cancel.",
                         type = {DataType.LONG},
                         optional = true,
                         defaultValue = "16777216"),
                 @Parameter(
                         name = "per.rpc.buffer.size",
                         description = "Sets the per RPC buffer limit in bytes used for retry. The RPC is not " +
-                                "retriable if its buffer limit is exceeded." ,
+                                "retriable if its buffer limit is exceeded.",
                         type = {DataType.LONG},
                         optional = true,
                         defaultValue = "1048576"),
                 @Parameter(
                         name = "channel.termination.waiting.time",
                         description = "The time in seconds to wait for the channel to become terminated, giving up " +
-                                "if the timeout is reached." ,
+                                "if the timeout is reached.",
                         type = {DataType.LONG},
                         optional = true,
                         defaultValue = "5"),
                 @Parameter(
                         name = "truststore.file",
                         description = "the file path of truststore. If this is provided then server authentication " +
-                                "is enabled" ,
+                                "is enabled",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "-"),
                 @Parameter(
                         name = "truststore.password",
                         description = "the password of truststore. If this is provided then the integrity of the " +
-                                "keystore is checked" ,
+                                "keystore is checked",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "-"),
                 @Parameter(
                         name = "truststore.algorithm",
-                        description = "the encryption algorithm to be used for server authentication" ,
+                        description = "the encryption algorithm to be used for server authentication",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "-"),
                 @Parameter(
                         name = "tls.store.type",
-                        description = "TLS store type" ,
+                        description = "TLS store type",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "-"),
                 @Parameter(
                         name = "keystore.file",
                         description = "the file path of keystore. If this is provided then client authentication " +
-                                "is enabled" ,
+                                "is enabled",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "-"),
                 @Parameter(
                         name = "keystore.password",
-                        description = "the password of keystore" ,
+                        description = "the password of keystore",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "-"),
                 @Parameter(
                         name = "keystore.algorithm",
-                        description = "the encryption algorithm to be used for client authentication" ,
+                        description = "the encryption algorithm to be used for client authentication",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "-"),
@@ -202,24 +207,18 @@ import java.util.concurrent.TimeUnit;
 
 public class GrpcSink extends AbstractGrpcSink {
     private static final Logger logger = Logger.getLogger(GrpcSink.class.getName());
+    StreamObserver responseObserver;
     private AbstractStub asyncStub;
-    private StreamObserver<Event> requestObserver;
+    private StreamObserver /*<Event>*/ requestObserver; //make it generic
+    private Method rpcMethod;
 
     @Override
     public void initSink(OptionHolder optionHolder) {
         if (serviceConfigs.isDefaultService()) {
-            if (serviceConfigs.getMethodName() == null) {
-                serviceConfigs.setMethodName(GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE);
-            } else if (!serviceConfigs.getMethodName().equalsIgnoreCase(GrpcConstants
-                    .DEFAULT_METHOD_NAME_WITHOUT_RESPONSE)) {
-                throw new SiddhiAppValidationException(siddhiAppName + ": " + streamID + ": In default " +
-                        "mode grpc-sink when using EventService the method name should be '" +
-                        GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE + "' but given " + serviceConfigs
-                        .getMethodName());
-            }
-            StreamObserver<Empty> responseObserver = new StreamObserver<Empty>() {
+            responseObserver = new StreamObserver<Empty>() {
                 @Override
-                public void onNext(Empty event) {}
+                public void onNext(Empty event) {
+                }
 
                 @Override
                 public void onError(Throwable t) { //parent method doest have error in its signature. so cant throw
@@ -236,14 +235,81 @@ public class GrpcSink extends AbstractGrpcSink {
                 public void onCompleted() {
                 }
             };
+            if (serviceConfigs.getMethodName() == null) {
+                serviceConfigs.setMethodName(GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE);
+            } else if (!serviceConfigs.getMethodName().equalsIgnoreCase(GrpcConstants
+                    .DEFAULT_METHOD_NAME_WITHOUT_RESPONSE)) {
+                throw new SiddhiAppValidationException(siddhiAppName + ": " + streamID + ": In default " +
+                        "mode grpc-sink when using EventService the method name should be '" +
+                        GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE + "' but given " + serviceConfigs
+                        .getMethodName());
+            }
             this.channel = managedChannelBuilder.build();
             this.asyncStub = EventServiceGrpc.newStub(channel);
-            if (metadataOption != null) {
+            /*if (metadataOption != null) {
                 if (metadataOption.isStatic()) {
                     asyncStub = attachMetaDataToStub(null, asyncStub);
                 }
-            }
+            }*/
             requestObserver = ((EventServiceGrpc.EventServiceStub) asyncStub).consume(responseObserver);
+        } else {
+            responseObserver = new StreamObserver<Object>() {
+                @Override
+                public void onNext(Object event) {
+                }
+
+                @Override
+                public void onError(Throwable t) { //parent method doest have error in its signature. so cant throw
+                    // from here
+//                    if (((StatusRuntimeException) t).getStatus().getCode().equals(Status.UNAVAILABLE)) {
+//                        throw new ConnectionUnavailableException(siddhiAppName.getName() + ": " + streamID + ": "
+//                        + t.getMessage());
+//                    }
+                    logger.error(siddhiAppName + ":" + streamID + ": " + t.getMessage() + " caused by "
+                            + t.getMessage(), t);
+                }
+
+                @Override
+                public void onCompleted() {
+                }
+            };
+            String stubReference = serviceConfigs.getFullyQualifiedServiceName() + GrpcConstants.
+                    GRPC_PROTOCOL_NAME_UPPERCAMELCASE + GrpcConstants.DOLLAR_SIGN + serviceConfigs.getServiceName()
+                    + GrpcConstants.STUB;
+            try {
+                Method[] methodsInStub = Class.forName(stubReference).getMethods();
+                for (Method method : methodsInStub) {
+                    if (method.getName().equalsIgnoreCase(serviceConfigs.getMethodName())) {
+                        rpcMethod = method;
+                        break;
+                    }
+                }
+                if (rpcMethod == null) {
+                    throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid method name " +
+                            "provided in the url, provided method name: " + serviceConfigs.getMethodName() +
+                            "expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName,
+                            streamID));
+                }
+                this.channel = managedChannelBuilder.build();
+                createStub(serviceConfigs.getFullyQualifiedServiceName());
+                if (rpcMethod.getParameterCount() == 1) {
+                    requestObserver = (StreamObserver) rpcMethod.invoke(asyncStub, responseObserver);
+                }
+            } catch (ClassNotFoundException e) {
+                throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid service name " +
+                        "provided in the url, provided service name: '" + serviceConfigs
+                        .getFullyQualifiedServiceName() + "'", e);
+            } catch (IllegalAccessException | InvocationTargetException e) { //throws from 'invoke'
+                throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid method name " +
+                        "provided in the url, provided method name: " + serviceConfigs.getMethodName() +
+                        "expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName,
+                        streamID), e);
+            }
+        }
+        if (metadataOption != null) {
+            if (metadataOption.isStatic()) {
+                asyncStub = attachMetaDataToStub(null, asyncStub);
+            }
         }
     }
 
@@ -262,13 +328,27 @@ public class GrpcSink extends AbstractGrpcSink {
             }
             requestObserver.onNext(eventBuilder.build());
         } else {
-
+            System.out.println(payload);
+            if (requestObserver == null) {
+                Object[] arguments = new Object[]{payload, responseObserver};
+                try {
+                    rpcMethod.invoke(asyncStub, arguments);
+                } catch (IllegalAccessException | InvocationTargetException e) {
+                    throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid method name " +
+                            "provided in the url, provided method name: " + serviceConfigs.getMethodName() +
+                            "expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName,
+                            streamID), e);
+                }
+            } else {
+                requestObserver.onNext(payload);
+            }
         }
     }
 
     /**
      * This method will be called before the processing method.
      * Intention to establish connection to publish event.
+     *
      * @throws ConnectionUnavailableException if end point is unavailable the ConnectionUnavailableException thrown
      *                                        such that the  system will take care retrying for connection
      */
@@ -294,7 +374,9 @@ public class GrpcSink extends AbstractGrpcSink {
     @Override
     public void disconnect() {
         try {
-            requestObserver.onCompleted();
+            if (requestObserver != null) {
+                requestObserver.onCompleted();
+            }
             if (channelTerminationWaitingTimeInMillis > 0L) {
                 channel.shutdown().awaitTermination(channelTerminationWaitingTimeInMillis, TimeUnit.MILLISECONDS);
             } else {
@@ -304,6 +386,26 @@ public class GrpcSink extends AbstractGrpcSink {
         } catch (InterruptedException e) {
             logger.error(siddhiAppName + ": " + streamID + ": Error in shutting " + "down the channel. " +
                     e.getMessage(), e);
+        }
+    }
+
+    /**
+     * to create Stub object in generic way
+     */
+    private void createStub(String fullyQualifiedServiceName) {
+        try {
+            Class serviceClass = Class.forName(fullyQualifiedServiceName + GrpcConstants
+                    .GRPC_PROTOCOL_NAME_UPPERCAMELCASE);
+            Method newStub = serviceClass.getDeclaredMethod(GrpcConstants.NEW_STUB_NAME, Channel.class);
+            asyncStub = (AbstractStub) newStub.invoke(serviceClass, this.channel);
+        } catch (ClassNotFoundException e) {
+            throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid service name " +
+                    "provided in the url, provided service name: '" + serviceConfigs
+                    .getFullyQualifiedServiceName() + "'", e);
+        } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+            throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid method name " +
+                    "provided in the url, provided method name: " + serviceConfigs.getMethodName() +
+                    "expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName, streamID));
         }
     }
 }

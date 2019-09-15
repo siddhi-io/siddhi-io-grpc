@@ -18,7 +18,10 @@
 package io.siddhi.extension.io.grpc.util;
 
 import io.siddhi.core.exception.SiddhiAppRuntimeException;
+import io.siddhi.query.api.exception.SiddhiAppValidationException;
 
+import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -44,8 +47,34 @@ public class GrpcUtils {
         List headersArrayList = Arrays.asList(headersArray);
         if (headersArrayList.contains(null)) {
             throw new SiddhiAppRuntimeException("Requested transport property '" +
-                requestedTransportPropertyNames[headersArrayList.indexOf(null)] + "' not present in received event");
+                    requestedTransportPropertyNames[headersArrayList.indexOf(null)] + "' not present in received " +
+                    "event");
         }
         return headersArray;
+    }
+
+    /**
+     * @return methods that are available in the stub as list of String
+     */
+    public static List<String> getRpcMethodList(ServiceConfigs serviceConfigs, String siddhiAppName,
+                                                String streamID) {
+        List<String> rpcMethodNameList = new ArrayList<>();
+        String stubReference = serviceConfigs.getFullyQualifiedServiceName() + GrpcConstants.
+                GRPC_PROTOCOL_NAME_UPPERCAMELCASE + GrpcConstants.DOLLAR_SIGN + serviceConfigs.getServiceName()
+                + GrpcConstants.STUB;
+        Method[] methodsInStub;
+        try {
+            methodsInStub = Class.forName(stubReference).getMethods();
+        } catch (ClassNotFoundException e) {
+            throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid service name " +
+                    "provided in the url, provided service name: '" + serviceConfigs
+                    .getFullyQualifiedServiceName() + "'", e);
+        }
+        for (Method method : methodsInStub) {
+            if (method.getDeclaringClass().getName().equals(stubReference)) { //to ignore super class method
+                rpcMethodNameList.add(method.getName());
+            }
+        }
+        return rpcMethodNameList;
     }
 }
