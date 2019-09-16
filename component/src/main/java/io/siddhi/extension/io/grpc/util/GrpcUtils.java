@@ -20,7 +20,6 @@ package io.siddhi.extension.io.grpc.util;
 import io.siddhi.core.exception.SiddhiAppRuntimeException;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -79,31 +78,4 @@ public class GrpcUtils {
         return rpcMethodNameList;
     }
 
-    public static Method getRpcMethod(ServiceConfigs serviceConfigs, String siddhiAppName, String streamID) {
-
-        Method rpcMethod = null;
-        String stubReference = serviceConfigs.getFullyQualifiedServiceName() + GrpcConstants.
-                GRPC_PROTOCOL_NAME_UPPERCAMELCASE + GrpcConstants.DOLLAR_SIGN + serviceConfigs.getServiceName()
-                + GrpcConstants.STUB;
-        try {
-            Method[] methodsInStub = Class.forName(stubReference).getMethods();
-            for (Method method : methodsInStub) {
-                if (method.getName().equalsIgnoreCase(serviceConfigs.getMethodName())) {
-                    rpcMethod = method;
-                    break;
-                }
-            }
-            if (rpcMethod == null) { //only if user has provided a wrong method name
-                throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid method name " +
-                        "provided in the url, provided method name: " + serviceConfigs.getMethodName() +
-                        "expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName,
-                        streamID));
-            }
-        } catch (ClassNotFoundException e) {
-            throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid service name " +
-                    "provided in the url, provided service name: '" + serviceConfigs
-                    .getFullyQualifiedServiceName() + "'", e);
-        }
-        return rpcMethod;
-    }
 }

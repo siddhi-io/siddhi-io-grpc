@@ -99,7 +99,7 @@ public class GrpcConstants {
     public static final String TIMEOUT_CHECK_INTERVAL = "timeout.check.interval";
 
     public static final String STUB = "Stub";
-    public static final String FUTURE_STUB_NAME = "FutureStub";
+    public static final String FUTURE_STUB = "FutureStub";
     public static final String FUTURE_STUB_METHOD_NAME = "newFutureStub";
     public static final String GRPC_PROTOCOL_NAME_UPPERCAMELCASE = "Grpc";
     public static final String DOLLAR_SIGN = "$";

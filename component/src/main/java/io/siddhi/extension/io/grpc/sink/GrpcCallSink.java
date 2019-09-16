@@ -21,7 +21,6 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
-import com.google.protobuf.GeneratedMessageV3;
 import io.grpc.Channel;
 import io.grpc.stub.AbstractStub;
 import io.siddhi.annotation.Example;
@@ -49,7 +48,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethod;
 import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
 
 /**
@@ -256,8 +254,6 @@ public class GrpcCallSink extends AbstractGrpcSink {
                         GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE + "' but given " + serviceConfigs
                         .getMethodName());
             }
-        } else {
-
         }
         if (optionHolder.isOptionExists(GrpcConstants.MAX_INBOUND_MESSAGE_SIZE)) {
             managedChannelBuilder.maxInboundMessageSize(Integer.parseInt(optionHolder.validateAndGetOption(
@@ -312,20 +308,20 @@ public class GrpcCallSink extends AbstractGrpcSink {
             if (metadataOption != null) {
                 currentStub = attachMetaDataToStub(dynamicOptions, currentStub);
             }
-            ListenableFuture<GeneratedMessageV3> genericFutureResponse;
+            ListenableFuture genericFutureResponse;
             try {
-                genericFutureResponse = (ListenableFuture<GeneratedMessageV3>) rpcMethod.invoke(currentStub, payload);
+                genericFutureResponse = (ListenableFuture) rpcMethod.invoke(currentStub, payload);
             } catch (IllegalAccessException | InvocationTargetException e) {
                 throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid method name " +
                         "provided in the url, provided method name: " + serviceConfigs.getMethodName() +
                         "expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName,
                         streamID), e);
             }
-            Futures.addCallback(genericFutureResponse, new FutureCallback<GeneratedMessageV3>() {
+            Futures.addCallback(genericFutureResponse, new FutureCallback<Object>() {
                 Map<String, String> siddhiRequestEventData = getRequestEventDataMap(dynamicOptions);
 
                 @Override
-                public void onSuccess(GeneratedMessageV3 o) {
+                public void onSuccess(Object o) {
                     GrpcSourceRegistry.getInstance().getGrpcCallResponseSource(sinkID).onResponse(o,
                             siddhiRequestEventData);
                 }
@@ -414,5 +410,33 @@ public class GrpcCallSink extends AbstractGrpcSink {
                     "provided in the url, provided method name: " + serviceConfigs.getMethodName() +
                     "expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName, streamID));
         }
+    }
+
+    private static Method getRpcMethod(ServiceConfigs serviceConfigs, String siddhiAppName, String streamID) {
+
+        Method rpcMethod = null;
+        String stubReference = serviceConfigs.getFullyQualifiedServiceName() + GrpcConstants.
+                GRPC_PROTOCOL_NAME_UPPERCAMELCASE + GrpcConstants.DOLLAR_SIGN + serviceConfigs.getServiceName()
+                + GrpcConstants.FUTURE_STUB;
+        try {
+            Method[] methodsInStub = Class.forName(stubReference).getMethods();
+            for (Method method : methodsInStub) {
+                if (method.getName().equalsIgnoreCase(serviceConfigs.getMethodName())) {
+                    rpcMethod = method;
+                    break;
+                }
+            }
+            if (rpcMethod == null) { //only if user has provided a wrong method name
+                throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid method name " +
+                        "provided in the url, provided method name: " + serviceConfigs.getMethodName() +
+                        "expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName,
+                        streamID));
+            }
+        } catch (ClassNotFoundException e) {
+            throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid service name " +
+                    "provided in the url, provided service name: '" + serviceConfigs
+                    .getFullyQualifiedServiceName() + "'", e);
+        }
+        return rpcMethod;
     }
 }

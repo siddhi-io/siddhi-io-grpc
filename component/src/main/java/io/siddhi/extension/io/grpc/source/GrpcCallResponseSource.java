@@ -102,7 +102,7 @@ public class GrpcCallResponseSource extends Source {
         sourceEventListener.onEvent(response.getPayload(), getTransportProperties(response.getHeadersMap(),
                 siddhiRequestEventData));
     }
-    public void onResponse(GeneratedMessageV3 response, Map<String, String> siddhiRequestEventData) {
+    public void onResponse(Object response, Map<String, String> siddhiRequestEventData) {
         sourceEventListener.onEvent(response, getTransportProperties(siddhiRequestEventData));
     }
 
