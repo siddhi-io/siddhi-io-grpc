@@ -23,6 +23,7 @@ import io.grpc.Metadata;
 import io.grpc.ServerCall;
 import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
+import io.siddhi.extension.io.grpc.source.GenericServiceServer;
 import io.siddhi.extension.io.grpc.source.GrpcEventServiceServer;
 import org.apache.log4j.Logger;
 
@@ -34,20 +35,29 @@ import java.util.Set;
  * Server interceptor to receive headers
  */
 public class SourceServerInterceptor implements ServerInterceptor {
-  private static final Logger logger = Logger.getLogger(SourceServerInterceptor.class.getName());
+    private static final Logger logger = Logger.getLogger(SourceServerInterceptor.class.getName());
+    private boolean isDefaultService;
 
-  @Override
-  public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> serverCall,
-                                                               Metadata metadata,
-                                                               ServerCallHandler<ReqT, RespT> serverCallHandler) {
-    logger.debug("Interceptor thread is: " + Thread.currentThread().getId());
-    Set<String> metadataKeys = metadata.keys();
-    Map<String, String> metaDataMap = new HashMap<>();
-    for (String key: metadataKeys) {
-      metaDataMap.put(key, metadata.get(Metadata.Key.of(key, io.grpc.Metadata.ASCII_STRING_MARSHALLER)));
+    public SourceServerInterceptor(boolean isDefaultService) {
+        this.isDefaultService = isDefaultService;
     }
-    GrpcEventServiceServer.metaDataMap.set(metaDataMap);
-    return Contexts.interceptCall(Context.ROOT, serverCall, metadata, serverCallHandler);
-    //todo check if this line is there in the stacktrace when debugging reading from the threadlocal
-  }
+
+    @Override
+    public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> serverCall,
+                                                                 Metadata metadata,
+                                                                 ServerCallHandler<ReqT, RespT> serverCallHandler) {
+        logger.debug("Interceptor thread is: " + Thread.currentThread().getId());
+        Set<String> metadataKeys = metadata.keys();
+        Map<String, String> metaDataMap = new HashMap<>();
+        for (String key : metadataKeys) {
+            metaDataMap.put(key, metadata.get(Metadata.Key.of(key, io.grpc.Metadata.ASCII_STRING_MARSHALLER)));
+        }
+        if (isDefaultService) {
+            GrpcEventServiceServer.metaDataMap.set(metaDataMap);
+        } else {
+            GenericServiceServer.metaDataMap.set(metaDataMap);
+        }
+        return Contexts.interceptCall(Context.ROOT, serverCall, metadata, serverCallHandler);
+        //todo check if this line is there in the stacktrace when debugging reading from the threadlocal
+    }
 }

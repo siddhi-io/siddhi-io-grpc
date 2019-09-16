@@ -37,8 +37,10 @@ public class GrpcUtils {
         }
         String[] headersArray = new String[requestedTransportPropertyNames.length];
         for (int i = 0; i < requestedTransportPropertyNames.length; i++) {
-            if (headersMap.containsKey(requestedTransportPropertyNames[i])) {
-                headersArray[i] = headersMap.get(requestedTransportPropertyNames[i]);
+            if (headersMap != null) {
+                if (headersMap.containsKey(requestedTransportPropertyNames[i])) {
+                    headersArray[i] = headersMap.get(requestedTransportPropertyNames[i]);
+                }
             }
             if (metaDataMap.containsKey(requestedTransportPropertyNames[i])) {
                 headersArray[i] = metaDataMap.get(requestedTransportPropertyNames[i]);
