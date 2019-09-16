@@ -102,10 +102,22 @@ public class GrpcCallResponseSource extends Source {
         sourceEventListener.onEvent(response.getPayload(), getTransportProperties(response.getHeadersMap(),
                 siddhiRequestEventData));
     }
+    public void onResponse(GeneratedMessageV3 response, Map<String, String> siddhiRequestEventData) {
+        sourceEventListener.onEvent(response, getTransportProperties(siddhiRequestEventData));
+    }
 
     private String[] getTransportProperties(Map<String, String> headersMap,
                                             Map<String, String> siddhiRequestEventData) {
         siddhiRequestEventData.putAll(headersMap);
+        String[] transportProperties = new String[requestedTransportPropertyNames.length];
+        for (int i = 0; i < requestedTransportPropertyNames.length; i++) {
+            if (siddhiRequestEventData.containsKey(requestedTransportPropertyNames[i])) {
+                transportProperties[i] = siddhiRequestEventData.get(requestedTransportPropertyNames[i]);
+            }
+        }
+        return transportProperties;
+    }
+    private String[] getTransportProperties(Map<String, String> siddhiRequestEventData) {
         String[] transportProperties = new String[requestedTransportPropertyNames.length];
         for (int i = 0; i < requestedTransportPropertyNames.length; i++) {
             if (siddhiRequestEventData.containsKey(requestedTransportPropertyNames[i])) {

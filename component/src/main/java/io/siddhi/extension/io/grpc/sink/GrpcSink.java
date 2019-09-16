@@ -30,6 +30,7 @@ import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.transport.DynamicOptions;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
+import io.siddhi.extension.io.grpc.util.ServiceConfigs;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
@@ -277,7 +278,7 @@ public class GrpcSink extends AbstractGrpcSink {
 
             this.channel = managedChannelBuilder.build();
             rpcMethod = getRpcMethod(serviceConfigs,siddhiAppName,streamID);
-            createStub(serviceConfigs.getFullyQualifiedServiceName());
+            createStub(serviceConfigs);
             try {
                 if (rpcMethod.getParameterCount() == 1) {
                     requestObserver = (StreamObserver) rpcMethod.invoke(asyncStub, responseObserver);
@@ -339,7 +340,11 @@ public class GrpcSink extends AbstractGrpcSink {
     public void connect() throws ConnectionUnavailableException {
         if (channel == null || channel.isShutdown()) {
             this.channel = managedChannelBuilder.build();
-            this.asyncStub = EventServiceGrpc.newStub(channel);
+            if(serviceConfigs.isDefaultService()) {
+                this.asyncStub = EventServiceGrpc.newStub(channel);
+            } else {
+                createStub(serviceConfigs);
+            }
             if (!channel.isShutdown()) {
                 logger.info(siddhiAppName + ": gRPC service on " + streamID + " has successfully connected to "
                         + serviceConfigs.getUrl());
@@ -375,9 +380,26 @@ public class GrpcSink extends AbstractGrpcSink {
     /**
      * to create Stub object in generic way
      */
-    private void createStub(String fullyQualifiedServiceName) {
+    /*private void createStub(String fullyQualifiedServiceName) {
         try {
             Class serviceClass = Class.forName(fullyQualifiedServiceName + GrpcConstants
+                    .GRPC_PROTOCOL_NAME_UPPERCAMELCASE);
+            Method newStub = serviceClass.getDeclaredMethod(GrpcConstants.NEW_STUB_NAME, Channel.class);
+            asyncStub = (AbstractStub) newStub.invoke(serviceClass, this.channel);
+        } catch (ClassNotFoundException e) {
+            throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid service name " +
+                    "provided in the url, provided service name: '" + serviceConfigs
+                    .getFullyQualifiedServiceName() + "'", e);
+        } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+            throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid method name " +
+                    "provided in the url, provided method name: " + serviceConfigs.getMethodName() +
+                    "expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName, streamID));
+        }
+    }*/
+
+    private void createStub(ServiceConfigs serviceConfigs) {
+        try {
+            Class serviceClass = Class.forName(serviceConfigs.getFullyQualifiedServiceName() + GrpcConstants
                     .GRPC_PROTOCOL_NAME_UPPERCAMELCASE);
             Method newStub = serviceClass.getDeclaredMethod(GrpcConstants.NEW_STUB_NAME, Channel.class);
             asyncStub = (AbstractStub) newStub.invoke(serviceClass, this.channel);

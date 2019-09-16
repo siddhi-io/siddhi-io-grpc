@@ -21,6 +21,8 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.protobuf.GeneratedMessageV3;
+import io.grpc.Channel;
 import io.grpc.stub.AbstractStub;
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
@@ -33,16 +35,22 @@ import io.siddhi.core.util.transport.DynamicOptions;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
 import io.siddhi.extension.io.grpc.util.GrpcSourceRegistry;
+import io.siddhi.extension.io.grpc.util.ServiceConfigs;
 import io.siddhi.query.api.definition.Attribute;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethod;
+import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
 
 /**
  * {@code GrpcCallSink} Handle the gRPC publishing tasks and injects response into grpc-call-response source.
@@ -300,9 +308,33 @@ public class GrpcCallSink extends AbstractGrpcSink {
             }, MoreExecutors.directExecutor());
         } else {
             AbstractStub currentStub = futureStub;
+            Method rpcMethod = getRpcMethod(serviceConfigs, siddhiAppName, streamID);
             if (metadataOption != null) {
-//                Method
+                currentStub = attachMetaDataToStub(dynamicOptions, currentStub);
             }
+            ListenableFuture<GeneratedMessageV3> genericFutureResponse;
+            try {
+                genericFutureResponse = (ListenableFuture<GeneratedMessageV3>) rpcMethod.invoke(currentStub, payload);
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid method name " +
+                        "provided in the url, provided method name: " + serviceConfigs.getMethodName() +
+                        "expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName,
+                        streamID), e);
+            }
+            Futures.addCallback(genericFutureResponse, new FutureCallback<GeneratedMessageV3>() {
+                Map<String, String> siddhiRequestEventData = getRequestEventDataMap(dynamicOptions);
+
+                @Override
+                public void onSuccess(GeneratedMessageV3 o) {
+                    GrpcSourceRegistry.getInstance().getGrpcCallResponseSource(sinkID).onResponse(o,
+                            siddhiRequestEventData);
+                }
+
+                @Override
+                public void onFailure(Throwable t) {
+                    logger.error(siddhiAppName + ":" + streamID + ": " + t.getMessage());
+                }
+            }, MoreExecutors.directExecutor());
         }
     }
 
@@ -327,7 +359,11 @@ public class GrpcCallSink extends AbstractGrpcSink {
     @Override
     public void connect() throws ConnectionUnavailableException {
         this.channel = managedChannelBuilder.build();
-        this.futureStub = EventServiceGrpc.newFutureStub(channel);
+        if (serviceConfigs.isDefaultService()) {
+            this.futureStub = EventServiceGrpc.newFutureStub(channel);
+        } else {
+            this.futureStub = createFutureStub(serviceConfigs, siddhiAppName, streamID);
+        }
         if (!channel.isShutdown()) {
             logger.info(siddhiAppName + ": gRPC service on " + streamID + " has successfully connected to "
                     + serviceConfigs.getUrl());
@@ -360,6 +396,23 @@ public class GrpcCallSink extends AbstractGrpcSink {
         } catch (InterruptedException e) {
             logger.error(siddhiAppName + ":" + streamID + ": Error in shutting " + "down the channel. " +
                     e.getMessage(), e);
+        }
+    }
+
+    private AbstractStub createFutureStub(ServiceConfigs serviceConfigs, String siddhiAppName, String streamID) {
+        try {
+            Class serviceClass = Class.forName(serviceConfigs.getFullyQualifiedServiceName() + GrpcConstants
+                    .GRPC_PROTOCOL_NAME_UPPERCAMELCASE);
+            Method newStub = serviceClass.getDeclaredMethod(GrpcConstants.FUTURE_STUB_METHOD_NAME, Channel.class);
+            return (AbstractStub) newStub.invoke(serviceClass, this.channel);
+        } catch (ClassNotFoundException e) {
+            throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid service name " +
+                    "provided in the url, provided service name: '" + serviceConfigs
+                    .getFullyQualifiedServiceName() + "'", e);
+        } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+            throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid method name " +
+                    "provided in the url, provided method name: " + serviceConfigs.getMethodName() +
+                    "expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName, streamID));
         }
     }
 }
