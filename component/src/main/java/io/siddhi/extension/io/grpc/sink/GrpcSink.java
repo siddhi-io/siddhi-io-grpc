@@ -39,6 +39,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
 
+import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethod;
 import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
 
 /**
@@ -209,7 +210,7 @@ public class GrpcSink extends AbstractGrpcSink {
     private static final Logger logger = Logger.getLogger(GrpcSink.class.getName());
     StreamObserver responseObserver;
     private AbstractStub asyncStub;
-    private StreamObserver /*<Event>*/ requestObserver; //make it generic
+    private StreamObserver /*<Event>*/ requestObserver; //converted into generic
     private Method rpcMethod;
 
     @Override
@@ -273,32 +274,14 @@ public class GrpcSink extends AbstractGrpcSink {
                 public void onCompleted() {
                 }
             };
-            String stubReference = serviceConfigs.getFullyQualifiedServiceName() + GrpcConstants.
-                    GRPC_PROTOCOL_NAME_UPPERCAMELCASE + GrpcConstants.DOLLAR_SIGN + serviceConfigs.getServiceName()
-                    + GrpcConstants.STUB;
+
+            this.channel = managedChannelBuilder.build();
+            rpcMethod = getRpcMethod(serviceConfigs,siddhiAppName,streamID);
+            createStub(serviceConfigs.getFullyQualifiedServiceName());
             try {
-                Method[] methodsInStub = Class.forName(stubReference).getMethods();
-                for (Method method : methodsInStub) {
-                    if (method.getName().equalsIgnoreCase(serviceConfigs.getMethodName())) {
-                        rpcMethod = method;
-                        break;
-                    }
-                }
-                if (rpcMethod == null) {
-                    throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid method name " +
-                            "provided in the url, provided method name: " + serviceConfigs.getMethodName() +
-                            "expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName,
-                            streamID));
-                }
-                this.channel = managedChannelBuilder.build();
-                createStub(serviceConfigs.getFullyQualifiedServiceName());
                 if (rpcMethod.getParameterCount() == 1) {
                     requestObserver = (StreamObserver) rpcMethod.invoke(asyncStub, responseObserver);
                 }
-            } catch (ClassNotFoundException e) {
-                throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid service name " +
-                        "provided in the url, provided service name: '" + serviceConfigs
-                        .getFullyQualifiedServiceName() + "'", e);
             } catch (IllegalAccessException | InvocationTargetException e) { //throws from 'invoke'
                 throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid method name " +
                         "provided in the url, provided method name: " + serviceConfigs.getMethodName() +
