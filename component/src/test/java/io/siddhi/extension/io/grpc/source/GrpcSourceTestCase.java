@@ -182,6 +182,116 @@ public class GrpcSourceTestCase {
     }
 
     @Test
+    public void testWithMetaDataConcurrancy() throws Exception {
+        logger.info("Test case to call process");
+        logger.setLevel(Level.DEBUG);
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String stream2 = "@source(type='grpc', receiver.url = 'grpc://localhost:" + port +
+                "/org.wso2.grpc.EventService/consume', " +
+                "@map(type='json', @attributes(msgNum='trp:msgNum', message='message'))) " +
+                "define stream BarStream (message String, msgNum int);";
+        String query = "@info(name = 'query') "
+                + "from BarStream "
+                + "select *  "
+                + "insert into outputStream;";
+
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(stream2 + query);
+        siddhiAppRuntime.addCallback("query", new QueryCallback() {
+            @Override
+            public void receive(long timeStamp, io.siddhi.core.event.Event[] inEvents,
+                                io.siddhi.core.event.Event[] removeEvents) {
+                EventPrinter.print(timeStamp, inEvents, removeEvents);
+                for (int i = 0; i < inEvents.length; i++) {
+                    eventCount.incrementAndGet();
+                    switch (i) {
+                        case 0:
+//                            Assert.assertEquals((String) inEvents[i].getData()[0], "Hello 2!");
+                            break;
+                        default:
+                            Assert.fail();
+                    }
+                }
+            }
+        });
+
+        Event.Builder requestBuilder = Event.newBuilder();
+
+        String json = "{ \"message\": \"Hello 1!\"}";
+
+        requestBuilder.setPayload(json);
+        requestBuilder.putHeaders("stream.id", "BarStream");
+        requestBuilder.putHeaders("msgNum", "1");
+        Event sequenceCallRequest = requestBuilder.build();
+        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:" + port).usePlaintext().build();
+        EventServiceGrpc.EventServiceStub asyncStub = EventServiceGrpc.newStub(channel);
+
+        StreamObserver<Empty> responseObserver = new StreamObserver<Empty>() {
+            @Override
+            public void onNext(Empty event) {
+            }
+
+            @Override
+            public void onError(Throwable t) {
+            }
+
+            @Override
+            public void onCompleted() {
+            }
+        };
+
+        siddhiAppRuntime.start();
+        StreamObserver requestObserver  = asyncStub.consume(responseObserver);
+        requestObserver.onNext(sequenceCallRequest);
+        Thread.sleep(10);
+
+        Thread client = new Thread() {
+            public void run() {
+                Event.Builder requestBuilder = Event.newBuilder();
+
+                String json = "{ \"message\": \"Hello 2!\"}";
+
+                requestBuilder.setPayload(json);
+                requestBuilder.putHeaders("stream.id", "BarStream");
+                requestBuilder.putHeaders("msgNum", "2");
+                Event sequenceCallRequest = requestBuilder.build();
+                ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:" + port).usePlaintext().build();
+                EventServiceGrpc.EventServiceStub asyncStub = EventServiceGrpc.newStub(channel);
+
+                StreamObserver<Empty> responseObserver = new StreamObserver<Empty>() {
+                    @Override
+                    public void onNext(Empty event) {
+                    }
+
+                    @Override
+                    public void onError(Throwable t) {
+                    }
+
+                    @Override
+                    public void onCompleted() {
+                    }
+                };
+
+                siddhiAppRuntime.start();
+                StreamObserver requestObserver  = asyncStub.consume(responseObserver);
+                requestObserver.onNext(sequenceCallRequest);
+                try {
+                    Thread.sleep(10);
+                    requestObserver.onCompleted();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        siddhiAppRuntime.start();
+        client.start();
+
+        requestObserver.onCompleted();
+        Thread.sleep(1000);
+        siddhiAppRuntime.shutdown();
+    }
+
+    @Test
     public void testToCheckForAllReqTrpInStreamDef() throws Exception {
         logger.info("Test case to call process");
         logger.setLevel(Level.DEBUG);
