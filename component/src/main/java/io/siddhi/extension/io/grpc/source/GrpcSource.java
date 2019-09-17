@@ -111,6 +111,27 @@ import org.apache.log4j.Logger;
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "-"),
+                @Parameter(
+                        name = "enable.ssl",
+                        description = "to enable ssl. If set to true and truststore.file is not given then it will " +
+                                "be set to default carbon jks by default" ,
+                        type = {DataType.BOOL},
+                        optional = true,
+                        defaultValue = "FALSE"),
+                @Parameter(
+                        name = "threadpool.size",
+                        description = "Sets the maximum size of threadpool dedicated to serve requests at the gRPC " +
+                                "server" ,
+                        type = {DataType.INT},
+                        optional = true,
+                        defaultValue = "100"),
+                @Parameter(
+                        name = "threadpool.buffer.size",
+                        description = "Sets the maximum size of threadpool buffer " +
+                                "server" ,
+                        type = {DataType.INT},
+                        optional = true,
+                        defaultValue = "100"),
         },
         examples = {
                 @Example(syntax = "" +
