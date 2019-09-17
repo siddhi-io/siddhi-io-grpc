@@ -743,7 +743,6 @@ public class GrpcSourceTestCase {
 
         siddhiAppRuntime.addCallback("query", new QueryCallback() {
             int j = 0;
-
             @Override
             public void receive(long timeStamp, io.siddhi.core.event.Event[] inEvents,
                                 io.siddhi.core.event.Event[] removeEvents) {

@@ -101,7 +101,7 @@ public class GrpcServiceResponseSink extends Sink {
     @Override
     public void publish(Object payload, DynamicOptions dynamicOptions, State state) {
         String messageId = messageIdOption.getValue(dynamicOptions);
-        grpcSourceRegistry.getGrpcServiceSource(sourceId).handleCallback(messageId, (String) payload);
+        grpcSourceRegistry.getGrpcServiceSource(sourceId).handleCallback(messageId, payload);
     }
 
     @Override

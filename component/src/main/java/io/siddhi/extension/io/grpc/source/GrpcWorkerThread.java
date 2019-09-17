@@ -40,9 +40,11 @@ public class GrpcWorkerThread implements Runnable {
         this.metaData = metaData;
     }
 
-    public GrpcWorkerThread(AbstractGrpcSource relevantSource, Object payload, Map<String, String> metaData) {
+    public GrpcWorkerThread(AbstractGrpcSource relevantSource, Object payload, Map<String, String> headers,
+                            Map<String, String> metaData) {
         this.relevantSource = relevantSource;
         this.payload = payload;
+        this.headers = headers;
         this.metaData = metaData;
     }
 

@@ -17,6 +17,10 @@
  */
 package io.siddhi.extension.io.grpc.source;
 
+import com.google.protobuf.AbstractMessageLite;
+import com.google.protobuf.Any;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 import io.grpc.Server;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
@@ -28,16 +32,22 @@ import io.siddhi.core.exception.ConnectionUnavailableException;
 import io.siddhi.core.exception.SiddhiAppRuntimeException;
 import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.transport.OptionHolder;
+import io.siddhi.extension.io.grpc.util.GenericService;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
 import io.siddhi.extension.io.grpc.util.GrpcSourceRegistry;
+import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
 
 /**
  * This extension handles receiving requests from grpc clients/stubs and sending back responses
@@ -46,10 +56,13 @@ import java.util.TimerTask;
         description = "This extension implements a grpc server for receiving and responding to requests. During " +
                 "initialization time a grpc server is started on the user specified port exposing the required " +
                 "service as given in the url. This source also has a default mode and a user defined grpc service " +
-                "mode. By default this uses EventService. Please find the io.siddhi.extension.io.grpc.proto definition [here](https://github.com/" +
-                "siddhi-io/siddhi-io-grpc/tree/master/component/src/main/resources/EventService.io.siddhi.extension.io.grpc.proto) In the default" +
+                "mode. By default this uses EventService. Please find the io.siddhi.extension.io.grpc.proto " +
+                "definition [here](https://github.com/" +
+                "siddhi-io/siddhi-io-grpc/tree/master/component/src/main/resources/EventService.io.siddhi.extension" +
+                ".io.grpc.proto) In the default" +
                 " mode this will use the EventService process method. This accepts grpc message class Event as " +
-                "defined in the EventService io.siddhi.extension.io.grpc.proto. This uses GrpcServiceResponse sink to send reponses back in the " +
+                "defined in the EventService io.siddhi.extension.io.grpc.proto. This uses GrpcServiceResponse sink to" +
+                " send reponses back in the " +
                 "same Event message format.",
         parameters = {
                 @Parameter(
@@ -59,17 +72,17 @@ import java.util.TimerTask;
                                 "name, method name in the following format. `grpc://0.0.0.0:9763/<serviceName>/" +
                                 "<methodName>`\n" +
                                 "For example:\n" +
-                                "grpc://0.0.0.0:9763/org.wso2.grpc.EventService/consume" ,
+                                "grpc://0.0.0.0:9763/org.wso2.grpc.EventService/consume",
                         type = {DataType.STRING}),
                 @Parameter(
                         name = "max.inbound.message.size",
-                        description = "Sets the maximum message size in bytes allowed to be received on the server." ,
+                        description = "Sets the maximum message size in bytes allowed to be received on the server.",
                         type = {DataType.INT},
                         optional = true,
                         defaultValue = "4194304"),
                 @Parameter(
                         name = "max.inbound.metadata.size",
-                        description = "Sets the maximum size of metadata in bytes allowed to be received." ,
+                        description = "Sets the maximum size of metadata in bytes allowed to be received.",
                         type = {DataType.INT},
                         optional = true,
                         defaultValue = "8192"),
@@ -77,59 +90,59 @@ import java.util.TimerTask;
                         name = "service.timeout",
                         description = "The period of time in milliseconds to wait for siddhi to respond to a " +
                                 "request received. After this time period of receiving a request it will be closed " +
-                                "with an error message." ,
+                                "with an error message.",
                         type = {DataType.INT},
                         optional = true,
                         defaultValue = "10000"),
                 @Parameter(
                         name = "server.shutdown.waiting.time",
                         description = "The time in seconds to wait for the server to shutdown, giving up " +
-                                "if the timeout is reached." ,
+                                "if the timeout is reached.",
                         type = {DataType.LONG},
                         optional = true,
                         defaultValue = "5"),
                 @Parameter(
                         name = "truststore.file",
                         description = "the file path of truststore. If this is provided then server authentication " +
-                                "is enabled" ,
+                                "is enabled",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "-"),
                 @Parameter(
                         name = "truststore.password",
                         description = "the password of truststore. If this is provided then the integrity of the " +
-                                "keystore is checked" ,
+                                "keystore is checked",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "-"),
                 @Parameter(
                         name = "truststore.algorithm",
-                        description = "the encryption algorithm to be used for server authentication" ,
+                        description = "the encryption algorithm to be used for server authentication",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "-"),
                 @Parameter(
                         name = "tls.store.type",
-                        description = "TLS store type" ,
+                        description = "TLS store type",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "-"),
                 @Parameter(
                         name = "keystore.file",
                         description = "the file path of keystore. If this is provided then client authentication " +
-                                "is enabled" ,
+                                "is enabled",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "-"),
                 @Parameter(
                         name = "keystore.password",
-                        description = "the password of keystore" ,
+                        description = "the password of keystore",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "-"),
                 @Parameter(
                         name = "keystore.algorithm",
-                        description = "the encryption algorithm to be used for client authentication" ,
+                        description = "the encryption algorithm to be used for client authentication",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "-"),
@@ -179,15 +192,110 @@ import java.util.TimerTask;
 )
 public class GrpcServiceSource extends AbstractGrpcSource {
     private static final Logger logger = Logger.getLogger(GrpcServiceSource.class.getName());
+    protected Server server;
     private Map<String, StreamObserver<Event>> streamObserverMap = Collections.synchronizedMap(new HashMap<>());
+    private Map<String, StreamObserver<Any>> genericStreamObserverMap = Collections.synchronizedMap(new HashMap<>());
     private String sourceId;
     private long serviceTimeout;
-    protected Server server;
     private Timer timer;
+    private GenericServiceServer genericServiceServer;
 
     public void scheduleServiceTimeout(String messageId) {
         timer.schedule(new GrpcServiceSource.ServiceSourceTimeoutChecker(messageId,
                 siddhiAppContext.getTimestampGenerator().currentTime()), serviceTimeout);
+    }
+
+    //@Override
+    public void initSource(OptionHolder optionHolder, String[] requestedTransportPropertyNames) {
+        this.sourceId = optionHolder.validateAndGetOption(GrpcConstants.SOURCE_ID).getValue();
+        this.serviceTimeout = Long.parseLong(optionHolder.getOrCreateOption(GrpcConstants.SERVICE_TIMEOUT,
+                GrpcConstants.SERVICE_TIMEOUT_DEFAULT).getValue());
+        this.timer = new Timer();
+        GrpcSourceRegistry.getInstance().putGrpcServiceSource(sourceId, this);
+        if (grpcServerConfigs.getServiceConfigs().isDefaultService()) {
+            GrpcServerManager.getInstance().registerSource(grpcServerConfigs, this, GrpcConstants
+                    .DEFAULT_METHOD_NAME_WITH_RESPONSE, siddhiAppContext, streamID);
+        } else {
+            GenericService.setServiceName(grpcServerConfigs.getServiceConfigs().getServiceName());
+            GenericService.setNonEmptyResponseMethodName(grpcServerConfigs.getServiceConfigs().getMethodName());
+            genericServiceServer = new GenericServiceServer(grpcServerConfigs, this, requestClass,
+                    siddhiAppName, streamID);
+        }
+    }
+
+    @Override
+    public void connect(ConnectionCallback connectionCallback, State state) throws ConnectionUnavailableException {
+        if (grpcServerConfigs.getServiceConfigs().isDefaultService()) {
+            if (GrpcServerManager.getInstance().getServer(grpcServerConfigs.getServiceConfigs().getPort())
+                    .getState() == 0) {
+                GrpcServerManager.getInstance().getServer(grpcServerConfigs.getServiceConfigs().getPort()).
+                        connectServer(logger, connectionCallback, siddhiAppContext, streamID);
+            }
+        } else {
+            genericServiceServer.connectServer(logger, connectionCallback, siddhiAppName, streamID);
+        }
+    }
+
+    /**
+     * This method can be called when it is needed to disconnect from the end point.
+     */
+    @Override
+    public void disconnect() {
+        if (grpcServerConfigs.getServiceConfigs().isDefaultService()) {
+            GrpcServerManager.getInstance().unregisterSource(grpcServerConfigs.getServiceConfigs().getPort(), streamID,
+                    GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE, logger, siddhiAppContext);
+        } else {
+            genericServiceServer.disconnectServer(logger, siddhiAppName, streamID);
+        }
+    }
+
+    public void handleCallback(String messageId, Object responsePayload) {
+        if (grpcServerConfigs.getServiceConfigs().isDefaultService()) {
+            StreamObserver<Event> streamObserver = streamObserverMap.remove(messageId);
+            if (streamObserver != null) {
+                Event.Builder responseBuilder = Event.newBuilder();
+                responseBuilder.setPayload((String) responsePayload);
+                Event response = responseBuilder.build();
+                streamObserver.onNext(response);
+                streamObserver.onCompleted();
+            }
+        } else {
+            StreamObserver<Any> genericStreamObserver = genericStreamObserverMap.remove(messageId);
+            if (genericStreamObserver != null) {
+                try {
+                    Method toByteString = AbstractMessageLite.class.getDeclaredMethod("toByteString");
+                    ByteString responseByteString = (ByteString) toByteString.invoke(responsePayload);
+                    Any response = Any.parseFrom(responseByteString);
+                    genericStreamObserver.onNext(response);
+                    genericStreamObserver.onCompleted();
+                } catch (NoSuchMethodException | IllegalAccessException | InvalidProtocolBufferException |
+                        InvocationTargetException e) {
+                    throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid method" +
+                            " name provided in the url, provided method name: " + grpcServerConfigs.
+                            getServiceConfigs().getMethodName() + ", Expected one of these these methods: " +
+                            getRpcMethodList(grpcServerConfigs.getServiceConfigs(), siddhiAppName, streamID),
+                            e);
+                }
+            }
+        }
+    }
+
+    public void putStreamObserver(String messageID, StreamObserver streamObserver) {
+        if (grpcServerConfigs.getServiceConfigs().isDefaultService()) {
+            streamObserverMap.put(messageID, streamObserver);
+        } else {
+            genericStreamObserverMap.put(messageID, streamObserver);
+        }
+    }
+
+    @Override
+    public void destroy() {
+        GrpcSourceRegistry.getInstance().removeGrpcServiceSource(sourceId);
+    }
+
+    @Override
+    public void logError(String message) {
+        logger.error(siddhiAppContext.getName() + ": " + streamID + ": " + message);
     }
 
     class ServiceSourceTimeoutChecker extends TimerTask {
@@ -209,67 +317,17 @@ public class GrpcServiceSource extends AbstractGrpcSource {
                             e.getMessage(), e);
                 }
             }
-            StreamObserver streamObserver = streamObserverMap.remove(messageId);
+            StreamObserver streamObserver;
+            if (grpcServerConfigs.getServiceConfigs().isDefaultService()) {
+                streamObserver = streamObserverMap.remove(messageId);
+            } else {
+                streamObserver = genericStreamObserverMap.remove(messageId);
+            }
+
             if (streamObserver != null) {
                 streamObserver.onError(new io.grpc.StatusRuntimeException(
                         Status.DEADLINE_EXCEEDED));
             }
         }
-    }
-
-    //@Override
-    public void initSource(OptionHolder optionHolder, String[] requestedTransportPropertyNames) {
-        this.sourceId = optionHolder.validateAndGetOption(GrpcConstants.SOURCE_ID).getValue();
-        this.serviceTimeout = Long.parseLong(optionHolder.getOrCreateOption(GrpcConstants.SERVICE_TIMEOUT,
-                GrpcConstants.SERVICE_TIMEOUT_DEFAULT).getValue());
-        this.timer = new Timer();
-        GrpcSourceRegistry.getInstance().putGrpcServiceSource(sourceId, this);
-        GrpcServerManager.getInstance().registerSource(grpcServerConfigs, this, GrpcConstants
-                .DEFAULT_METHOD_NAME_WITH_RESPONSE, siddhiAppContext, streamID);
-    }
-
-    @Override
-    public void connect(ConnectionCallback connectionCallback, State state) throws ConnectionUnavailableException {
-        if (GrpcServerManager.getInstance().getServer(grpcServerConfigs.getServiceConfigs().getPort())
-                .getState() == 0) {
-            GrpcServerManager.getInstance().getServer(grpcServerConfigs.getServiceConfigs().getPort()).connectServer(
-                    logger, connectionCallback, siddhiAppContext, streamID);
-        }
-    }
-
-    /**
-     * This method can be called when it is needed to disconnect from the end point.
-     */
-    @Override
-    public void disconnect() {
-        GrpcServerManager.getInstance().unregisterSource(grpcServerConfigs.getServiceConfigs().getPort(), streamID,
-                GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE, logger, siddhiAppContext);
-    }
-
-    public void handleCallback(String messageId, String responsePayload) {
-        if (grpcServerConfigs.getServiceConfigs().isDefaultService()) {
-            StreamObserver<Event> streamObserver = streamObserverMap.remove(messageId);
-            if (streamObserver != null) {
-                Event.Builder responseBuilder = Event.newBuilder();
-                responseBuilder.setPayload(responsePayload);
-                Event response = responseBuilder.build();
-                streamObserver.onNext(response);
-                streamObserver.onCompleted();
-            }
-        }
-    }
-
-    public void putStreamObserver(String messageID, StreamObserver streamObserver) {
-        streamObserverMap.put(messageID, streamObserver);
-    }
-
-    @Override
-    public void destroy() {
-        GrpcSourceRegistry.getInstance().removeGrpcServiceSource(sourceId);
-    }
-
-    @Override
-    public void logError(String message) {
-        logger.error(siddhiAppContext.getName() + ": " + streamID + ": " + message);
     }
 }
