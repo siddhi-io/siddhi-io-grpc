@@ -26,7 +26,6 @@ import io.siddhi.core.util.config.ConfigReader;
 import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.GrpcServerConfigs;
-import org.apache.log4j.Logger;
 
 /**
  * This is an abstract class extended by GrpcSource and GrpcServiceSource. This provides most of initialization

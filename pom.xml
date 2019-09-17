@@ -165,6 +165,15 @@
                 <extensions>true</extensions>
                 <configuration>
                     <obrRepository>NONE</obrRepository>
+                    <instructions>
+                        <Export-Package>
+                            io.siddhi.extension.io.grpc.*
+                        </Export-Package>
+                        <Private-Package>
+                            io.grpc.*,
+                            com.google.*,
+                        </Private-Package>
+                    </instructions>
                 </configuration>
             </plugin>
             <plugin>
@@ -186,12 +195,30 @@
                             <consoleOutput>true</consoleOutput>
                             <failsOnError>true</failsOnError>
                             <includeTestSourceDirectory>true</includeTestSourceDirectory>
-                            <!--Exclude sources-->
-                            <!--<excludes>${maven.checkstyleplugin.excludes}</excludes>-->
                         </configuration>
                         <goals>
                             <goal>check</goal>
                         </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>2.4.3</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>package.Main</mainClass>
+                                </transformer>
+                            </transformers>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
