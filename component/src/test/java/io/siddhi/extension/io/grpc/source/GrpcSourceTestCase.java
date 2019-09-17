@@ -781,7 +781,7 @@ public class GrpcSourceTestCase {
 
             }
         });
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 15; i++) {
             Request request = Request.newBuilder()
                     .setStringValue("Test " + i)
                     .setIntValue(i * 100)
