@@ -299,6 +299,7 @@ public class GrpcServiceSourceTestCase {
                 Event sequenceCallRequest = requestBuilder.build();
                 EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
                 Event response = blockingStub.process(sequenceCallRequest);
+                logger.info("Response: \n" + response);
                 Assert.assertNotNull(response);
             }
         };
@@ -440,7 +441,7 @@ public class GrpcServiceSourceTestCase {
     }
 
     @Test
-    public void genericTestCase01() throws Exception {
+    public void genericTestCase() throws Exception {
         logger.info("Test case to call process");
         logger.setLevel(Level.DEBUG);
         SiddhiManager siddhiManager = new SiddhiManager();
@@ -481,35 +482,28 @@ public class GrpcServiceSourceTestCase {
                 }
             }
         });
-        Thread client = new Thread() {
-            public void run() {
+        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888").usePlaintext().build();
+        Thread client = new Thread(() -> {
+            Request request = Request.newBuilder()
+                    .setStringValue("Benjamin Watson")
+                    .setIntValue(100)
+                    .setBooleanValue(true)
+                    .setDoubleValue(168.4567)
+                    .setFloatValue(45.345f)
+                    .setLongValue(1000000L)
+                    .build();
+            MyServiceGrpc.MyServiceBlockingStub blockingStub = MyServiceGrpc.newBlockingStub(channel);
+            Response response = blockingStub.process(request);
+            logger.debug("Response : \n" + response);
+            Assert.assertNotNull(response);
 
-                Request request = Request.newBuilder()
-                        .setStringValue("Benjamin Watson")
-                        .setIntValue(100)
-                        .setBooleanValue(true)
-                        .setDoubleValue(168.4567)
-                        .setFloatValue(45.345f)
-                        .setLongValue(1000000L)
-                        .build();
-                ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888")
-                        .usePlaintext()
-                        .build();
-                MyServiceGrpc.MyServiceBlockingStub blockingStub = MyServiceGrpc.newBlockingStub(channel);
-                try {
-                    Response response = blockingStub.process(request);
-                    logger.debug("Response : \n" + response);
-                    Assert.assertNotNull(response);
-
-                } catch (Exception e) {
-
-                }
-            }
-        };
+        });
         siddhiAppRuntime.start();
         client.start();
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
+        channel.shutdown();
+        channel.awaitTermination(30, TimeUnit.SECONDS);
     }
 
     @Test
@@ -519,7 +513,7 @@ public class GrpcServiceSourceTestCase {
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String stream1 = "@source(type='grpc-service', " +
-                "receiver.url='grpc://localhost:8898/org.wso2.grpc.test.MyService/process', source.id='1', " +
+                "receiver.url='grpc://localhost:8898/" + packageName + ".MyService/process', source.id='1', " +
                 "@map(type='protobuf' , " +
                 "@attributes(messageId='trp:message.id', a = 'stringValue', b = 'intValue', c = 'longValue',d = " +
                 "'booleanValue', e = 'floatValue', f ='doubleValue',name='trp:name',age='trp:age'))) " +
@@ -527,7 +521,7 @@ public class GrpcServiceSourceTestCase {
                 "string, age int);";
 
         String stream2 = "@sink(type='grpc-service-response', " +
-                "publisher.url='grpc://localhost:8898/org.wso2.grpc.test.MyService/process', source.id='1', " +
+                "publisher.url='grpc://localhost:8898/" + packageName + ".MyService/process', source.id='1', " +
                 "message.id='{{messageId}}', " +
                 "@map(type='protobuf'," +
                 "@payload(stringValue='a',intValue='b',longValue='c',booleanValue='d',floatValue = 'e', doubleValue =" +
@@ -557,31 +551,31 @@ public class GrpcServiceSourceTestCase {
             }
         });
 
-        Thread client = new Thread() {
-            public void run() {
-                Request request = Request.newBuilder()
-                        .setStringValue("Benjamin Watson")
-                        .setIntValue(100)
-                        .setBooleanValue(true)
-                        .setDoubleValue(168.4567)
-                        .setFloatValue(45.345f)
-                        .setLongValue(1000000L)
-                        .build();
-                ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8898").usePlaintext().build();
-                MyServiceGrpc.MyServiceBlockingStub blockingStub = MyServiceGrpc.newBlockingStub(channel);
-                Metadata metadata = new Metadata();
-                metadata.put(Metadata.Key.of("Name", Metadata.ASCII_STRING_MARSHALLER), "John");
-                metadata.put(Metadata.Key.of("Age", Metadata.ASCII_STRING_MARSHALLER), "23");
-                blockingStub = MetadataUtils.attachHeaders(blockingStub, metadata);
-                Response response = blockingStub.process(request);
-                Assert.assertNotNull(response);
+        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8898").usePlaintext().build();
+        Thread client = new Thread(() -> {
+            Request request = Request.newBuilder()
+                    .setStringValue("Benjamin Watson")
+                    .setIntValue(100)
+                    .setBooleanValue(true)
+                    .setDoubleValue(168.4567)
+                    .setFloatValue(45.345f)
+                    .setLongValue(1000000L)
+                    .build();
+            MyServiceGrpc.MyServiceBlockingStub blockingStub = MyServiceGrpc.newBlockingStub(channel);
+            Metadata metadata = new Metadata();
+            metadata.put(Metadata.Key.of("Name", Metadata.ASCII_STRING_MARSHALLER), "John");
+            metadata.put(Metadata.Key.of("Age", Metadata.ASCII_STRING_MARSHALLER), "23");
+            blockingStub = MetadataUtils.attachHeaders(blockingStub, metadata);
+            Response response = blockingStub.process(request);
+            Assert.assertNotNull(response);
 
-            }
-        };
+        });
         siddhiAppRuntime.start();
         client.start();
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
+        channel.shutdown();
+        channel.awaitTermination(30, TimeUnit.SECONDS);
     }
 
     @Test
@@ -591,13 +585,13 @@ public class GrpcServiceSourceTestCase {
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String stream1 = "@source(type='grpc-service', " +
-                "receiver.url='grpc://localhost:8888/org.wso2.grpc.test.MyService/testMap', source.id='1', " +
+                "receiver.url='grpc://localhost:8888/" + packageName + ".MyService/testMap', source.id='1', " +
                 "@map(type='protobuf' , " +
                 "@attributes(messageId='trp:message.id', a = 'stringValue', b = 'intValue', c = 'map'))) " +
                 "define stream FooStream (a string,messageId string, b int, c object);";
 
         String stream2 = "@sink(type='grpc-service-response', " +
-                "publisher.url='grpc://localhost:8888/org.wso2.grpc.test.MyService/testMap', source.id='1', " +
+                "publisher.url='grpc://localhost:8888/" + packageName + ".MyService/testMap', source.id='1', " +
                 "message.id='{{messageId}}', " +
                 "@map(type='protobuf'," +
                 "@payload(stringValue='a',intValue='b',map='c'))) " +
@@ -625,6 +619,7 @@ public class GrpcServiceSourceTestCase {
             }
         });
 
+        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888").usePlaintext().build();
         Thread client = new Thread() {
             public void run() {
                 Map<String, String> map = new HashMap<>();
@@ -635,10 +630,9 @@ public class GrpcServiceSourceTestCase {
                         .setIntValue(100)
                         .putAllMap(map)
                         .build();
-                ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888").usePlaintext().build();
                 MyServiceGrpc.MyServiceBlockingStub blockingStub = MyServiceGrpc.newBlockingStub(channel);
-
                 ResponseWithMap response = blockingStub.testMap(request);
+                logger.info("Response: \n" + response);
                 Assert.assertNotNull(response);
 
             }
@@ -647,5 +641,75 @@ public class GrpcServiceSourceTestCase {
         client.start();
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
+        channel.shutdown();
+        channel.awaitTermination(30, TimeUnit.SECONDS);
     }
+
+    @Test
+    public void genericTestCaseWithServiceTimeOut() throws Exception {
+        logger.info("Test case to call process");
+        logger.setLevel(Level.DEBUG);
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String stream1 = "@source(type='grpc-service', " +
+                "receiver.url='grpc://localhost:8888/" + packageName + ".MyService/process', source.id='1', " +
+                "service.timeout = '3000', " +
+                "@map(type='protobuf', " +
+                "@attributes(messageId='trp:message.id', a = 'stringValue', b = 'intValue', c = 'longValue',d = " +
+                "'booleanValue', e = 'floatValue', f ='doubleValue'))) " +// TODO: 9/11/19 Change the messageId
+                "define stream FooStream (a string,messageId string, b int,c long,d bool,e float,f double);";
+
+        String stream2 = "@sink(type='grpc-service-response', " +
+                "publisher.url='grpc://localhost:8888/" + packageName + ".MyService/process', source.id='1', " +
+                "message.id='{{messageId}}', " + //todo messageId
+                "@map(type='protobuf'," +
+                "@payload(stringValue='a',intValue='b',longValue='c',booleanValue='d',floatValue = 'e', doubleValue =" +
+                " 'f'))) " +
+                "define stream BarStream (a string,messageId string, b int,c long,d bool,e float,f double);";
+        String query = "@info(name = 'query') "
+                + "from FooStream "
+                + "select a,messageId,b*2 as b, c*2 as c,d,e*100 as e,f*4 as f "
+                + "insert into BarStream;";
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(stream1 + stream2 + query);
+        siddhiAppRuntime.addCallback("query", new QueryCallback() {
+            @Override
+            public void receive(long timeStamp, io.siddhi.core.event.Event[] inEvents,
+                                io.siddhi.core.event.Event[] removeEvents) {
+                EventPrinter.print(timeStamp, inEvents, removeEvents);
+                for (int i = 0; i < inEvents.length; i++) {
+                    eventCount.incrementAndGet();
+                    switch (i) {
+                        case 0:
+                            Assert.assertEquals((String) inEvents[i].getData()[0], "Benjamin Watson");
+                            break;
+                        default:
+                            Assert.fail();
+                    }
+                }
+            }
+        });
+        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888").usePlaintext().build();
+        Thread client = new Thread(() -> {
+            Request request = Request.newBuilder()
+                    .setStringValue("Benjamin Watson")
+                    .setIntValue(100)
+                    .setBooleanValue(true)
+                    .setDoubleValue(168.4567)
+                    .setFloatValue(45.345f)
+                    .setLongValue(1000000L)
+                    .build();
+            MyServiceGrpc.MyServiceBlockingStub blockingStub = MyServiceGrpc.newBlockingStub(channel);
+            Response response = blockingStub.process(request);
+            logger.debug("Response : \n" + response);
+            Assert.assertNotNull(response);
+
+        });
+        siddhiAppRuntime.start();
+        client.start();
+        Thread.sleep(10000);
+        siddhiAppRuntime.shutdown();
+        channel.shutdown();
+        channel.awaitTermination(30, TimeUnit.SECONDS);
+    }
+
 }

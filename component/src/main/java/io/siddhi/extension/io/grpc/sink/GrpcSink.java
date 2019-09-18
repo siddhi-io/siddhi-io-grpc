@@ -302,7 +302,6 @@ public class GrpcSink extends AbstractGrpcSink {
                 public void onCompleted() {
                 }
             };
-
             this.channel = managedChannelBuilder.build();
             rpcMethod = getRpcMethod(serviceConfigs, siddhiAppName, streamID);
             createStub(serviceConfigs);
