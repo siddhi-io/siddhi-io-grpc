@@ -232,13 +232,11 @@ public class GrpcServiceSource extends AbstractGrpcSource {
             }
             StreamObserver streamObserver = streamObserverMap.remove(messageId);
             if (streamObserver != null) {
-                streamObserver.onError(new io.grpc.StatusRuntimeException(
-                        Status.DEADLINE_EXCEEDED));
+                streamObserver.onError(new io.grpc.StatusRuntimeException(Status.DEADLINE_EXCEEDED));
             }
         }
     }
 
-    //@Override
     public void initSource(OptionHolder optionHolder, String[] requestedTransportPropertyNames) {
         this.sourceId = optionHolder.validateAndGetOption(GrpcConstants.SOURCE_ID).getValue();
         this.serviceTimeout = Long.parseLong(optionHolder.getOrCreateOption(GrpcConstants.SERVICE_TIMEOUT,
