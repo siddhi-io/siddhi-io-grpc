@@ -278,7 +278,7 @@ public class GrpcCallSinkGenericTestCase {
 
         String inStreamDefinition = ""
                 + "@sink(type='grpc-call', " +
-                "publisher.url = 'grpc://localhost:8888/" +packageName + ".MyService/process', " +
+                "publisher.url = 'grpc://localhost:8888/" + packageName + ".MyService/process', " +
                 "sink.id = '1', " +
                 "metadata='{{metadata}}', " +
                 "@map(type='protobuf'," +
@@ -329,7 +329,7 @@ public class GrpcCallSinkGenericTestCase {
 
         String inStreamDefinition = ""
                 + "@sink(type='grpc-call', " +
-                "publisher.url = 'grpc://localhost:8888/" +packageName + ".MyService/process', " +
+                "publisher.url = 'grpc://localhost:8888/" + packageName + ".MyService/process', " +
                 "sink.id = '1', " +
                 "metadata=\"'Name:John','Age:54','Content-Type:json'\", " +
                 "@map(type='protobuf'," +

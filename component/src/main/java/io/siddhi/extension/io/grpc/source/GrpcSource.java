@@ -124,7 +124,7 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
         examples = {
                 @Example(syntax = "" +
                         "@source(type='grpc',\n" +
-                        "       receiver.url='grpc://locanhost:8888/org.wso2.grpc.EventService/consume',\n" +
+                        "       receiver.url='grpc://localhost:8888/org.wso2.grpc.EventService/consume',\n" +
                         "       @map(type='json'))\n" +
                         "define stream BarStream (message String);",
                         description = "Here the port is given as 8888. So a grpc server will be started on port 8888 " +
@@ -133,12 +133,48 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
                 ),
                 @Example(syntax = "" +
                         "@source(type='grpc',\n" +
-                        "       receiver.url='grpc://locanhost:8888/org.wso2.grpc.EventService/consume',\n" +
+                        "       receiver.url='grpc://localhost:8888/org.wso2.grpc.EventService/consume',\n" +
                         "       @map(type='json', @attributes(name='trp:name', age='trp:age', message='message')))\n" +
                         "define stream BarStream (message String, name String, age int);",
                         description = "Here we are getting headers sent with the request as transport properties and " +
                                 "injecting them into the stream. With each request a header will be sent in MetaData " +
                                 "in the following format: 'Name:John', 'Age:23'"
+                ),
+                @Example(syntax = "" +
+                        "@source(type='grpc',\n" +
+                        "       receiver.url='grpc://localhost:8888/org.wso2.grpc.MyService/send',\n" +
+                        "       @map(type='protobuf'))\n" +
+                        "define stream BarStream (stringValue string, intValue int,longValue long,booleanValue bool," +
+                        "floatValue float,doubleValue double);",
+                        description = "Here the port is given as 8888. So a grpc server will be started on port 8888 " +
+                                "and sever will keep listening to the 'send' RPC method in the 'MyService' service."
+                ),
+                @Example(syntax = "" +
+                        "@source(type='grpc',\n" +
+                        "       receiver.url='grpc://localhost:8888/org.wso2.grpc.MyService/send',\n" +
+                        "       @map(type='protobuf', \n" +
+                        "@attributes(a = 'stringValue', b = 'intValue', c = 'longValue',d = 'booleanValue', e " +
+                        "='floatValue', f ='doubleValue'))) \n" +
+                        "define stream BarStream (a string ,c long,b int, d bool,e float,f double);",
+                        description = "Here the port is given as 8888. So a grpc server will be started on port 8888 " +
+                                "and sever will keep listening to the 'send' method in the 'MyService' service. Since" +
+                                " we provide mapping in the stream we can use any names for stream attributes, but we" +
+                                " have to map those names with correct protobuf message attributes' names. If we want" +
+                                " to send metadata, we should map the attributes."
+                ),
+                @Example(syntax = "" +
+                        "@source(type='grpc',\n" +
+                        "       receiver.url='grpc://localhost:8888/org.wso2.grpc.StreamService/" +
+                        "clientStream',\n" +
+                        "       @map(type='protobuf')) \n" +
+                        "define stream BarStream (stringValue string, intValue int,longValue long,booleanValue bool," +
+                        "floatValue float,doubleValue double);",
+                        description = "Here we receive a stream of requests to the grpc source. Whenever we want to " +
+                                "use streaming with grpc source, we have to define the RPC method as client streaming" +
+                                " method (look at the sample proto file provided in the resource folder[here]" +
+                                "(https://github.com/siddhi-io/siddhi-io-grpc/tree/master/component/src/main/" +
+                                "resources)), when we define a stream method siddhi will identify it as a stream RPC" +
+                                " method and ready to accept stream of request from the client."
                 )
         }
 )

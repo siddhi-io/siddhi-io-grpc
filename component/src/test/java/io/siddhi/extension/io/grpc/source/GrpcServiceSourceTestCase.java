@@ -450,12 +450,12 @@ public class GrpcServiceSourceTestCase {
                 "receiver.url='grpc://localhost:8888/" + packageName + ".MyService/process', source.id='1', " +
                 "@map(type='protobuf' , " +
                 "@attributes(messageId='trp:message.id', a = 'stringValue', b = 'intValue', c = 'longValue',d = " +
-                "'booleanValue', e = 'floatValue', f ='doubleValue'))) " +// TODO: 9/11/19 Change the messageId
+                "'booleanValue', e = 'floatValue', f ='doubleValue'))) " +
                 "define stream FooStream (a string,messageId string, b int,c long,d bool,e float,f double);";
 
         String stream2 = "@sink(type='grpc-service-response', " +
                 "publisher.url='grpc://localhost:8888/" + packageName + ".MyService/process', source.id='1', " +
-                "message.id='{{messageId}}', " + //todo messageId
+                "message.id='{{messageId}}', " +
                 "@map(type='protobuf'," +
                 "@payload(stringValue='a',intValue='b',longValue='c',booleanValue='d',floatValue = 'e', doubleValue =" +
                 " 'f'))) " +
@@ -656,12 +656,12 @@ public class GrpcServiceSourceTestCase {
                 "service.timeout = '3000', " +
                 "@map(type='protobuf', " +
                 "@attributes(messageId='trp:message.id', a = 'stringValue', b = 'intValue', c = 'longValue',d = " +
-                "'booleanValue', e = 'floatValue', f ='doubleValue'))) " +// TODO: 9/11/19 Change the messageId
+                "'booleanValue', e = 'floatValue', f ='doubleValue'))) " +
                 "define stream FooStream (a string,messageId string, b int,c long,d bool,e float,f double);";
 
         String stream2 = "@sink(type='grpc-service-response', " +
                 "publisher.url='grpc://localhost:8888/" + packageName + ".MyService/process', source.id='1', " +
-                "message.id='{{messageId}}', " + //todo messageId
+                "message.id='{{messageId}}', " +
                 "@map(type='protobuf'," +
                 "@payload(stringValue='a',intValue='b',longValue='c',booleanValue='d',floatValue = 'e', doubleValue =" +
                 " 'f'))) " +

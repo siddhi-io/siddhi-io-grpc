@@ -302,13 +302,13 @@ public class GrpcCallSink extends AbstractGrpcSink {
                 }
             }
             if (rpcMethod == null) { //only if user has provided a wrong method name
-                throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid method name " +
+                throw new SiddhiAppValidationException(siddhiAppName + ": " + streamID + ": Invalid method name " +
                         "provided in the url, provided method name: " + serviceConfigs.getMethodName() +
                         "expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName,
                         streamID));
             }
         } catch (ClassNotFoundException e) {
-            throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid service name " +
+            throw new SiddhiAppValidationException(siddhiAppName + ": " + streamID + ": Invalid service name " +
                     "provided in the url, provided service name: '" + serviceConfigs
                     .getFullyQualifiedServiceName() + "'", e);
         }
@@ -372,7 +372,7 @@ public class GrpcCallSink extends AbstractGrpcSink {
 
                 @Override
                 public void onFailure(Throwable t) {
-                    logger.error(siddhiAppName + ":" + streamID + ": " + t.getMessage());
+                    logger.error(siddhiAppName + ": " + streamID + ": " + t.getMessage());
                 }
             }, MoreExecutors.directExecutor());
         } else {
@@ -385,7 +385,7 @@ public class GrpcCallSink extends AbstractGrpcSink {
             try {
                 genericFutureResponse = (ListenableFuture) rpcMethod.invoke(currentStub, payload);
             } catch (IllegalAccessException | InvocationTargetException e) {
-                throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid method name " +
+                throw new SiddhiAppValidationException(siddhiAppName + ": " + streamID + ": Invalid method name " +
                         "provided in the url, provided method name: " + serviceConfigs.getMethodName() +
                         "expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName,
                         streamID), e);

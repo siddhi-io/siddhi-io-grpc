@@ -16,7 +16,7 @@
  * under the License.
  */
 package io.siddhi.extension.io.grpc.util;
- 
+
 import com.google.protobuf.Any;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.Empty;
@@ -29,7 +29,7 @@ import static io.grpc.stub.ServerCalls.asyncClientStreamingCall;
 import static io.grpc.stub.ServerCalls.asyncUnaryCall;
 import static io.grpc.stub.ServerCalls.asyncUnimplementedStreamingCall;
 import static io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall;
- 
+
 /**
  * {@code GenericServiceClass} Work as a generic service to handle rpc calls that send non-empty responses and empty
  * responses.
@@ -42,39 +42,39 @@ public class GenericService {
     private static volatile MethodDescriptor<Any, Empty> emptyResponseHandle;
     private static volatile MethodDescriptor<Any, Any> nonEmptyResponseHandle;
     private static volatile MethodDescriptor<Any, Empty> getClientStreamMethod;
- 
+
     public static void setServiceName(String serviceName) {
         GenericService.serviceName = serviceName;
     }
- 
+
     public static void setNonEmptyResponseMethodName(String nonEmptyResponseMethodName) {
         GenericService.nonEmptyResponseMethodName = nonEmptyResponseMethodName;
     }
- 
+
     public static void setEmptyResponseMethodName(String emptyResponseMethodName) {
         GenericService.emptyResponseMethodName = emptyResponseMethodName;
     }
- 
+
     public static void setClientStreamMethodName(String clientStreamMethodName) {
         GenericService.clientStreamMethodName = clientStreamMethodName;
     }
- 
+
     public static ServiceDescriptor getServiceDescriptor() { //service descriptor have to be refresh when each time
         // server object is created,otherwise method descriptors won't be changed even if they changed later. because
         // of that server can't be implemented for multiple methods
         ServiceDescriptor result;
         synchronized (GenericService.class) {
-            ServiceDescriptor serviceDescriptor = result = io.grpc.ServiceDescriptor.newBuilder(serviceName)
+            result = io.grpc.ServiceDescriptor.newBuilder(serviceName)
                     .setSchemaDescriptor(new AnyServiceFileDescriptorSupplier())
                     .addMethod(getEmptyResponseHandle())
                     .addMethod(getHandleNonEmptyResponse())
                     .addMethod(getClientStreamMethod())
                     .build();
- 
+
         }
         return result;
     }
- 
+
     public static io.grpc.MethodDescriptor<Any,
             Empty> getEmptyResponseHandle() {
         io.grpc.MethodDescriptor<Any, Empty> nonResponseMethod = null;
@@ -102,7 +102,7 @@ public class GenericService {
         }
         return nonResponseMethod;
     }
- 
+
     public static io.grpc.MethodDescriptor<Any,
             Any> getHandleNonEmptyResponse() {
         io.grpc.MethodDescriptor<Any, Any> responseMethod;
@@ -130,7 +130,7 @@ public class GenericService {
         }
         return responseMethod;
     }
- 
+
     public static io.grpc.MethodDescriptor<Any, Empty> getClientStreamMethod() {
         io.grpc.MethodDescriptor<Any, Empty> getClientStreamMethod;
         if ((getClientStreamMethod = GenericService.getClientStreamMethod) == null ||
@@ -155,62 +155,62 @@ public class GenericService {
         }
         return getClientStreamMethod;
     }
- 
+
     private abstract static class AnyServiceBaseDescriptorSupplier
             implements io.grpc.protobuf.ProtoFileDescriptorSupplier, io.grpc.protobuf.ProtoServiceDescriptorSupplier {
         AnyServiceBaseDescriptorSupplier() {
         }
- 
+
         @Override
         public Descriptors.FileDescriptor getFileDescriptor() {
             return null;
         }
- 
+
         @Override
         public Descriptors.ServiceDescriptor getServiceDescriptor() {
             return getFileDescriptor().findServiceByName(serviceName);
         }
     }
- 
+
     private static final class AnyServiceFileDescriptorSupplier
             extends AnyServiceBaseDescriptorSupplier {
         AnyServiceFileDescriptorSupplier() {
         }
     }
- 
+
     private static final class AnyServiceMethodDescriptorSupplier
             extends AnyServiceBaseDescriptorSupplier
             implements io.grpc.protobuf.ProtoMethodDescriptorSupplier {
- 
+
         private final String methodName;
- 
+
         AnyServiceMethodDescriptorSupplier(String methodName) {
             this.methodName = methodName;
         }
- 
+
         @Override
         public Descriptors.MethodDescriptor getMethodDescriptor() {
             return getServiceDescriptor().findMethodByName(methodName);
         }
     }
- 
+
     private static final class MethodHandlers<Req, Resp> implements io.grpc.stub.ServerCalls.UnaryMethod<Req, Resp>,
             io.grpc.stub.ServerCalls.ServerStreamingMethod<Req, Resp>,
             io.grpc.stub.ServerCalls.ClientStreamingMethod<Req, Resp>,
             io.grpc.stub.ServerCalls.BidiStreamingMethod<Req, Resp> {
         private final GenericService.AnyServiceImplBase serviceImpl;
         private final int methodId;
- 
+
         MethodHandlers(GenericService.AnyServiceImplBase serviceImpl, int methodId) {
             this.serviceImpl = serviceImpl;
             this.methodId = methodId;
         }
- 
+
         @Override
         @SuppressWarnings("unchecked")
         public void invoke(Req request, io.grpc.stub.StreamObserver<Resp> responseObserver) {
             switch (methodId) {
- 
+
                 case GrpcConstants.EMPTY_METHOD_ID:
                     serviceImpl.handleEmptyResponse((Any) request,
                             (io.grpc.stub.StreamObserver<Empty>) responseObserver);
@@ -223,7 +223,7 @@ public class GenericService {
                     throw new AssertionError();
             }
         }
- 
+
         @Override
         @SuppressWarnings("unchecked")
         public io.grpc.stub.StreamObserver<Req> invoke(
@@ -237,7 +237,7 @@ public class GenericService {
             }
         }
     }
- 
+
     /**
      * Generic ImplBase class of the GenericServiceClass
      */
@@ -245,20 +245,20 @@ public class GenericService {
         public void handleEmptyResponse(Any request, io.grpc.stub.StreamObserver<Empty> responseObserver) {
             asyncUnimplementedUnaryCall(getEmptyResponseHandle(), responseObserver);
         }
- 
+
         public void handleNonEmptyResponse(Any request,
                                            io.grpc.stub.StreamObserver<Any> responseObserver) {
             asyncUnimplementedUnaryCall(getHandleNonEmptyResponse(), responseObserver);
         }
- 
+
         public io.grpc.stub.StreamObserver<Any> clientStream(
                 io.grpc.stub.StreamObserver<Empty> responseObserver) {
             return asyncUnimplementedStreamingCall(getClientStreamMethod(), responseObserver);
         }
- 
+
         @Override
         public final ServerServiceDefinition bindService() {
- 
+
             return ServerServiceDefinition.builder(getServiceDescriptor())
                     .addMethod(
                             getEmptyResponseHandle(),
@@ -281,3 +281,4 @@ public class GenericService {
         }
     }
 }
+

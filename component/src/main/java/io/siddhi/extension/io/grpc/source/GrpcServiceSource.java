@@ -187,6 +187,34 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
                         description = "Here we are getting headers sent with the request as transport properties and " +
                                 "injecting them into the stream. With each request a header will be sent in MetaData " +
                                 "in the following format: 'Name:John', 'Age:23'"
+                ),
+                @Example(syntax = "" +
+                        "@sink(type='grpc-service-response',\n" +
+                        "      source.id='1',\n" +
+                        "      message.id='{{messageId}}',\n" +
+                        "      @map(type='protobuf',\n" +
+                        "@payload(stringValue='a',intValue='b',longValue='c',booleanValue='d',floatValue = 'e', " +
+                        "doubleValue ='f')))\n" +
+                        "define stream BarStream (a string,messageId string, b int,c long,d bool,e float,f double);\n" +
+                        "\n" +
+                        "@source(type='grpc-service',\n" +
+                        "       receiver.url='grpc://134.23.43.35:8888/org.wso2.grpc.test.MyService/process',\n" +
+                        "       source.id='1',\n" +
+                        "       @map(type='protobuf', @attributes(messageId='trp:message.id', a = 'stringValue', b = " +
+                        "'intValue', c = 'longValue',d = 'booleanValue', e = 'floatValue', f ='doubleValue')))\n" +
+                        "define stream FooStream (a string,messageId string, b int,c long,d bool,e float,f double);\n" +
+                        "\n" +
+                        "from FooStream\n" +
+                        "select * \n" +
+                        "insert into BarStream;",
+                        description = "Here a grpc server will be started at port 8888. The process method of the " +
+                                "MyService will be exposed to the clients. 'source.id' is set as 1. So a grpc-service" +
+                                "-response sink with source.id = 1 will send responses back for requests received to" +
+                                " this source. Note that it is required to specify the transport property messageId" +
+                                " since we need to correlate the request message with the response and also we should" +
+                                " map stream attributes with correct protobuf message attributes even they define " +
+                                "using the same name as protobuf message attributes."
+
                 )
         }
 )

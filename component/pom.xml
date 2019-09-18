@@ -79,11 +79,11 @@
             <groupId>io.siddhi</groupId>
             <artifactId>siddhi-annotations</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.wso2.transport.http</groupId>
-            <artifactId>org.wso2.transport.http.netty</artifactId>
-            <version>${transport.http.version}</version>
-        </dependency>
+                <dependency>
+                    <groupId>org.wso2.transport.http</groupId>
+                    <artifactId>org.wso2.transport.http.netty</artifactId>
+                    <version>${transport.http.version}</version>
+                </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>

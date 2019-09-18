@@ -5,14 +5,14 @@ import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.ServerInterceptors;
 import io.grpc.stub.StreamObserver;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import io.siddhi.extension.io.grpc.proto.MyServiceGrpc;
 import io.siddhi.extension.io.grpc.proto.Request;
 import io.siddhi.extension.io.grpc.proto.RequestWithMap;
 import io.siddhi.extension.io.grpc.proto.Response;
 import io.siddhi.extension.io.grpc.proto.ResponseWithMap;
 import io.siddhi.extension.io.grpc.proto.StreamServiceGrpc;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;

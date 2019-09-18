@@ -28,10 +28,8 @@ import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
 import io.siddhi.extension.io.grpc.util.GrpcServerConfigs;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
-import org.apache.log4j.Logger;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 
 import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
@@ -75,7 +73,7 @@ public abstract class AbstractGrpcSource extends Source {
         this.sourceEventListener = sourceEventListener;
         this.requestedTransportPropertyNames = requestedTransportPropertyNames.clone();
         this.grpcServerConfigs = new GrpcServerConfigs(optionHolder, siddhiAppContext, streamID);
-        if(!grpcServerConfigs.getServiceConfigs().isDefaultService()) {
+        if (!grpcServerConfigs.getServiceConfigs().isDefaultService()) {
             requestClass = getRequestClass();
         }
         initSource(optionHolder, requestedTransportPropertyNames);

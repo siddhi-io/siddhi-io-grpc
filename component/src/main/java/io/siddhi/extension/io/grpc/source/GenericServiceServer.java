@@ -24,7 +24,6 @@ import com.google.protobuf.Empty;
 import io.grpc.Server;
 import io.grpc.ServerInterceptors;
 import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
 import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 import io.grpc.netty.shaded.io.netty.handler.ssl.ClientAuth;
@@ -41,8 +40,6 @@ import io.siddhi.extension.io.grpc.util.SourceServerInterceptor;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.log4j.Logger;
 
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.TrustManagerFactory;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -60,6 +57,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.TrustManagerFactory;
 
 import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
 
@@ -135,13 +134,13 @@ public class GenericServiceServer {
                             responseObserver.onNext(Empty.getDefaultInstance());
                             responseObserver.onCompleted();
                         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-                            throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid method" +
-                                    " name provided in the url, provided method name: " + grpcServerConfigs.
+                            throw new SiddhiAppValidationException(siddhiAppName + ": " + streamID + ": Invalid method"
+                                    + " name provided in the url, provided method name: " + grpcServerConfigs.
                                     getServiceConfigs().getMethodName() + ", Expected one of these these methods: " +
                                     getRpcMethodList(grpcServerConfigs.getServiceConfigs(), siddhiAppName, streamID),
                                     e);
                         } catch (SiddhiAppRuntimeException e) {
-                            logger.error(siddhiAppName + ":" + streamID + ": Dropping request. " + e.getMessage());
+                            logger.error(siddhiAppName + ": " + streamID + ": Dropping request. " + e.getMessage());
                             responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
                         }
                     }
@@ -158,7 +157,7 @@ public class GenericServiceServer {
                                     executorService.execute(new GrpcWorkerThread(relevantSource, requestMessageObject,
                                             null, metaDataMap.get()));
                                 } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-                                    throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": " +
+                                    throw new SiddhiAppValidationException(siddhiAppName + " :" + streamID + ": " +
                                             "Invalid method" +
                                             " name provided in the url, provided method name: " + grpcServerConfigs.
                                             getServiceConfigs().getMethodName() + ", Expected one of these these " +
@@ -167,7 +166,8 @@ public class GenericServiceServer {
                                                     streamID),
                                             e);
                                 } catch (SiddhiAppRuntimeException e) {
-                                    logger.error(siddhiAppName + ":" + streamID + ": Dropping request. " + e.getMessage());
+                                    logger.error(siddhiAppName + ": " + streamID + ": Dropping request. " +
+                                            e.getMessage());
                                     responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
                                 }
                             }
@@ -192,8 +192,8 @@ public class GenericServiceServer {
                             Method parseFrom = requestClass.getDeclaredMethod("parseFrom", ByteString.class);
                             requestObject = parseFrom.invoke(requestClass, request.toByteString());
                         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-                            throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid method" +
-                                    " name provided in the url, provided method name: " + grpcServerConfigs.
+                            throw new SiddhiAppValidationException(siddhiAppName + ": " + streamID + ": Invalid " +
+                                    "method name provided in the url, provided method name: " + grpcServerConfigs.
                                     getServiceConfigs().getMethodName() + ", Expected one of these these methods: " +
                                     getRpcMethodList(grpcServerConfigs.getServiceConfigs(), siddhiAppName, streamID),
                                     e);
@@ -207,7 +207,7 @@ public class GenericServiceServer {
                             ((GrpcServiceSource) relevantSource).putStreamObserver(messageId, responseObserver);
                             ((GrpcServiceSource) relevantSource).scheduleServiceTimeout(messageId);
                         } catch (SiddhiAppRuntimeException e) {
-                            logger.error(siddhiAppName + ":" + streamID + ": Dropping request. " + e.getMessage());
+                            logger.error(siddhiAppName + ": " + streamID + ": Dropping request. " + e.getMessage());
                             responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
                         } finally {
                             metaDataMap.remove();
@@ -222,15 +222,15 @@ public class GenericServiceServer {
         try {
             server.start();
             if (logger.isDebugEnabled()) {
-                logger.debug(siddhiAppName + ":" + streamID + ": gRPC Server started");
+                logger.debug(siddhiAppName + ": " + streamID + ": gRPC Server started");
             }
         } catch (IOException e) {
             if (e.getCause() instanceof BindException) {
-                throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Another " +
+                throw new SiddhiAppValidationException(siddhiAppName + ": " + streamID + ": Another " +
                         "server is already running on the port " + grpcServerConfigs.getServiceConfigs().getPort() +
                         ". Please provide a different port");
             } else {
-                connectionCallback.onError(new ConnectionUnavailableException(siddhiAppName + ":" + streamID +
+                connectionCallback.onError(new ConnectionUnavailableException(siddhiAppName + ": " + streamID +
                         ": Error when starting the server. " + e.getMessage(), e));
             }
             throw new SiddhiAppRuntimeException(siddhiAppName + ": " + streamID + ": ", e);
@@ -241,7 +241,7 @@ public class GenericServiceServer {
         try {
             if (server == null) {
                 if (logger.isDebugEnabled()) {
-                    logger.debug(siddhiAppName + ":" + streamID + ": Illegal state. Server already stopped.");
+                    logger.debug(siddhiAppName + ": " + streamID + ": Illegal state. Server already stopped.");
                 }
                 return;
             }
@@ -259,7 +259,7 @@ public class GenericServiceServer {
                         TimeUnit.MILLISECONDS)) {
                     return;
                 }
-                throw new SiddhiAppRuntimeException(siddhiAppName + ":" + streamID + ": Unable to shutdown server");
+                throw new SiddhiAppRuntimeException(siddhiAppName + ": " + streamID + ": Unable to shutdown server");
             }
         } catch (InterruptedException e) {
             throw new SiddhiAppRuntimeException(siddhiAppName + ": " + streamID + ": " + e.getMessage(), e);
