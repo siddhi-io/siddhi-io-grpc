@@ -248,10 +248,15 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
                         "define stream FooStream (stringValue string, intValue int,longValue long,booleanValue bool," +
                         "floatValue float,doubleValue double);",
                         description = "Here a stream named FooStream is defined with grpc sink. A grpc server should " +
-                                "be running at 194.23.98.100 listening to port 8080. We have added another stream called  BarStream which is a grpc-call-response source with the same sink.id 1 and as same as FooStream definiton. So the responses for calls sent from the FooStream will be added to BarStream" +
-                                ". since there is no mapping available in the stream definition attributes " +
-                                "names should be as same as the attributes of the protobuf message definition" +
-                                ""
+                                "be running at 194.23.98.100 listening to port 8080. We have added another stream " +
+                                "called  BarStream which is a grpc-call-response source with the same sink.id 1 and " +
+                                "as same as FooStream definition. So the responses for calls sent from the FooStream " +
+                                "will be added to BarStream. Since there is no mapping available in the stream " +
+                                "definition attributes names should be as same as the attributes of the protobuf " +
+                                "message definition. (Here the only reason we provide receiver.url in the grpc-call" +
+                                "-response source is for protobuf mapper to map Response into a siddhi event, we can " +
+                                "give any address and any port number in the URL, but we should provide the service " +
+                                "name and the method name correctly)"
                 ),
                 @Example(syntax = "" +
                         "@sink(type='grpc-call',\n" +
@@ -281,6 +286,34 @@ public class GrpcCallSink extends AbstractGrpcSink {
     private static final Logger logger = Logger.getLogger(GrpcCallSink.class.getName());
     protected String sinkID;
     protected AbstractStub futureStub;
+
+    private static Method getRpcMethod(ServiceConfigs serviceConfigs, String siddhiAppName, String streamID) {
+
+        Method rpcMethod = null;
+        String stubReference = serviceConfigs.getFullyQualifiedServiceName() + GrpcConstants.
+                GRPC_PROTOCOL_NAME_UPPERCAMELCASE + GrpcConstants.DOLLAR_SIGN + serviceConfigs.getServiceName()
+                + GrpcConstants.FUTURE_STUB;
+        try {
+            Method[] methodsInStub = Class.forName(stubReference).getMethods();
+            for (Method method : methodsInStub) {
+                if (method.getName().equalsIgnoreCase(serviceConfigs.getMethodName())) {
+                    rpcMethod = method;
+                    break;
+                }
+            }
+            if (rpcMethod == null) { //only if user has provided a wrong method name
+                throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid method name " +
+                        "provided in the url, provided method name: " + serviceConfigs.getMethodName() +
+                        "expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName,
+                        streamID));
+            }
+        } catch (ClassNotFoundException e) {
+            throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid service name " +
+                    "provided in the url, provided service name: '" + serviceConfigs
+                    .getFullyQualifiedServiceName() + "'", e);
+        }
+        return rpcMethod;
+    }
 
     @Override
     public void initSink(OptionHolder optionHolder) {
@@ -450,33 +483,5 @@ public class GrpcCallSink extends AbstractGrpcSink {
                     "provided in the url, provided method name: " + serviceConfigs.getMethodName() +
                     "expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName, streamID));
         }
-    }
-
-    private static Method getRpcMethod(ServiceConfigs serviceConfigs, String siddhiAppName, String streamID) {
-
-        Method rpcMethod = null;
-        String stubReference = serviceConfigs.getFullyQualifiedServiceName() + GrpcConstants.
-                GRPC_PROTOCOL_NAME_UPPERCAMELCASE + GrpcConstants.DOLLAR_SIGN + serviceConfigs.getServiceName()
-                + GrpcConstants.FUTURE_STUB;
-        try {
-            Method[] methodsInStub = Class.forName(stubReference).getMethods();
-            for (Method method : methodsInStub) {
-                if (method.getName().equalsIgnoreCase(serviceConfigs.getMethodName())) {
-                    rpcMethod = method;
-                    break;
-                }
-            }
-            if (rpcMethod == null) { //only if user has provided a wrong method name
-                throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid method name " +
-                        "provided in the url, provided method name: " + serviceConfigs.getMethodName() +
-                        "expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName,
-                        streamID));
-            }
-        } catch (ClassNotFoundException e) {
-            throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid service name " +
-                    "provided in the url, provided service name: '" + serviceConfigs
-                    .getFullyQualifiedServiceName() + "'", e);
-        }
-        return rpcMethod;
     }
 }
