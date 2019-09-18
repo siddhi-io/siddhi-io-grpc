@@ -279,7 +279,7 @@ public class GrpcSourceTestCase {
                     Thread.sleep(10);
                     requestObserver.onCompleted();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+
                 }
             }
         };
