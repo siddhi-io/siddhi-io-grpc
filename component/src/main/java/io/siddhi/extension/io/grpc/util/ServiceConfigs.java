@@ -56,29 +56,34 @@ public class ServiceConfigs {
         } else if (optionHolder.isOptionExists(GrpcConstants.PUBLISHER_URL)) {
             this.url = optionHolder.validateAndGetOption(GrpcConstants.PUBLISHER_URL).getValue();
         } else {
-            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID + ": either " +
+            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": " + streamID + ": either " +
                     "receiver.url or publisher.url should be given. But found neither");
         }
         if (!url.startsWith(GrpcConstants.GRPC_PROTOCOL_NAME)) {
-            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID + ": The url must " +
+            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": " + streamID + ": The url must " +
                     "begin with \"" + GrpcConstants.GRPC_PROTOCOL_NAME + "\" for all grpc sinks");
         }
         URL aURL;
         try {
             aURL = new URL(GrpcConstants.DUMMY_PROTOCOL_NAME + url.substring(4));
         } catch (MalformedURLException e) {
-            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID +
+            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": " + streamID +
                     ": Error in URL format. Expected format is `grpc://0.0.0.0:9763/<serviceName>/<methodName>` but " +
                     "the provided url is " + url + ". ", e);
         }
         this.port = aURL.getPort();
         this.hostPort = aURL.getAuthority();
+        if (this.port == -1 || this.hostPort == null || aURL.getPath().equals("")) {
+            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": " + streamID + ": URL not " +
+                    "properly given. Expected format is `grpc://0.0.0.0:9763/<serviceName>/<methodName>` or " +
+                    "`grpc://0.0.0.0:9763/<sequenceName>` but the provided url is " + url + ". ");
+        }
 
         List<String> urlPathParts = new ArrayList<>(Arrays.asList(aURL.getPath().substring(1).split(GrpcConstants
                 .PORT_SERVICE_SEPARATOR)));
         if (urlPathParts.contains(GrpcConstants.EMPTY_STRING)) {
-            throw new SiddhiAppValidationException("Malformed URL. There should not be any empty parts in the URL " +
-                    "between two '/'");
+            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID + "Malformed URL. " +
+                    "There should not be any empty parts in the URL between two '/'");
         }
         if (urlPathParts.size() < 2) {
             this.fullyQualifiedServiceName = GrpcConstants.DEFAULT_FULLY_QUALIFIED_SERVICE_NAME;
@@ -89,11 +94,12 @@ public class ServiceConfigs {
             this.fullyQualifiedServiceName = urlPathParts.get(GrpcConstants.PATH_SERVICE_NAME_POSITION);
             String[] fullyQualifiedServiceNameParts = fullyQualifiedServiceName.split("\\.");
             this.serviceName = fullyQualifiedServiceNameParts[fullyQualifiedServiceNameParts.length - 1];
-            if (fullyQualifiedServiceName.equalsIgnoreCase(GrpcConstants.DEFAULT_FULLY_QUALIFIED_SERVICE_NAME)) {
-                isDefaultService = true;
-                if (urlPathParts.size() == 3) {
-                    this.sequenceName = urlPathParts.get(GrpcConstants.PATH_SEQUENCE_NAME_POSITION);
-                }
+        }
+
+        if (fullyQualifiedServiceName.equalsIgnoreCase(GrpcConstants.DEFAULT_FULLY_QUALIFIED_SERVICE_NAME)) {
+            isDefaultService = true;
+            if (urlPathParts.size() == 3) {
+                this.sequenceName = urlPathParts.get(GrpcConstants.PATH_SEQUENCE_NAME_POSITION);
             }
         }
 
