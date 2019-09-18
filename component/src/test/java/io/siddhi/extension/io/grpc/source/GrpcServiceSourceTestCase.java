@@ -264,29 +264,29 @@ public class GrpcServiceSourceTestCase {
                 "message.id='{{messageId}}', " +
                 "@map(type='json')) " +
                 "define stream BarStream (messageId String, message String);";
-        String query = "@info(name = 'query') "
-                + "from FooStream "
-                + "select *  "
-                + "insert into OutputStream;";
+//        String query = "@info(name = 'query') "
+//                + "from FooStream "
+//                + "select *  "
+//                + "insert into OutputStream;";
 
-        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(stream1 + stream2 + query);
-        siddhiAppRuntime.addCallback("query", new QueryCallback() {
-            @Override
-            public void receive(long timeStamp, io.siddhi.core.event.Event[] inEvents,
-                                io.siddhi.core.event.Event[] removeEvents) {
-                EventPrinter.print(timeStamp, inEvents, removeEvents);
-                for (int i = 0; i < inEvents.length; i++) {
-                    eventCount.incrementAndGet();
-                    switch (i) {
-                        case 0:
-                            Assert.assertEquals((String) inEvents[i].getData()[1], "Benjamin Watson");
-                            break;
-                        default:
-                            Assert.fail();
-                    }
-                }
-            }
-        });
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(stream1 + stream2);
+//        siddhiAppRuntime.addCallback("query", new QueryCallback() {
+//            @Override
+//            public void receive(long timeStamp, io.siddhi.core.event.Event[] inEvents,
+//                                io.siddhi.core.event.Event[] removeEvents) {
+//                EventPrinter.print(timeStamp, inEvents, removeEvents);
+//                for (int i = 0; i < inEvents.length; i++) {
+//                    eventCount.incrementAndGet();
+//                    switch (i) {
+//                        case 0:
+//                            Assert.assertEquals((String) inEvents[i].getData()[1], "Benjamin Watson");
+//                            break;
+//                        default:
+//                            Assert.fail();
+//                    }
+//                }
+//            }
+//        });
 
         ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:" + port).usePlaintext().build();
         Thread client = new Thread() {
@@ -482,7 +482,6 @@ public class GrpcServiceSourceTestCase {
                 }
             }
         });
-        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888").usePlaintext().build();
         Thread client = new Thread(() -> {
             Request request = Request.newBuilder()
                     .setStringValue("Benjamin Watson")
@@ -492,18 +491,19 @@ public class GrpcServiceSourceTestCase {
                     .setFloatValue(45.345f)
                     .setLongValue(1000000L)
                     .build();
+            ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888").usePlaintext().build();
             MyServiceGrpc.MyServiceBlockingStub blockingStub = MyServiceGrpc.newBlockingStub(channel);
             Response response = blockingStub.process(request);
             logger.debug("Response : \n" + response);
             Assert.assertNotNull(response);
+            channel.shutdown();
 
         });
         siddhiAppRuntime.start();
         client.start();
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
-        channel.shutdown();
-        channel.awaitTermination(30, TimeUnit.SECONDS);
+
     }
 
     @Test
@@ -551,7 +551,6 @@ public class GrpcServiceSourceTestCase {
             }
         });
 
-        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8898").usePlaintext().build();
         Thread client = new Thread(() -> {
             Request request = Request.newBuilder()
                     .setStringValue("Benjamin Watson")
@@ -561,6 +560,7 @@ public class GrpcServiceSourceTestCase {
                     .setFloatValue(45.345f)
                     .setLongValue(1000000L)
                     .build();
+            ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8898").usePlaintext().build();
             MyServiceGrpc.MyServiceBlockingStub blockingStub = MyServiceGrpc.newBlockingStub(channel);
             Metadata metadata = new Metadata();
             metadata.put(Metadata.Key.of("Name", Metadata.ASCII_STRING_MARSHALLER), "John");
@@ -568,14 +568,14 @@ public class GrpcServiceSourceTestCase {
             blockingStub = MetadataUtils.attachHeaders(blockingStub, metadata);
             Response response = blockingStub.process(request);
             Assert.assertNotNull(response);
+            channel.shutdown();
 
         });
         siddhiAppRuntime.start();
         client.start();
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
-        channel.shutdown();
-        channel.awaitTermination(30, TimeUnit.SECONDS);
+
     }
 
     @Test
@@ -619,7 +619,6 @@ public class GrpcServiceSourceTestCase {
             }
         });
 
-        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888").usePlaintext().build();
         Thread client = new Thread() {
             public void run() {
                 Map<String, String> map = new HashMap<>();
@@ -630,10 +629,12 @@ public class GrpcServiceSourceTestCase {
                         .setIntValue(100)
                         .putAllMap(map)
                         .build();
+                ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888").usePlaintext().build();
                 MyServiceGrpc.MyServiceBlockingStub blockingStub = MyServiceGrpc.newBlockingStub(channel);
                 ResponseWithMap response = blockingStub.testMap(request);
                 logger.info("Response: \n" + response);
                 Assert.assertNotNull(response);
+                channel.shutdown();
 
             }
         };
@@ -641,8 +642,7 @@ public class GrpcServiceSourceTestCase {
         client.start();
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
-        channel.shutdown();
-        channel.awaitTermination(30, TimeUnit.SECONDS);
+
     }
 
     @Test
@@ -666,29 +666,8 @@ public class GrpcServiceSourceTestCase {
                 "@payload(stringValue='a',intValue='b',longValue='c',booleanValue='d',floatValue = 'e', doubleValue =" +
                 " 'f'))) " +
                 "define stream BarStream (a string,messageId string, b int,c long,d bool,e float,f double);";
-        String query = "@info(name = 'query') "
-                + "from FooStream "
-                + "select a,messageId,b*2 as b, c*2 as c,d,e*100 as e,f*4 as f "
-                + "insert into BarStream;";
-        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(stream1 + stream2 + query);
-        siddhiAppRuntime.addCallback("query", new QueryCallback() {
-            @Override
-            public void receive(long timeStamp, io.siddhi.core.event.Event[] inEvents,
-                                io.siddhi.core.event.Event[] removeEvents) {
-                EventPrinter.print(timeStamp, inEvents, removeEvents);
-                for (int i = 0; i < inEvents.length; i++) {
-                    eventCount.incrementAndGet();
-                    switch (i) {
-                        case 0:
-                            Assert.assertEquals((String) inEvents[i].getData()[0], "Benjamin Watson");
-                            break;
-                        default:
-                            Assert.fail();
-                    }
-                }
-            }
-        });
-        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888").usePlaintext().build();
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(stream1 + stream2);
+
         Thread client = new Thread(() -> {
             Request request = Request.newBuilder()
                     .setStringValue("Benjamin Watson")
@@ -698,18 +677,18 @@ public class GrpcServiceSourceTestCase {
                     .setFloatValue(45.345f)
                     .setLongValue(1000000L)
                     .build();
+            ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8888").usePlaintext().build();
             MyServiceGrpc.MyServiceBlockingStub blockingStub = MyServiceGrpc.newBlockingStub(channel);
             Response response = blockingStub.process(request);
             logger.debug("Response : \n" + response);
             Assert.assertNotNull(response);
+            channel.shutdown();
 
         });
         siddhiAppRuntime.start();
         client.start();
         Thread.sleep(10000);
         siddhiAppRuntime.shutdown();
-        channel.shutdown();
-        channel.awaitTermination(30, TimeUnit.SECONDS);
     }
 
 }

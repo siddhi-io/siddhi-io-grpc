@@ -146,8 +146,7 @@ public class GrpcEventServiceServer {
                                                 .get(GrpcConstants.STREAM_ID));
                                         executorService.execute(new GrpcWorkerThread(relevantSource,
                                                 request.getPayload(), request.getHeadersMap(), metaDataMap.get()));
-                                        responseObserver.onNext(Empty.getDefaultInstance()); // TODO: 9/16/19 should
-                                        // it belongs to oncomplete
+                                        responseObserver.onNext(Empty.getDefaultInstance());
                                         responseObserver.onCompleted();
                                     } catch (SiddhiAppRuntimeException e) {
                                         logger.error(siddhiAppContext.getName() + ":" + streamID + ": Dropping " +

@@ -234,6 +234,46 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
                         description = "Here with the same FooStream definition we have added a BarStream which has " +
                                 "a grpc-call-response source with the same sink.id 1. So the responses for calls " +
                                 "sent from the FooStream will be added to BarStream."
+                ),
+                @Example(syntax = "" +
+                        "@sink(type='grpc-call',\n" +
+                        "      publisher.url = 'grpc://194.23.98.100:8888/org.wso2.grpc.test.MyService/process',\n" +
+                        "      sink.id= '1', @map(type='protobuf'))\n" +
+                        "define stream FooStream (stringValue string, intValue int,longValue long,booleanValue " +
+                        "bool,floatValue float,doubleValue double);\n" +
+                        "\n" +
+                        "@source(type='grpc-call-response', receiver.url = 'grpc://localhost:8888/org.wso2.grpc" +
+                        ".MyService/process', sink.id= '1', \n" +
+                        "@map(type='protobuf'))" +
+                        "define stream FooStream (stringValue string, intValue int,longValue long,booleanValue bool," +
+                        "floatValue float,doubleValue double);",
+                        description = "Here a stream named FooStream is defined with grpc sink. A grpc server should " +
+                                "be running at 194.23.98.100 listening to port 8080. We have added another stream called  BarStream which is a grpc-call-response source with the same sink.id 1 and as same as FooStream definiton. So the responses for calls sent from the FooStream will be added to BarStream" +
+                                ". since there is no mapping available in the stream definition attributes " +
+                                "names should be as same as the attributes of the protobuf message definition" +
+                                ""
+                ),
+                @Example(syntax = "" +
+                        "@sink(type='grpc-call',\n" +
+                        "      publisher.url = 'grpc://194.23.98.100:8888/org.wso2.grpc.test.MyService/process',\n" +
+                        "      sink.id= '1', @map(type='protobuf', \n" +
+                        "@payload(stringValue='a',longValue='c',intValue='b',booleanValue='d',floatValue = 'e', " +
+                        "doubleValue = 'f')))" +
+                        "define stream FooStream (a string, b int,c long,d bool,e float,f double);\n" +
+                        "\n" +
+                        "@source(type='grpc-call-response', receiver.url = 'grpc://localhost:8888/org.wso2.grpc.test" +
+                        ".MyService/process', sink.id= '1', \n" +
+                        "@map(type='protobuf'," +
+                        "@attributes(a = 'stringValue', b = 'intValue', c = 'longValue',d = 'booleanValue', " +
+                        "e ='floatValue', f ='doubleValue')))" +
+                        "define stream FooStream (a string, b int,c long,d bool,e float,f double);",
+                        description = "Here with the same FooStream definition we have added a BarStream which has " +
+                                "a grpc-call-response source with the same sink.id 1. So the responses for calls " +
+                                "sent from the FooStream will be added to BarStream. In this stream we provided " +
+                                "mapping for both the sink and the source. so we can use any name for the " +
+                                "attributes in the stream definition, but we have to map those attributes with " +
+                                "correct protobuf attributes. As same as the grpc-sink, if we are planning to use  " +
+                                "metadata we should map the attributes."
                 )
         }
 )

@@ -62,7 +62,7 @@ public class GrpcSinkGenericTestCases {
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inStreamDefinition = ""
-                + "@sink(type='grpc', publisher.url = 'grpc://localhost:8888/"+ packageName + ".MyService/send', " +
+                + "@sink(type='grpc', publisher.url = 'grpc://localhost:8888/" + packageName + ".MyService/send', " +
                 "@map(type='protobuf')) " +
                 "define stream FooStream (stringValue string, intValue int,longValue long,booleanValue bool," +
                 "floatValue float,doubleValue double);";
