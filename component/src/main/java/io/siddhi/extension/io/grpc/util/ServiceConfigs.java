@@ -137,6 +137,10 @@ public class ServiceConfigs {
         return serviceName;
     }
 
+    public String getFullyQualifiedServiceName() {
+        return fullyQualifiedServiceName;
+    }
+
     public int getPort() {
         return port;
     }

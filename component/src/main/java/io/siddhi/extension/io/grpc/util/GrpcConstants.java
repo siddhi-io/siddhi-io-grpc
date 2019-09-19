@@ -97,4 +97,20 @@ public class GrpcConstants {
     public static final String SERVICE_TIMEOUT = "service.timeout";
     public static final String SERVICE_TIMEOUT_DEFAULT = "10000";
     public static final String TIMEOUT_CHECK_INTERVAL = "timeout.check.interval";
+
+    public static final String STUB = "Stub";
+    public static final String FUTURE_STUB = "FutureStub";
+    public static final String FUTURE_STUB_METHOD_NAME = "newFutureStub";
+    public static final String GRPC_PROTOCOL_NAME_UPPERCAMELCASE = "Grpc";
+    public static final String DOLLAR_SIGN = "$";
+    public static final String NEW_STUB_NAME = "newStub";
+    public static final String PARSE_FROM_METHOD_NAME = "parseFrom";
+    public static final String METHOD_NAME = "Method";
+    public static final String GETTER = "get";
+
+    public static final int REQUEST_CLASS_POSITION = 0;
+    public static final int RESPONSE_CLASS_POSITION = 1;
+    public static final int EMPTY_METHOD_ID = 1;
+    public static final int NON_EMPTY_METHOD_ID = 2;
+    public static final int CLIENT_STREAM_METHOD_ID = 3;
 }

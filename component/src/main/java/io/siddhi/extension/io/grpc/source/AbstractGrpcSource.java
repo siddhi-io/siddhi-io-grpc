@@ -25,7 +25,14 @@ import io.siddhi.core.stream.input.source.SourceEventListener;
 import io.siddhi.core.util.config.ConfigReader;
 import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.core.util.transport.OptionHolder;
+import io.siddhi.extension.io.grpc.util.GrpcConstants;
 import io.siddhi.extension.io.grpc.util.GrpcServerConfigs;
+import io.siddhi.query.api.exception.SiddhiAppValidationException;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+
+import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
 
 /**
  * This is an abstract class extended by GrpcSource and GrpcServiceSource. This provides most of initialization
@@ -38,6 +45,8 @@ public abstract class AbstractGrpcSource extends Source {
     protected String streamID;
     private ServiceDeploymentInfo serviceDeploymentInfo;
     protected GrpcServerConfigs grpcServerConfigs;
+    protected String siddhiAppName;
+    protected Class requestClass;
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
@@ -59,9 +68,13 @@ public abstract class AbstractGrpcSource extends Source {
                              SiddhiAppContext siddhiAppContext) {
         this.streamID = sourceEventListener.getStreamDefinition().getId();
         this.siddhiAppContext = siddhiAppContext;
+        this.siddhiAppName = siddhiAppContext.getName();
         this.sourceEventListener = sourceEventListener;
         this.requestedTransportPropertyNames = requestedTransportPropertyNames.clone();
         this.grpcServerConfigs = new GrpcServerConfigs(optionHolder, siddhiAppContext, streamID);
+        if (!grpcServerConfigs.getServiceConfigs().isDefaultService()) {
+            requestClass = getRequestClass();
+        }
         initSource(optionHolder, requestedTransportPropertyNames);
         this.serviceDeploymentInfo = new ServiceDeploymentInfo(grpcServerConfigs.getServiceConfigs().getPort(),
                 grpcServerConfigs.getServiceConfigs().getTruststoreFilePath() != null ||
@@ -69,8 +82,30 @@ public abstract class AbstractGrpcSource extends Source {
         return null;
     }
 
-    public void handleInjection(String payload, String[] headers) {
+    public void handleInjection(Object payload, String[] headers) {
         sourceEventListener.onEvent(payload, headers);
+    }
+
+    private Class getRequestClass() {
+        String camelCaseMethodName = grpcServerConfigs.getServiceConfigs().getMethodName().substring(0, 1).toUpperCase()
+                + grpcServerConfigs.getServiceConfigs().getMethodName().substring(1);
+        Field methodDescriptor;
+        try {
+            methodDescriptor = Class.forName(grpcServerConfigs.getServiceConfigs().getFullyQualifiedServiceName() +
+                    GrpcConstants.GRPC_PROTOCOL_NAME_UPPERCAMELCASE).getDeclaredField(GrpcConstants.GETTER +
+                    camelCaseMethodName + GrpcConstants.METHOD_NAME);
+        } catch (ClassNotFoundException e) {
+            throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid service name provided " +
+                    "in the url, provided service name: " + grpcServerConfigs.getServiceConfigs()
+                    .getFullyQualifiedServiceName(), e);
+        } catch (NoSuchFieldException e) {
+            throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid method name provided " +
+                    "in the url, provided method name: " + grpcServerConfigs.getServiceConfigs()
+                    .getMethodName() + ", Expected one of these these methods: " + getRpcMethodList(grpcServerConfigs
+                    .getServiceConfigs(), siddhiAppName, streamID), e);
+        }
+        ParameterizedType parameterizedType = (ParameterizedType) methodDescriptor.getGenericType();
+        return (Class) parameterizedType.getActualTypeArguments()[GrpcConstants.REQUEST_CLASS_POSITION];
     }
 
     public abstract void initSource(OptionHolder optionHolder, String[] requestedTransportPropertyNames);

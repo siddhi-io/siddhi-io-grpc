@@ -38,4 +38,12 @@
         <Class name="io.siddhi.extension.io.grpc.source.GrpcEventServiceServer"/>
         <Bug pattern="MS_SHOULD_BE_FINAL"/>
     </Match>
+    <Match>
+        <Class name="io.siddhi.extension.io.grpc.source.GenericServiceServer"/>
+        <Bug pattern="MS_SHOULD_BE_FINAL"/>
+    </Match>
+    <Match>
+        <Class name="io.siddhi.extension.io.grpc.source.AbstractGrpcSource"/>
+        <Bug pattern="DM_CONVERT_CASE"/>
+    </Match>
 </FindBugsFilter>

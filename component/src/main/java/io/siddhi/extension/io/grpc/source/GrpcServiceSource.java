@@ -17,6 +17,10 @@
  */
 package io.siddhi.extension.io.grpc.source;
 
+import com.google.protobuf.AbstractMessageLite;
+import com.google.protobuf.Any;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 import io.grpc.Server;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
@@ -28,16 +32,22 @@ import io.siddhi.core.exception.ConnectionUnavailableException;
 import io.siddhi.core.exception.SiddhiAppRuntimeException;
 import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.transport.OptionHolder;
+import io.siddhi.extension.io.grpc.util.GenericService;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
 import io.siddhi.extension.io.grpc.util.GrpcSourceRegistry;
+import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
 
 /**
  * This extension handles receiving requests from grpc clients/stubs and sending back responses
@@ -195,16 +205,46 @@ import java.util.TimerTask;
                         description = "Here we are getting headers sent with the request as transport properties and " +
                                 "injecting them into the stream. With each request a header will be sent in MetaData " +
                                 "in the following format: 'Name:John', 'Age:23'"
+                ),
+                @Example(syntax = "" +
+                        "@sink(type='grpc-service-response',\n" +
+                        "      source.id='1',\n" +
+                        "      message.id='{{messageId}}',\n" +
+                        "      @map(type='protobuf',\n" +
+                        "@payload(stringValue='a',intValue='b',longValue='c',booleanValue='d',floatValue = 'e', " +
+                        "doubleValue ='f')))\n" +
+                        "define stream BarStream (a string,messageId string, b int,c long,d bool,e float,f double);\n" +
+                        "\n" +
+                        "@source(type='grpc-service',\n" +
+                        "       receiver.url='grpc://134.23.43.35:8888/org.wso2.grpc.test.MyService/process',\n" +
+                        "       source.id='1',\n" +
+                        "       @map(type='protobuf', @attributes(messageId='trp:message.id', a = 'stringValue', b = " +
+                        "'intValue', c = 'longValue',d = 'booleanValue', e = 'floatValue', f ='doubleValue')))\n" +
+                        "define stream FooStream (a string,messageId string, b int,c long,d bool,e float,f double);\n" +
+                        "\n" +
+                        "from FooStream\n" +
+                        "select * \n" +
+                        "insert into BarStream;",
+                        description = "Here a grpc server will be started at port 8888. The process method of the " +
+                                "MyService will be exposed to the clients. 'source.id' is set as 1. So a grpc-service" +
+                                "-response sink with source.id = 1 will send responses back for requests received to" +
+                                " this source. Note that it is required to specify the transport property messageId" +
+                                " since we need to correlate the request message with the response and also we should" +
+                                " map stream attributes with correct protobuf message attributes even they define " +
+                                "using the same name as protobuf message attributes."
+
                 )
         }
 )
 public class GrpcServiceSource extends AbstractGrpcSource {
     private static final Logger logger = Logger.getLogger(GrpcServiceSource.class.getName());
     private Map<String, StreamObserver<Event>> streamObserverMap = Collections.synchronizedMap(new HashMap<>());
+    private Map<String, StreamObserver<Any>> genericStreamObserverMap = Collections.synchronizedMap(new HashMap<>());
     private String sourceId;
     private long serviceTimeout;
     protected Server server;
     private Timer timer;
+    private GenericServiceServer genericServiceServer;
 
     public void scheduleServiceTimeout(String messageId) {
         timer.schedule(new GrpcServiceSource.ServiceSourceTimeoutChecker(messageId,
@@ -243,16 +283,27 @@ public class GrpcServiceSource extends AbstractGrpcSource {
                 GrpcConstants.SERVICE_TIMEOUT_DEFAULT).getValue());
         this.timer = new Timer();
         GrpcSourceRegistry.getInstance().putGrpcServiceSource(sourceId, this);
-        GrpcServerManager.getInstance().registerSource(grpcServerConfigs, this, GrpcConstants
-                .DEFAULT_METHOD_NAME_WITH_RESPONSE, siddhiAppContext, streamID);
+        if (grpcServerConfigs.getServiceConfigs().isDefaultService()) {
+            GrpcServerManager.getInstance().registerSource(grpcServerConfigs, this, GrpcConstants
+                    .DEFAULT_METHOD_NAME_WITH_RESPONSE, siddhiAppContext, streamID);
+        } else {
+            GenericService.setServiceName(grpcServerConfigs.getServiceConfigs().getServiceName());
+            GenericService.setNonEmptyResponseMethodName(grpcServerConfigs.getServiceConfigs().getMethodName());
+            genericServiceServer = new GenericServiceServer(grpcServerConfigs, this, requestClass,
+                    siddhiAppName, streamID);
+        }
     }
 
     @Override
     public void connect(ConnectionCallback connectionCallback, State state) throws ConnectionUnavailableException {
-        if (GrpcServerManager.getInstance().getServer(grpcServerConfigs.getServiceConfigs().getPort())
-                .getState() == 0) {
-            GrpcServerManager.getInstance().getServer(grpcServerConfigs.getServiceConfigs().getPort()).connectServer(
-                    logger, connectionCallback, siddhiAppContext, streamID);
+        if (grpcServerConfigs.getServiceConfigs().isDefaultService()) {
+            if (GrpcServerManager.getInstance().getServer(grpcServerConfigs.getServiceConfigs().getPort())
+                    .getState() == 0) {
+                GrpcServerManager.getInstance().getServer(grpcServerConfigs.getServiceConfigs().getPort()).
+                        connectServer(logger, connectionCallback, siddhiAppContext, streamID);
+            }
+        } else {
+            genericServiceServer.connectServer(logger, connectionCallback, siddhiAppName, streamID);
         }
     }
 
@@ -261,25 +312,51 @@ public class GrpcServiceSource extends AbstractGrpcSource {
      */
     @Override
     public void disconnect() {
-        GrpcServerManager.getInstance().unregisterSource(grpcServerConfigs.getServiceConfigs().getPort(), streamID,
-                GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE, logger, siddhiAppContext);
+        if (grpcServerConfigs.getServiceConfigs().isDefaultService()) {
+            GrpcServerManager.getInstance().unregisterSource(grpcServerConfigs.getServiceConfigs().getPort(), streamID,
+                    GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE, logger, siddhiAppContext);
+        } else {
+            genericServiceServer.disconnectServer(logger, siddhiAppName, streamID);
+        }
     }
 
-    public void handleCallback(String messageId, String responsePayload) {
+    public void handleCallback(String messageId, Object responsePayload) {
         if (grpcServerConfigs.getServiceConfigs().isDefaultService()) {
             StreamObserver<Event> streamObserver = streamObserverMap.remove(messageId);
             if (streamObserver != null) {
                 Event.Builder responseBuilder = Event.newBuilder();
-                responseBuilder.setPayload(responsePayload);
+                responseBuilder.setPayload((String) responsePayload);
                 Event response = responseBuilder.build();
                 streamObserver.onNext(response);
                 streamObserver.onCompleted();
+            }
+        } else {
+            StreamObserver<Any> genericStreamObserver = genericStreamObserverMap.remove(messageId);
+            if (genericStreamObserver != null) {
+                try {
+                    Method toByteString = AbstractMessageLite.class.getDeclaredMethod("toByteString");
+                    ByteString responseByteString = (ByteString) toByteString.invoke(responsePayload);
+                    Any response = Any.parseFrom(responseByteString);
+                    genericStreamObserver.onNext(response);
+                    genericStreamObserver.onCompleted();
+                } catch (NoSuchMethodException | IllegalAccessException | InvalidProtocolBufferException |
+                        InvocationTargetException e) {
+                    throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid method" +
+                            " name provided in the url, provided method name: " + grpcServerConfigs.
+                            getServiceConfigs().getMethodName() + ", Expected one of these these methods: " +
+                            getRpcMethodList(grpcServerConfigs.getServiceConfigs(), siddhiAppName, streamID),
+                            e);
+                }
             }
         }
     }
 
     public void putStreamObserver(String messageID, StreamObserver streamObserver) {
-        streamObserverMap.put(messageID, streamObserver);
+        if (grpcServerConfigs.getServiceConfigs().isDefaultService()) {
+            streamObserverMap.put(messageID, streamObserver);
+        } else {
+            genericStreamObserverMap.put(messageID, streamObserver);
+        }
     }
 
     @Override

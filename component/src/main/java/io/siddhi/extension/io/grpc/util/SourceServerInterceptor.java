@@ -23,6 +23,7 @@ import io.grpc.Metadata;
 import io.grpc.ServerCall;
 import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
+import io.siddhi.extension.io.grpc.source.GenericServiceServer;
 import io.siddhi.extension.io.grpc.source.GrpcEventServiceServer;
 import org.apache.log4j.Logger;
 
@@ -34,7 +35,12 @@ import java.util.Set;
  * Server interceptor to receive headers
  */
 public class SourceServerInterceptor implements ServerInterceptor {
-  private static final Logger logger = Logger.getLogger(SourceServerInterceptor.class.getName());
+    private static final Logger logger = Logger.getLogger(SourceServerInterceptor.class.getName());
+    private boolean isDefaultService;
+
+    public SourceServerInterceptor(boolean isDefaultService) {
+        this.isDefaultService = isDefaultService;
+    }
 
   @Override
   public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> serverCall,
@@ -46,7 +52,11 @@ public class SourceServerInterceptor implements ServerInterceptor {
     for (String key: metadataKeys) {
       metaDataMap.put(key, metadata.get(Metadata.Key.of(key, io.grpc.Metadata.ASCII_STRING_MARSHALLER)));
     }
-    GrpcEventServiceServer.metaDataMap.set(metaDataMap);
+      if (isDefaultService) {
+          GrpcEventServiceServer.metaDataMap.set(metaDataMap);
+      } else {
+          GenericServiceServer.metaDataMap.set(metaDataMap);
+      }
     return Contexts.interceptCall(Context.ROOT, serverCall, metadata, serverCallHandler);
   }
 }
