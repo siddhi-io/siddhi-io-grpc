@@ -305,6 +305,11 @@ public class GrpcSink extends AbstractGrpcSink {
             }
             this.channel = managedChannelBuilder.build();
             this.asyncStub = EventServiceGrpc.newStub(channel);
+            if (metadataOption != null) {
+                if (metadataOption.isStatic()) {
+                    asyncStub = attachMetaDataToStub(null, asyncStub);
+                }
+            }
             requestObserver = ((EventServiceGrpc.EventServiceStub) asyncStub).consume(responseObserver);
         } else {
             responseObserver = new StreamObserver<Object>() {
@@ -330,6 +335,11 @@ public class GrpcSink extends AbstractGrpcSink {
             this.channel = managedChannelBuilder.build();
             rpcMethod = getRpcMethod(serviceConfigs, siddhiAppName, streamID);
             this.asyncStub = createStub(serviceConfigs);
+            if (metadataOption != null) {
+                if (metadataOption.isStatic()) {
+                    asyncStub = attachMetaDataToStub(null, asyncStub);
+                }
+            }
             try {
                 if (rpcMethod.getParameterCount() == 1) {
                     requestObserver = (StreamObserver) rpcMethod.invoke(asyncStub, responseObserver);
@@ -339,11 +349,6 @@ public class GrpcSink extends AbstractGrpcSink {
                         "provided in the url, provided method name: " + serviceConfigs.getMethodName() +
                         "expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName,
                         streamID), e);
-            }
-        }
-        if (metadataOption != null) {
-            if (metadataOption.isStatic()) {
-                asyncStub = attachMetaDataToStub(null, asyncStub);
             }
         }
     }
