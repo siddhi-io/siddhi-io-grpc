@@ -102,6 +102,7 @@ public class GrpcServiceSourceTestCase {
                 EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
                 Event response = blockingStub.process(sequenceCallRequest);
                 Assert.assertNotNull(response);
+                channel.shutdown();
             }
         };
         siddhiAppRuntime.start();
@@ -111,6 +112,66 @@ public class GrpcServiceSourceTestCase {
 
         channel.shutdown();
         channel.awaitTermination(30, TimeUnit.SECONDS);
+    }
+
+    @Test
+    public void testToCallProcessTwice() throws Exception {
+        logger.info("Test case to call process");
+        logger.setLevel(Level.DEBUG);
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String stream1 = "@source(type='grpc-service', " +
+                "receiver.url = 'grpc://localhost:" + port + "/org.wso2.grpc.EventService/process', source.id='1', " +
+                "@map(type='json', @attributes(messageId='trp:message.id', message='message'))) " +
+                "define stream FooStream (messageId String, message String);";
+
+        String stream2 = "@sink(type='grpc-service-response',  source.id='1', " +
+                "message.id='{{messageId}}', " +
+                "@map(type='json')) " +
+                "define stream BarStream (messageId String, message String);";
+        String query = "@info(name = 'query') "
+                + "from FooStream "
+                + "select *  "
+                + "insert into BarStream;";
+
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(stream1 + stream2 + query);
+        siddhiAppRuntime.addCallback("query", new QueryCallback() {
+            @Override
+            public void receive(long timeStamp, io.siddhi.core.event.Event[] inEvents,
+                                io.siddhi.core.event.Event[] removeEvents) {
+                EventPrinter.print(timeStamp, inEvents, removeEvents);
+                for (int i = 0; i < inEvents.length; i++) {
+                    eventCount.incrementAndGet();
+                    switch (i) {
+                        case 0:
+                            Assert.assertEquals((String) inEvents[i].getData()[1], "Benjamin Watson");
+                            break;
+                        default:
+                            Assert.fail();
+                    }
+                }
+            }
+        });
+
+        Thread client = new Thread() {
+            public void run() {
+                Event.Builder requestBuilder = Event.newBuilder();
+                String json = "{ \"message\": \"Benjamin Watson\"}";
+                requestBuilder.setPayload(json);
+                requestBuilder.putHeaders("stream.id", "FooStream");
+                Event sequenceCallRequest = requestBuilder.build();
+                ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:" + port).usePlaintext().build();
+                EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
+                Event response = blockingStub.process(sequenceCallRequest);
+                Assert.assertNotNull(response);
+                channel.shutdown();
+            }
+        };
+        siddhiAppRuntime.start();
+        client.start();
+        Thread.sleep(1000);
+        client.run();
+        siddhiAppRuntime.shutdown();
     }
 
     @Test
@@ -172,6 +233,7 @@ public class GrpcServiceSourceTestCase {
 
                 Event response = blockingStub.process(sequenceCallRequest);
                 Assert.assertNotNull(response);
+                channel.shutdown();
             }
         };
         siddhiAppRuntime.start();
@@ -226,6 +288,7 @@ public class GrpcServiceSourceTestCase {
 
                 Event response = blockingStub.process(sequenceCallRequest);
                 Assert.assertNotNull(response);
+                channel.shutdown();
             }
         };
         siddhiAppRuntime.start();
@@ -301,6 +364,7 @@ public class GrpcServiceSourceTestCase {
                 Event response = blockingStub.process(sequenceCallRequest);
                 logger.info("Response: \n" + response);
                 Assert.assertNotNull(response);
+                channel.shutdown();
             }
         };
         siddhiAppRuntime.start();
@@ -367,6 +431,7 @@ public class GrpcServiceSourceTestCase {
 
                 Event response = blockingStub.process(sequenceCallRequest);
                 Assert.assertNotNull(response);
+                channel.shutdown();
             }
         };
         siddhiAppRuntime.start();
@@ -418,6 +483,7 @@ public class GrpcServiceSourceTestCase {
 
                 Event response = blockingStub.process(sequenceCallRequest);
                 Assert.assertNotNull(response);
+                channel.shutdown();
             }
         };
         siddhiAppRuntime.start();

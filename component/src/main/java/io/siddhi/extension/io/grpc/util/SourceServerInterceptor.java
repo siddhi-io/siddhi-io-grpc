@@ -42,22 +42,21 @@ public class SourceServerInterceptor implements ServerInterceptor {
         this.isDefaultService = isDefaultService;
     }
 
-    @Override
-    public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> serverCall,
-                                                                 Metadata metadata,
-                                                                 ServerCallHandler<ReqT, RespT> serverCallHandler) {
-        logger.debug("Interceptor thread is: " + Thread.currentThread().getId());
-        Set<String> metadataKeys = metadata.keys();
-        Map<String, String> metaDataMap = new HashMap<>();
-        for (String key : metadataKeys) {
-            metaDataMap.put(key, metadata.get(Metadata.Key.of(key, io.grpc.Metadata.ASCII_STRING_MARSHALLER)));
-        }
-        if (isDefaultService) {
-            GrpcEventServiceServer.metaDataMap.set(metaDataMap);
-        } else {
-            GenericServiceServer.metaDataMap.set(metaDataMap);
-        }
-        return Contexts.interceptCall(Context.ROOT, serverCall, metadata, serverCallHandler);
-        //todo check if this line is there in the stacktrace when debugging reading from the threadlocal
+  @Override
+  public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> serverCall,
+                                                               Metadata metadata,
+                                                               ServerCallHandler<ReqT, RespT> serverCallHandler) {
+    logger.debug("Interceptor thread is: " + Thread.currentThread().getId());
+    Set<String> metadataKeys = metadata.keys();
+    Map<String, String> metaDataMap = new HashMap<>();
+    for (String key: metadataKeys) {
+      metaDataMap.put(key, metadata.get(Metadata.Key.of(key, io.grpc.Metadata.ASCII_STRING_MARSHALLER)));
     }
+      if (isDefaultService) {
+          GrpcEventServiceServer.metaDataMap.set(metaDataMap);
+      } else {
+          GenericServiceServer.metaDataMap.set(metaDataMap);
+      }
+    return Contexts.interceptCall(Context.ROOT, serverCall, metadata, serverCallHandler);
+  }
 }

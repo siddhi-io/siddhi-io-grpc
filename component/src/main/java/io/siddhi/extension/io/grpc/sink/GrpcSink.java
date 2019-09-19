@@ -179,6 +179,13 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "-"),
+                @Parameter(
+                        name = "enable.ssl",
+                        description = "to enable ssl. If set to true and truststore.file is not given then it will " +
+                                "be set to default carbon jks by default" ,
+                        type = {DataType.BOOL},
+                        optional = true,
+                        defaultValue = "FALSE"),
         },
         examples = {
                 @Example(syntax = "" +

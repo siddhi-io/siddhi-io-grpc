@@ -172,28 +172,68 @@ public class GrpcSinkTestCase {
         }
     }
 
-//    @Test  //todo
-//    public void testCaseWithMalformedURL() throws Exception {
-//        log.info("Test case to call consume");
-//        final TestAppender appender = new TestAppender();
-//        final Logger rootLogger = Logger.getRootLogger();
-//        rootLogger.setLevel(Level.DEBUG);
-//        rootLogger.addAppender(appender);
-//        SiddhiManager siddhiManager = new SiddhiManager();
-//
-//        String inStreamDefinition = ""
-//                + "@sink(type='grpc', publisher.url = 'grpc:dfasf', " +
-//                "@map(type='json', @payload('{{message}}'))) " +
-//                "define stream FooStream (message String);";
-//
-//        try {
-//            SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
-//        } catch (SiddhiAppValidationException e) {
-//            Assert.assertTrue(e.getMessage().contains("Malformed URL. After port number at least two sections
-//            should " +
-//                    "be available separated by '/' as in 'grpc://<host>:<port>/<ServiceName>/<MethodName>'"));
-//        }
-//    }
+    @Test
+    public void testCaseWithMalformedURL1() throws Exception {
+        log.info("Test case to call consume");
+        final TestAppender appender = new TestAppender();
+        final Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(Level.DEBUG);
+        rootLogger.addAppender(appender);
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String inStreamDefinition = ""
+                + "@sink(type='grpc', publisher.url = 'grpc://localhost:8888', " +
+                "@map(type='json', @payload('{{message}}'))) " +
+                "define stream FooStream (message String);";
+
+        try {
+            SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
+        } catch (SiddhiAppValidationException e) {
+            Assert.assertTrue(e.getMessage().contains("URL not properly given. Expected format is " +
+                    "`grpc://0.0.0.0:9763/<serviceName>/<methodName>` or `grpc://0.0.0.0:9763/<sequenceName>` but " +
+                    "the provided url is grpc://localhost:8888. "));
+        }
+    }
+
+    @Test
+    public void testCaseWithMalformedURL2() throws Exception {
+        log.info("Test case to call consume");
+        final TestAppender appender = new TestAppender();
+        final Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(Level.DEBUG);
+        rootLogger.addAppender(appender);
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String inStreamDefinition = ""
+                + "@sink(type='grpc', publisher.url = 'grpc:dfasf', " +
+                "@map(type='json', @payload('{{message}}'))) " +
+                "define stream FooStream (message String);";
+
+        try {
+            SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
+        } catch (SiddhiAppValidationException e) {
+            Assert.assertTrue(e.getMessage().contains("URL not properly given. Expected format is " +
+                    "`grpc://0.0.0.0:9763/<serviceName>/<methodName>` or `grpc://0.0.0.0:9763/<sequenceName>` but " +
+                    "the provided url is grpc:dfasf. "));
+        }
+    }
+
+    @Test
+    public void testCaseWithShortURL() throws Exception {
+        log.info("Test case to call consume");
+        final TestAppender appender = new TestAppender();
+        final Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(Level.DEBUG);
+        rootLogger.addAppender(appender);
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String inStreamDefinition = ""
+                + "@sink(type='grpc', publisher.url = 'grpc://localhost:8888/mySeq', " +
+                "@map(type='json', @payload('{{message}}'))) " +
+                "define stream FooStream (message String);";
+
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
+    }
 
     @Test
     public void testCaseWithXMLMapper() throws Exception {
@@ -297,7 +337,7 @@ public class GrpcSinkTestCase {
     }
 
     @Test
-    public void testWithMetaData() throws Exception { //todo: check for concurrency issues
+    public void testWithMetaData() throws Exception {
         log.info("Test case to call consume with headers");
         final TestAppender appender = new TestAppender();
         final Logger rootLogger = Logger.getRootLogger();

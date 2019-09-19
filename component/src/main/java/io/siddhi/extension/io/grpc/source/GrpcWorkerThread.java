@@ -51,12 +51,11 @@ public class GrpcWorkerThread implements Runnable {
     @Override
     public void run() {
         try {
-            String[] headersArray = extractHeaders(headers, metaData,
-                    relevantSource.getRequestedTransportPropertyNames());
+            String[] headersArray = extractHeaders(headers, metaData, relevantSource
+                    .getRequestedTransportPropertyNames());
             relevantSource.handleInjection(payload, headersArray);
         } catch (SiddhiAppRuntimeException e) {
             relevantSource.logError("Dropping request. " + e.getMessage());
         }
-
     }
 }
