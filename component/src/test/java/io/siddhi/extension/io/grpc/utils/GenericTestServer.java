@@ -18,17 +18,21 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 public class GenericTestServer {
-
-    private static final Logger logger = Logger.getLogger(TestServer.class.getName());
-    TestServerInterceptor testInterceptor = new TestServerInterceptor();
+    private static final Logger logger = Logger.getLogger(GenericTestServer.class.getName());
+    private TestServerInterceptor testInterceptor = new TestServerInterceptor();
     private Server server;
+    private int port;
+
+    public GenericTestServer(int port) {
+        this.port = port;
+    }
 
     public void start() throws IOException {
         if (server != null) {
             throw new IllegalStateException("Already started");
         }
         server = ServerBuilder
-                .forPort(8888)
+                .forPort(port)
                 .addService(ServerInterceptors.intercept(new MyServiceGrpc.MyServiceImplBase() {
                     @Override
                     public void send(Request request, StreamObserver<Empty> responseObserver) {
@@ -119,7 +123,7 @@ public class GenericTestServer {
 
         server.start();
         if (logger.isDebugEnabled()) {
-            logger.debug("Server started");
+            logger.debug("Generic Server started");
         }
     }
 
@@ -131,20 +135,18 @@ public class GenericTestServer {
         server = null;
         s.shutdown();
         if (s.awaitTermination(1, TimeUnit.SECONDS)) {
-
             if (logger.isDebugEnabled()) {
-                logger.debug("Server stopped");
+                logger.debug("Generic Server stopped");
             }
             return;
         }
         s.shutdownNow();
         if (s.awaitTermination(1, TimeUnit.SECONDS)) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Generic Server stopped");
+            }
             return;
         }
         throw new RuntimeException("Unable to shutdown server");
-    }
-
-    public int getPort() {
-        return server.getPort();
     }
 }

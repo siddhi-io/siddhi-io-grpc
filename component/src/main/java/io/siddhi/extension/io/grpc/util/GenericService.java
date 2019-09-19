@@ -59,9 +59,9 @@ public class GenericService {
         GenericService.clientStreamMethodName = clientStreamMethodName;
     }
 
-    public static ServiceDescriptor getServiceDescriptor() { //service descriptor have to be refresh when each time
-        // server object is created,otherwise method descriptors won't be changed even if they changed later. because
-        // of that server can't be implemented for multiple methods
+    public static ServiceDescriptor getServiceDescriptor() { //service descriptor have to be refresh
+        // when each time server object is created,otherwise method descriptors won't be changed even if they changed
+        // later. because of that server can't be implemented for multiple methods
         ServiceDescriptor result;
         synchronized (GenericService.class) {
             result = io.grpc.ServiceDescriptor.newBuilder(serviceName)

@@ -38,7 +38,8 @@ import java.util.Map;
 
 public class GrpcSinkGenericTestCases {
     private static final Logger log = Logger.getLogger(GrpcSinkTestCase.class.getName());
-    private GenericTestServer server = new GenericTestServer();
+    private int port = 6667;
+    private GenericTestServer server = new GenericTestServer(port);
     private String packageName = "io.siddhi.extension.io.grpc.proto";
 
     @BeforeTest
@@ -62,8 +63,8 @@ public class GrpcSinkGenericTestCases {
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inStreamDefinition = ""
-                + "@sink(type='grpc', publisher.url = 'grpc://localhost:8888/" + packageName + ".MyService/send', " +
-                "@map(type='protobuf')) " +
+                + "@sink(type='grpc', publisher.url = 'grpc://localhost:" + port + "/" + packageName +
+                ".MyService/send', @map(type='protobuf')) " +
                 "define stream FooStream (stringValue string, intValue int,longValue long,booleanValue bool," +
                 "floatValue float,doubleValue double);";
 
@@ -102,7 +103,7 @@ public class GrpcSinkGenericTestCases {
 
         String inStreamDefinition = ""
                 + "@sink(type='grpc', " +
-                "publisher.url = 'grpc://localhost:8888/" + packageName + ".MyService/send', " +
+                "publisher.url = 'grpc://localhost:" + port + "/" + packageName + ".MyService/send', " +
                 "@map(type='protobuf', " +
                 "@payload(stringValue='a',longValue='b',intValue='c',booleanValue='d',floatValue = 'e', doubleValue =" +
                 " 'f'))) " +
@@ -143,7 +144,7 @@ public class GrpcSinkGenericTestCases {
 
         String inStreamDefinition = ""
                 + "@sink(type='grpc', " +
-                "publisher.url = 'grpc://localhost:8888/" + packageName + ".MyService/testMap', " +
+                "publisher.url = 'grpc://localhost:" + port + "/" + packageName + ".MyService/testMap', " +
                 "@map(type='protobuf')) " +
                 "define stream FooStream (stringValue string, intValue int,map object);";
 
@@ -190,7 +191,7 @@ public class GrpcSinkGenericTestCases {
 
         String inStreamDefinition = ""
                 + "@sink(type='grpc', " +
-                "publisher.url = 'grpc://localhost:8888/" + packageName + ".MyService/send', " +
+                "publisher.url = 'grpc://localhost:" + port + "/" + packageName + ".MyService/send', " +
                 "metadata = \"'Name:John','Age:23','Content-Type:text'\", " +
                 "@map(type='protobuf', " +
                 "@payload(stringValue='a',longValue='b',intValue='c',booleanValue='d',floatValue = 'e', doubleValue =" +
@@ -213,6 +214,7 @@ public class GrpcSinkGenericTestCases {
             logMessages.add(message);
         }
         Assert.assertTrue(logMessages.contains("Metadata received: name: John"));
+        Assert.assertTrue(logMessages.contains("Metadata received: age: 23"));
 
     }
 
@@ -228,7 +230,7 @@ public class GrpcSinkGenericTestCases {
         rootLogger.addAppender(appender);
 
         String inStreamDefinition = ""
-                + "@sink(type='grpc', publisher.url = 'grpc://localhost:8888/" + packageName +
+                + "@sink(type='grpc', publisher.url = 'grpc://localhost:" + port + "/" + packageName +
                 ".StreamService/clientStream', " +
                 "@map(type='protobuf')) " +
                 "define stream FooStream (stringValue string, intValue int,longValue long,booleanValue bool," +
@@ -264,7 +266,7 @@ public class GrpcSinkGenericTestCases {
         rootLogger.addAppender(appender);
 
         String inStreamDefinition = ""
-                + "@sink(type='grpc', publisher.url = 'grpc://localhost:8888/" + packageName +
+                + "@sink(type='grpc', publisher.url = 'grpc://localhost:" + port + "/" + packageName +
                 ".StreamService/clientStreamWithMap', " +
                 "@map(type='protobuf')) " +
                 "define stream FooStream (stringValue string, intValue int, map object);";

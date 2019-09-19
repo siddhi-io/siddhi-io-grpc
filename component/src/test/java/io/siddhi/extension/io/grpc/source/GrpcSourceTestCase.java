@@ -112,7 +112,7 @@ public class GrpcSourceTestCase {
         };
 
         siddhiAppRuntime.start();
-        StreamObserver requestObserver  = asyncStub.consume(responseObserver);
+        StreamObserver requestObserver = asyncStub.consume(responseObserver);
         requestObserver.onNext(sequenceCallRequest);
         Thread.sleep(10);
         requestObserver.onCompleted();
@@ -181,7 +181,7 @@ public class GrpcSourceTestCase {
         };
 
         siddhiAppRuntime.start();
-        StreamObserver requestObserver  = asyncStub.consume(responseObserver);
+        StreamObserver requestObserver = asyncStub.consume(responseObserver);
         requestObserver.onNext(sequenceCallRequest);
         Thread.sleep(10);
         requestObserver.onCompleted();
@@ -249,7 +249,7 @@ public class GrpcSourceTestCase {
         };
 
         siddhiAppRuntime.start();
-        StreamObserver requestObserver  = asyncStub.consume(responseObserver);
+        StreamObserver requestObserver = asyncStub.consume(responseObserver);
         requestObserver.onNext(sequenceCallRequest);
         Thread.sleep(10);
 
@@ -281,7 +281,7 @@ public class GrpcSourceTestCase {
                 };
 
                 siddhiAppRuntime.start();
-                StreamObserver requestObserver  = asyncStub.consume(responseObserver);
+                StreamObserver requestObserver = asyncStub.consume(responseObserver);
                 requestObserver.onNext(sequenceCallRequest);
                 try {
                     Thread.sleep(10);
@@ -360,7 +360,7 @@ public class GrpcSourceTestCase {
         };
 
         siddhiAppRuntime.start();
-        StreamObserver requestObserver  = asyncStub.consume(responseObserver);
+        StreamObserver requestObserver = asyncStub.consume(responseObserver);
         requestObserver.onNext(sequenceCallRequest);
         Thread.sleep(10);
         requestObserver.onCompleted();
@@ -416,7 +416,7 @@ public class GrpcSourceTestCase {
         };
 
         siddhiAppRuntime.start();
-        StreamObserver requestObserver  = asyncStub.consume(responseObserver);
+        StreamObserver requestObserver = asyncStub.consume(responseObserver);
         requestObserver.onNext(sequenceCallRequest);
         Thread.sleep(10);
         requestObserver.onCompleted();
@@ -496,7 +496,7 @@ public class GrpcSourceTestCase {
         };
 
         siddhiAppRuntime.start();
-        StreamObserver requestObserver  = asyncStub.consume(responseObserver);
+        StreamObserver requestObserver = asyncStub.consume(responseObserver);
         requestObserver.onNext(sequenceCallRequest);
         Thread.sleep(10);
         requestObserver.onCompleted();
@@ -548,7 +548,7 @@ public class GrpcSourceTestCase {
         };
 
         siddhiAppRuntime.start();
-        StreamObserver requestObserver  = asyncStub.consume(responseObserver);
+        StreamObserver requestObserver = asyncStub.consume(responseObserver);
         requestObserver.onNext(sequenceCallRequest);
         Thread.sleep(10);
         requestObserver.onCompleted();
@@ -592,10 +592,7 @@ public class GrpcSourceTestCase {
         siddhiAppRuntime.start();
     }
 
-
-
-
-    @Test//(dependsOnMethods = {"bindExceptionTest"})
+    @Test
     public void genericTestCase01() throws Exception {
         logger.info("Test case to call process");
         logger.setLevel(Level.DEBUG);
@@ -649,7 +646,7 @@ public class GrpcSourceTestCase {
         channel.awaitTermination(30, TimeUnit.SECONDS);
     }
 
-    @Test//(dependsOnMethods = {"genericTestCase01"})
+    @Test(dependsOnMethods = {"genericTestCase01"})
     public void genericTestCase_TestWithMapping() throws Exception {
         logger.info("Test case to call process");
         logger.setLevel(Level.DEBUG);
@@ -705,7 +702,7 @@ public class GrpcSourceTestCase {
         channel.awaitTermination(30, TimeUnit.SECONDS);
     }
 
-    @Test//(dependsOnMethods = {"genericTestCase_TestWithMapping"})
+    @Test(dependsOnMethods = {"genericTestCase_TestWithMapping"})
     public void genericTestCase_testWithMetaData() throws Exception {
         logger.info("Test case to call process");
         logger.setLevel(Level.DEBUG);
@@ -764,16 +761,10 @@ public class GrpcSourceTestCase {
         siddhiAppRuntime.shutdown();
 
         channel.shutdown();
-        channel.awaitTermination(30, TimeUnit.SECONDS); //otherwise channel will be garbage collected,
-        // and throw
-        // ~*~*~ Channel io.grpc.internal.ManagedChannelImpl-2096 for target 127.0.0.1:8771 was not
-        // shutdown properly!!! ~*~*~*
-        //    Make sure to call shutdown()/shutdownNow() and awaitTermination().
-        //java.lang.RuntimeException: ManagedChannel allocation site....
+        channel.awaitTermination(1, TimeUnit.SECONDS);
     }
 
-
-    @Test//(dependsOnMethods = {"genericTestCase_testWithMetaData"})
+    @Test(dependsOnMethods = {"genericTestCase_testWithMetaData"})
     public void genericTestCase_TestWithMapObject() throws Exception {
         logger.info("Test case to call process");
         logger.setLevel(Level.DEBUG);
@@ -830,10 +821,10 @@ public class GrpcSourceTestCase {
         siddhiAppRuntime.shutdown();
 
         channel.shutdown();
-        channel.awaitTermination(30, TimeUnit.SECONDS);
+        channel.awaitTermination(1, TimeUnit.SECONDS);
     }
 
-    @Test//(dependsOnMethods = {"bindExceptionTest"})
+    @Test
     public void genericTestCase_SendStream() throws Exception {
         logger.info("Test case to call process");
         logger.setLevel(Level.DEBUG);
@@ -851,8 +842,8 @@ public class GrpcSourceTestCase {
 
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(stream2 + query);
 
+        List<String> stringResponses = new ArrayList<>();
         siddhiAppRuntime.addCallback("query", new QueryCallback() {
-            int j = 0;
             @Override
             public void receive(long timeStamp, io.siddhi.core.event.Event[] inEvents,
                                 io.siddhi.core.event.Event[] removeEvents) {
@@ -861,8 +852,7 @@ public class GrpcSourceTestCase {
                     eventCount.incrementAndGet();
                     switch (i) {
                         case 0:
-                            Assert.assertEquals((String) inEvents[i].getData()[0], "Test " + j);
-                            j++;
+                            stringResponses.add((String) inEvents[i].getData(0));
                             break;
                         default:
                             Assert.fail();
@@ -903,10 +893,13 @@ public class GrpcSourceTestCase {
         }
         requestStreamObserver.onCompleted();
         siddhiAppRuntime.start();
-        Thread.sleep(1000);
+        Thread.sleep(1500);
         siddhiAppRuntime.shutdown();
+        Assert.assertTrue(stringResponses.contains("Test 14"));
+        Assert.assertTrue(stringResponses.contains("Test 8"));
         channel.shutdown();
-        channel.awaitTermination(30, TimeUnit.SECONDS);
+        channel.awaitTermination(1, TimeUnit.SECONDS);
 
     }
+
 }

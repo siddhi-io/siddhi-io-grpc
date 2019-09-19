@@ -41,8 +41,9 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class GrpcCallSinkGenericTestCase {
-    private static final Logger logger = Logger.getLogger(GrpcSinkTestCase.class.getName());
-    private GenericTestServer server = new GenericTestServer();
+    private static final Logger logger = Logger.getLogger(GrpcCallSinkGenericTestCase.class.getName());
+    private int port = 6666;
+    private GenericTestServer server = new GenericTestServer(port);
     private AtomicInteger eventCount = new AtomicInteger(0);
     private String packageName = "io.siddhi.extension.io.grpc.proto";
 
@@ -69,13 +70,13 @@ public class GrpcCallSinkGenericTestCase {
 
         String inStreamDefinition = ""
                 + "@sink(type='grpc-call', " +
-                "publisher.url = 'grpc://localhost:8888/" + packageName + ".MyService/process', " +
+                "publisher.url = 'grpc://localhost:" + port + "/" + packageName + ".MyService/process', " +
                 "sink.id= '1', @map(type='protobuf')) "
                 + "define stream FooStream (stringValue string, intValue int,longValue long,booleanValue bool," +
                 "floatValue float,doubleValue double);";
 
-        String stream2 = "@source(type='grpc-call-response', receiver.url = 'grpc://localhost:8888/" + packageName +
-                ".MyService/process', " +
+        String stream2 = "@source(type='grpc-call-response', receiver.url = 'grpc://localhost:" + port + "/"
+                + packageName + ".MyService/process', " +
                 "sink.id= '1', @map(type='protobuf')) " +
                 "define stream BarStream (stringValue string, intValue int,longValue long,booleanValue bool," +
                 "floatValue float,doubleValue double);";
@@ -137,14 +138,14 @@ public class GrpcCallSinkGenericTestCase {
 
         String inStreamDefinition = ""
                 + "@sink(type='grpc-call', " +
-                "publisher.url = 'grpc://localhost:8888/" + packageName + ".MyService/process', " +
+                "publisher.url = 'grpc://localhost:" + port + "/" + packageName + ".MyService/process', " +
                 "sink.id= '1', @map(type='protobuf'," +
                 "@payload(stringValue='a',longValue='c',intValue='b',booleanValue='d',floatValue = 'e', " +
                 "doubleValue = 'f'))) "
                 + "define stream FooStream (a string, b int,c long,d bool,e float,f double);";
 
-        String stream2 = "@source(type='grpc-call-response', receiver.url = 'grpc://localhost:8888/" + packageName +
-                ".MyService/process', " +
+        String stream2 = "@source(type='grpc-call-response', receiver.url = 'grpc://localhost:" + port + "/"
+                + packageName + ".MyService/process', " +
                 "sink.id= '1', @map(type='protobuf'," +
                 "@attributes(a = 'stringValue', b = 'intValue', c = 'longValue',d = 'booleanValue', e ='floatValue', " +
                 "f ='doubleValue'))) " +
@@ -206,12 +207,12 @@ public class GrpcCallSinkGenericTestCase {
 
         String inStreamDefinition = ""
                 + "@sink(type='grpc-call', " +
-                "publisher.url = 'grpc://localhost:8888/" + packageName + ".MyService/testMap', " +
+                "publisher.url = 'grpc://localhost:" + port + "/" + packageName + ".MyService/testMap', " +
                 "sink.id= '1', @map(type='protobuf'))" +
                 "define stream FooStream (stringValue string,intValue int,map object);";
 
-        String stream2 = "@source(type='grpc-call-response', receiver.url = 'grpc://localhost:8888/" + packageName +
-                ".MyService/testMap', " +
+        String stream2 = "@source(type='grpc-call-response', receiver.url = 'grpc://localhost:" + port + "/"
+                + packageName + ".MyService/testMap', " +
                 "sink.id= '1', @map(type='protobuf')) " +
                 "define stream BarStream (stringValue string,intValue int,map object);";
         String query = "@info(name = 'query') "
@@ -278,7 +279,7 @@ public class GrpcCallSinkGenericTestCase {
 
         String inStreamDefinition = ""
                 + "@sink(type='grpc-call', " +
-                "publisher.url = 'grpc://localhost:8888/" + packageName + ".MyService/process', " +
+                "publisher.url = 'grpc://localhost:" + port + "/" + packageName + ".MyService/process', " +
                 "sink.id = '1', " +
                 "metadata='{{metadata}}', " +
                 "@map(type='protobuf'," +
@@ -287,8 +288,8 @@ public class GrpcCallSinkGenericTestCase {
                 "define stream FooStream (stringValue string, intValue int,longValue long,booleanValue bool," +
                 "floatValue float,doubleValue double, metadata string);";
 
-        String stream2 = "@source(type='grpc-call-response', receiver.url = 'grpc://localhost:8888/" + packageName +
-                ".MyService/process', sink.id= '1', " +
+        String stream2 = "@source(type='grpc-call-response', receiver.url = 'grpc://localhost:" + port + "/"
+                + packageName + ".MyService/process', sink.id= '1', " +
                 "@map(type='protobuf')) " +
                 "define stream BarStream (stringValue string, intValue int,longValue long,booleanValue bool," +
                 "floatValue float,doubleValue double);";
@@ -329,7 +330,7 @@ public class GrpcCallSinkGenericTestCase {
 
         String inStreamDefinition = ""
                 + "@sink(type='grpc-call', " +
-                "publisher.url = 'grpc://localhost:8888/" + packageName + ".MyService/process', " +
+                "publisher.url = 'grpc://localhost:" + port + "/" + packageName + ".MyService/process', " +
                 "sink.id = '1', " +
                 "metadata=\"'Name:John','Age:54','Content-Type:json'\", " +
                 "@map(type='protobuf'," +
@@ -338,8 +339,8 @@ public class GrpcCallSinkGenericTestCase {
                 "define stream FooStream (stringValue string, intValue int,longValue long,booleanValue bool," +
                 "floatValue float,doubleValue double);";
 
-        String stream2 = "@source(type='grpc-call-response', receiver.url = 'grpc://localhost:8888/" + packageName +
-                ".MyService/process', sink.id= '1', " +
+        String stream2 = "@source(type='grpc-call-response', receiver.url = 'grpc://localhost:" + port + "/"
+                + packageName + ".MyService/process', sink.id= '1', " +
                 "@map(type='protobuf')) " +
                 "define stream BarStream (stringValue string, intValue int,longValue long,booleanValue bool," +
                 "floatValue float,doubleValue double);";
@@ -376,7 +377,7 @@ public class GrpcCallSinkGenericTestCase {
 
         String inStreamDefinition = ""
                 + "@sink(type='grpc-call', " +
-                "publisher.url = 'grpc://localhost:8888/" + packageName + ".MyService/process', " +
+                "publisher.url = 'grpc://localhost:" + port + "/" + packageName + ".MyService/process', " +
                 "sink.id= '1', @map(type='protobuf')) "
                 + "define stream FooStream (stringValue string, intValue int,longValue long,booleanValue bool," +
                 "floatValue float,doubleValue double);";
