@@ -40,10 +40,10 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
 @Extension(name = "grpc", namespace = "source",
         description = "This extension starts a grpc server during initialization time. The server listens to " +
                 "requests from grpc stubs. This source has a default mode of operation and custom user defined grpc " +
-                "service mode. By default this uses EventService. Please find the io.siddhi.extension.io.grpc.proto " +
+                "service mode. By default this uses EventService. Please find the proto " +
                 "definition [here]" +
                 "(https://github.com/siddhi-io/siddhi-io-grpc/tree/master/component/src/main/resources/" +
-                "EventService.io.siddhi.extension.io.grpc.proto) In the default mode this source will use " +
+                "EventService.proto) In the default mode this source will use " +
                 "EventService consume method. This " +
                 "method will receive requests and injects them into stream through a mapper.",
         parameters = {
