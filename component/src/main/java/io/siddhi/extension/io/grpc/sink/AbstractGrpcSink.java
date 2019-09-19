@@ -73,10 +73,6 @@ public abstract class AbstractGrpcSink extends Sink {
 
     /**
      * Returns the list of classes which this sink can consume.
-     * Based on the type of the sink, it may be limited to being able to publish specific type of classes.
-     * For example, a sink of type file can only write objects of type String .
-     * @return array of supported classes , if extension can support of any types of classes
-     * then return empty array .
      */
     @Override
     public Class[] getSupportedInputEventClasses() {

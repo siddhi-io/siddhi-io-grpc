@@ -256,7 +256,7 @@
         <testng.version>6.11</testng.version>
         <grpc.version>1.22.1</grpc.version>
         <mavan.findbugsplugin.exclude.file>findbugs-exclude.xml</mavan.findbugsplugin.exclude.file>
-        <siddhi.version>5.1.3</siddhi.version>
+        <siddhi.version>5.1.4</siddhi.version>
         <siddhi.version.range>[5.0.0,6.0.0)</siddhi.version.range>
         <log4j.version>1.2.17.wso2v1</log4j.version>
         <carbon.transport.version>4.4.15</carbon.transport.version>
@@ -265,4 +265,11 @@
         <siddhi.map.protobuf.version>1.0.0-SNAPSHOT</siddhi.map.protobuf.version>
         <jacoco.plugin.version>0.7.9</jacoco.plugin.version>
     </properties>
+
+    <scm>
+        <url>https://github.com/siddhi-io/siddhi-io-grpc.git</url>
+        <developerConnection>scm:git:https://github.com/siddhi-io/siddhi-io-grpc.git</developerConnection>
+        <connection>scm:git:https://github.com/siddhi-io/siddhi-io-grpc.git</connection>
+        <tag>HEAD</tag>
+    </scm>
 </project>

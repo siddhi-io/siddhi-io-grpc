@@ -280,12 +280,7 @@ public class GrpcSink extends AbstractGrpcSink {
                 }
 
                 @Override
-                public void onError(Throwable t) { //parent method doest have error in its signature. so cant throw
-                    // from here
-//                    if (((StatusRuntimeException) t).getStatus().getCode().equals(Status.UNAVAILABLE)) {
-//                        throw new ConnectionUnavailableException(siddhiAppName.getName() + ": " + streamID + ": "
-//                        + t.getMessage());
-//                    }
+                public void onError(Throwable t) {
                     logger.error(siddhiAppName + ":" + streamID + ": " + t.getMessage() + " caused by "
                             + t.getMessage(), t);
                 }
@@ -318,12 +313,7 @@ public class GrpcSink extends AbstractGrpcSink {
                 }
 
                 @Override
-                public void onError(Throwable t) { //parent method doest have error in its signature. so cant throw
-                    // from here
-//                    if (((StatusRuntimeException) t).getStatus().getCode().equals(Status.UNAVAILABLE)) {
-//                        throw new ConnectionUnavailableException(siddhiAppName.getName() + ": " + streamID + ": "
-//                        + t.getMessage());
-//                    }
+                public void onError(Throwable t) {
                     logger.error(siddhiAppName + ":" + streamID + ": " + t.getMessage() + " caused by "
                             + t.getMessage(), t);
                 }

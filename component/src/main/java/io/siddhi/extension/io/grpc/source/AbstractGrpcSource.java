@@ -112,9 +112,6 @@ public abstract class AbstractGrpcSource extends Source {
 
     /**
      * Returns the list of classes which this source can output.
-     *
-     * @return Array of classes that will be output by the source.
-     * Null or empty array if it can produce any type of class.
      */
     @Override
     public Class[] getOutputEventClasses() {

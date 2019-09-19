@@ -112,7 +112,6 @@ public class GrpcEventServiceServer {
         if (grpcServerConfigs.getMaxInboundMetadataSize() != -1) {
             serverBuilder.maxInboundMetadataSize(grpcServerConfigs.getMaxInboundMetadataSize());
         }
-
     }
 
     public void addServicesAndBuildServer(SiddhiAppContext siddhiAppContext, String streamID) {
