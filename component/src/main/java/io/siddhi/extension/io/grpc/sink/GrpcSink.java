@@ -305,6 +305,11 @@ public class GrpcSink extends AbstractGrpcSink {
             }
             this.channel = managedChannelBuilder.build();
             this.asyncStub = EventServiceGrpc.newStub(channel);
+            if (metadataOption != null) {
+                if (metadataOption.isStatic()) {
+                    asyncStub = attachMetaDataToStub(null, asyncStub);
+                }
+            }
             requestObserver = ((EventServiceGrpc.EventServiceStub) asyncStub).consume(responseObserver);
         } else {
             responseObserver = new StreamObserver<Object>() {
@@ -329,6 +334,11 @@ public class GrpcSink extends AbstractGrpcSink {
             };
             this.channel = managedChannelBuilder.build();
             rpcMethod = getRpcMethod(serviceConfigs, siddhiAppName, streamID);
+            if (metadataOption != null) {
+                if (metadataOption.isStatic()) {
+                    asyncStub = attachMetaDataToStub(null, asyncStub);
+                }
+            }
             this.asyncStub = createStub(serviceConfigs);
             try {
                 if (rpcMethod.getParameterCount() == 1) {
@@ -339,11 +349,6 @@ public class GrpcSink extends AbstractGrpcSink {
                         "provided in the url, provided method name: " + serviceConfigs.getMethodName() +
                         "expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName,
                         streamID), e);
-            }
-        }
-        if (metadataOption != null) {
-            if (metadataOption.isStatic()) {
-                asyncStub = attachMetaDataToStub(null, asyncStub);
             }
         }
     }
@@ -363,10 +368,10 @@ public class GrpcSink extends AbstractGrpcSink {
             }
             requestObserver.onNext(eventBuilder.build());
         } else {
-            if (requestObserver == null) {
+            if (requestObserver == null) { // check if it's a client stream method
                 Object[] arguments = new Object[]{payload, responseObserver};
                 try {
-                    rpcMethod.invoke(asyncStub, arguments);
+                    rpcMethod.invoke(asyncStub, arguments); //send as unary request
                 } catch (IllegalAccessException | InvocationTargetException e) {
                     throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid method name " +
                             "provided in the url, provided method name: " + serviceConfigs.getMethodName() +
@@ -374,7 +379,7 @@ public class GrpcSink extends AbstractGrpcSink {
                             streamID), e);
                 }
             } else {
-                requestObserver.onNext(payload);
+                requestObserver.onNext(payload); //send as stream of requests
             }
         }
     }
