@@ -20,127 +20,436 @@ package io.siddhi.extension.io.grpc.sink;
 import io.siddhi.core.SiddhiAppRuntime;
 import io.siddhi.core.SiddhiManager;
 import io.siddhi.core.stream.input.InputHandler;
-import io.siddhi.extension.io.grpc.TestServer;
-import io.siddhi.extension.io.grpc.GenericTestServer;
+import io.siddhi.core.util.persistence.InMemoryPersistenceStore;
+import io.siddhi.extension.io.grpc.utils.TestAppender;
+import io.siddhi.extension.io.grpc.utils.TestServer;
+import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.apache.log4j.spi.LoggingEvent;
+import org.testng.Assert;
+import org.testng.annotations.AfterTest;
+import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class GrpcSinkTestCase {
-    private static final Logger logger = Logger.getLogger(GrpcSinkTestCase.class.getName());
-    private TestServer server = new TestServer();
-    private GenericTestServer server2 = new GenericTestServer();
-    private AtomicInteger eventCount = new AtomicInteger(0);
+    private static final Logger log = Logger.getLogger(GrpcSinkTestCase.class.getName());
+    private TestServer server = new TestServer(8888);
+
+    @BeforeTest
+    public void init() throws IOException {
+        server.start();
+    }
+
+    @AfterTest
+    public void stop() throws InterruptedException {
+        server.stop();
+    }
 
     @Test
-    public void test1() throws Exception {
-        logger.info("Test case to call process");
-        logger.setLevel(Level.DEBUG);
+    public void testCaseToCallConsumeWithSimpleRequest() throws Exception {
+        log.info("Test case to call consume");
+        final TestAppender appender = new TestAppender();
+        final Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(Level.DEBUG);
+        rootLogger.addAppender(appender);
         SiddhiManager siddhiManager = new SiddhiManager();
 
-        server.start();
         String inStreamDefinition = ""
-                + "@sink(type='grpc', url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume/mySeq', " +
-                "@map(type='json')) " +
+                + "@sink(type='grpc', publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
+                "@map(type='json', @payload('{{message}}'))) " +
                 "define stream FooStream (message String);";
 
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
         InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
-        try {
-            siddhiAppRuntime.start();
-            fooStream.send(new Object[]{"Request 1"});
-            Thread.sleep(1000);
-            siddhiAppRuntime.shutdown();
-        } finally {
-            server.stop();
+
+        siddhiAppRuntime.start();
+        fooStream.send(new Object[]{"Request 1"});
+        Thread.sleep(1000);
+        siddhiAppRuntime.shutdown();
+
+        final List<LoggingEvent> log = appender.getLog();
+        List<String> logMessages = new ArrayList<>();
+        for (LoggingEvent logEvent : log) {
+            String message = String.valueOf(logEvent.getMessage());
+            logMessages.add(message);
         }
+        Assert.assertTrue(logMessages.contains("Server consume hit with payload = [Request 1] and Headers = {{}}"));
+    }
+
+    @Test
+    public void testCaseToCallConsumeWithTwoRequests() throws Exception {
+        log.info("Test case to call consume with 2 requests");
+        final TestAppender appender = new TestAppender();
+        final Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(Level.DEBUG);
+        rootLogger.addAppender(appender);
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String inStreamDefinition = ""
+                + "@sink(type='grpc', publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
+                "@map(type='json', @payload('{{message}}'))) " +
+                "define stream FooStream (message String);";
+
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
+        InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
+
+        siddhiAppRuntime.start();
+        fooStream.send(new Object[]{"Request 1"});
+        fooStream.send(new Object[]{"Request 2"});
+        Thread.sleep(1000);
+        siddhiAppRuntime.shutdown();
+
+        final List<LoggingEvent> log = appender.getLog();
+        List<String> logMessages = new ArrayList<>();
+        for (LoggingEvent logEvent : log) {
+            String message = String.valueOf(logEvent.getMessage());
+            logMessages.add(message);
+        }
+        Assert.assertTrue(logMessages.contains("Server consume hit with payload = [Request 1] and Headers = {{}}"));
+        Assert.assertTrue(logMessages.contains("Server consume hit with payload = [Request 2] and Headers = {{}}"));
     }
 
     @Test
     public void testWithHeader() throws Exception {
-        logger.info("Test case to call process");
-        logger.setLevel(Level.DEBUG);
+        log.info("Test case to call consume with headers");
+        final TestAppender appender = new TestAppender();
+        final Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(Level.DEBUG);
+        rootLogger.addAppender(appender);
         SiddhiManager siddhiManager = new SiddhiManager();
 
-        server.start();
         String inStreamDefinition = ""
                 + "@sink(type='grpc', " +
-                "url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume/mySeq', " +
+                "publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
                 "headers='{{headers}}', " +
                 "@map(type='json', @payload('{{message}}'))) " +
                 "define stream FooStream (message String, headers String);";
 
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
         InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
+
+        siddhiAppRuntime.start();
+        fooStream.send(new Object[]{"Request 1", "'Name:John','Age:23','Content-Type:text'"});
+        fooStream.send(new Object[]{"Request 2", "'Name:Nash','Age:54','Content-Type:json'"});
+        Thread.sleep(1000);
+        siddhiAppRuntime.shutdown();
+
+        final List<LoggingEvent> log = appender.getLog();
+        List<String> logMessages = new ArrayList<>();
+        for (LoggingEvent logEvent : log) {
+            String message = String.valueOf(logEvent.getMessage());
+            logMessages.add(message);
+        }
+        Assert.assertTrue(logMessages.contains("Server consume hit with payload = [Request 1] and Headers = " +
+                "{{Name=John, Age=23, Content-Type=text}}"));
+        Assert.assertTrue(logMessages.contains("Server consume hit with payload = [Request 2] and Headers = " +
+                "{{Name=Nash, Age=54, Content-Type=json}}"));
+    }
+
+    @Test
+    public void testCaseWithWrongProtocol() throws Exception {
+        log.info("Test case to call consume");
+        final TestAppender appender = new TestAppender();
+        final Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(Level.DEBUG);
+        rootLogger.addAppender(appender);
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String inStreamDefinition = ""
+                + "@sink(type='grpc', publisher.url = 'grc://localhost:8888/org.wso2.grpc.EventService/consume', " +
+                "@map(type='json', @payload('{{message}}'))) " +
+                "define stream FooStream (message String);";
+
         try {
-            siddhiAppRuntime.start();
-            fooStream.send(new Object[]{"Request 1", "'Name:John','Age:23','Content-Type:text'"});
-            Thread.sleep(5000);
-            fooStream.send(new Object[]{"Request 2", "'Name:Nash','Age:54','Content-Type:json'"});
-            Thread.sleep(1000);
-            siddhiAppRuntime.shutdown();
-        } finally {
-            server.stop();
+            SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
+        } catch (SiddhiAppValidationException e) {
+            Assert.assertTrue(e.getMessage().contains("The url must begin with \"grpc\" for all grpc sinks"));
         }
     }
 
-
-    //--------------------------------------------
     @Test
-    public void test3() throws Exception {
-        logger.info("Test case to call send");
-        logger.setLevel(Level.DEBUG);
+    public void testCaseWithMalformedURL1() throws Exception {
+        log.info("Test case to call consume");
+        final TestAppender appender = new TestAppender();
+        final Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(Level.DEBUG);
+        rootLogger.addAppender(appender);
         SiddhiManager siddhiManager = new SiddhiManager();
 
-        server2.start();
         String inStreamDefinition = ""
-                + "@sink(type='grpc', url = 'grpc://localhost:8888/package01.test.MyService/send', " +
-                "@map(type='protobuf')) " +
-                "define stream FooStream (stringValue string, intValue int,longValue long,booleanValue bool,floatValue float,doubleValue double);";
+                + "@sink(type='grpc', publisher.url = 'grpc://localhost:8888', " +
+                "@map(type='json', @payload('{{message}}'))) " +
+                "define stream FooStream (message String);";
+
+        try {
+            SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
+        } catch (SiddhiAppValidationException e) {
+            Assert.assertTrue(e.getMessage().contains("URL not properly given. Expected format is " +
+                    "`grpc://0.0.0.0:9763/<serviceName>/<methodName>` or `grpc://0.0.0.0:9763/<sequenceName>` but " +
+                    "the provided url is grpc://localhost:8888. "));
+        }
+    }
+
+    @Test
+    public void testCaseWithMalformedURL2() throws Exception {
+        log.info("Test case to call consume");
+        final TestAppender appender = new TestAppender();
+        final Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(Level.DEBUG);
+        rootLogger.addAppender(appender);
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String inStreamDefinition = ""
+                + "@sink(type='grpc', publisher.url = 'grpc:dfasf', " +
+                "@map(type='json', @payload('{{message}}'))) " +
+                "define stream FooStream (message String);";
+
+        try {
+            SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
+        } catch (SiddhiAppValidationException e) {
+            Assert.assertTrue(e.getMessage().contains("URL not properly given. Expected format is " +
+                    "`grpc://0.0.0.0:9763/<serviceName>/<methodName>` or `grpc://0.0.0.0:9763/<sequenceName>` but " +
+                    "the provided url is grpc:dfasf. "));
+        }
+    }
+
+    @Test
+    public void testCaseWithShortURL() throws Exception {
+        log.info("Test case to call consume");
+        final TestAppender appender = new TestAppender();
+        final Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(Level.DEBUG);
+        rootLogger.addAppender(appender);
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String inStreamDefinition = ""
+                + "@sink(type='grpc', publisher.url = 'grpc://localhost:8888/mySeq', " +
+                "@map(type='json', @payload('{{message}}'))) " +
+                "define stream FooStream (message String);";
+
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
+    }
+
+    @Test
+    public void testCaseWithXMLMapper() throws Exception {
+        log.info("Test case to call consume");
+        final TestAppender appender = new TestAppender();
+        final Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(Level.DEBUG);
+        rootLogger.addAppender(appender);
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String inStreamDefinition = ""
+                + "@sink(type='grpc', publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
+                "@map(type='xml', @payload('{{message}}'))) " +
+                "define stream FooStream (message String);";
 
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
         InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
-        try {
-            siddhiAppRuntime.start();
-            fooStream.send(new Object[]{"Test 01", 60, 10000L, true, 522.7586f, 34.5668});
-            Thread.sleep(1000);
-            siddhiAppRuntime.shutdown();
-        } finally {
-            server2.stop();
+
+        siddhiAppRuntime.start();
+        fooStream.send(new Object[]{"Request 1"});
+        Thread.sleep(1000);
+        siddhiAppRuntime.shutdown();
+
+        final List<LoggingEvent> log = appender.getLog();
+        List<String> logMessages = new ArrayList<>();
+        for (LoggingEvent logEvent : log) {
+            String message = String.valueOf(logEvent.getMessage());
+            logMessages.add(message);
         }
+        Assert.assertTrue(logMessages.contains("Server consume hit with payload = Request 1 and Headers = {{}}"));
     }
 
-
     @Test
-    public void testWithHeader2() throws Exception {
-        logger.info("Test case to call send");
-        logger.setLevel(Level.DEBUG);
+    public void testCaseWithSequenceName() throws Exception {
+        log.info("Test case to call consume");
+        final TestAppender appender = new TestAppender();
+        final Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(Level.DEBUG);
+        rootLogger.addAppender(appender);
         SiddhiManager siddhiManager = new SiddhiManager();
 
-        server2.start();
         String inStreamDefinition = ""
                 + "@sink(type='grpc', " +
-                "url = 'grpc://localhost:8888/package01.test.MyService/send', " +
-                "headers='{{headers}}', " +
-                "@map(type='protobuf', " +
-                "@payload(stringValue='a',longValue='b',intValue='c',booleanValue='d',floatValue = 'e', doubleValue = 'f'))) " +
-                "define stream FooStream (a string, b long, c int,d bool,e float,f double, headers String);";
+                "publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume/mySeq', " +
+                "@map(type='xml', @payload('{{message}}'))) " +
+                "define stream FooStream (message String);";
 
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
         InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
-        try {
-            siddhiAppRuntime.start();
-            fooStream.send(new Object[]{"Test 01", 10000L, 60, true, 522.7586f, 34.5668, "'Name:Sahan','Age:21','Content-Type:json'"});
-            Thread.sleep(1000);
-            fooStream.send(new Object[]{"Test 02", 10000L, 60, false, 768.987f, 34.5668, "'Name:Sahan','Age:21','Content-Type:json'"});
-            Thread.sleep(1000);
 
-            siddhiAppRuntime.shutdown();
+        siddhiAppRuntime.start();
+        fooStream.send(new Object[]{"Request 1"});
+        Thread.sleep(1000);
+        siddhiAppRuntime.shutdown();
 
-        } finally {
-            server2.stop();
+        final List<LoggingEvent> log = appender.getLog();
+        List<String> logMessages = new ArrayList<>();
+        for (LoggingEvent logEvent : log) {
+            String message = String.valueOf(logEvent.getMessage());
+            logMessages.add(message);
         }
+        Assert.assertTrue(logMessages.contains("Server consume hit with payload = Request 1 and Headers = " +
+                "{{sequence=mySeq}}"));
+    }
+
+    @Test
+    public void testWithHeaderAndSequenceName() throws Exception {
+        log.info("Test case to call consume with headers");
+        final TestAppender appender = new TestAppender();
+        final Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(Level.DEBUG);
+        rootLogger.addAppender(appender);
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String inStreamDefinition = ""
+                + "@sink(type='grpc', " +
+                "publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume/mySeq', " +
+                "headers='{{headers}}', " +
+                "@map(type='json', @payload('{{message}}'))) " +
+                "define stream FooStream (message String, headers String);";
+
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
+        InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
+
+        siddhiAppRuntime.start();
+        fooStream.send(new Object[]{"Request 1", "'Name:John','Age:23','Content-Type:text'"});
+        fooStream.send(new Object[]{"Request 2", "'Name:Nash','Age:54','Content-Type:json'"});
+        Thread.sleep(1000);
+        siddhiAppRuntime.shutdown();
+
+        final List<LoggingEvent> log = appender.getLog();
+        List<String> logMessages = new ArrayList<>();
+        for (LoggingEvent logEvent : log) {
+            String message = String.valueOf(logEvent.getMessage());
+            logMessages.add(message);
+        }
+        Assert.assertTrue(logMessages.contains("Server consume hit with payload = [Request 1] and Headers = " +
+                "{{Name=John, Age=23, Content-Type=text, sequence=mySeq}}"));
+        Assert.assertTrue(logMessages.contains("Server consume hit with payload = [Request 2] and Headers = " +
+                "{{Name=Nash, Age=54, Content-Type=json, sequence=mySeq}}"));
+    }
+
+    @Test
+    public void testWithMetaData() throws Exception {
+        log.info("Test case to call consume with headers");
+        final TestAppender appender = new TestAppender();
+        final Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(Level.DEBUG);
+        rootLogger.addAppender(appender);
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String inStreamDefinition = ""
+                + "@sink(type='grpc', " +
+                "publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
+                "metadata = \"'Name:John','Age:23','Content-Type:text'\", " +
+                "@map(type='json')) " +
+                "define stream FooStream (message String);";
+
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
+        InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
+
+        siddhiAppRuntime.start();
+        fooStream.send(new Object[]{"Request 1"});
+        Thread.sleep(1000);
+        siddhiAppRuntime.shutdown();
+
+        final List<LoggingEvent> log = appender.getLog();
+        List<String> logMessages = new ArrayList<>();
+        for (LoggingEvent logEvent : log) {
+            String message = String.valueOf(logEvent.getMessage());
+            logMessages.add(message);
+        }
+        Assert.assertTrue(logMessages.contains("Server consume hit with payload = " +
+                "[{\"event\":{\"message\":\"Request 1\"}}] and Headers = {{}}"));
+        Assert.assertTrue(logMessages.contains("Metadata received: name: John"));
+        Assert.assertTrue(logMessages.contains("Metadata received: age: 23"));
+    }
+
+    @Test
+    public void testCaseFailingWithUnavailableServer() throws Exception {
+        log.info("Test case to call consume");
+        final TestAppender appender = new TestAppender();
+        final Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(Level.DEBUG);
+        rootLogger.addAppender(appender);
+        SiddhiManager siddhiManager = new SiddhiManager();
+        server.stop();
+
+        String inStreamDefinition = ""
+                + "@sink(type='grpc', publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
+                "@map(type='json', @payload('{{message}}'))) " +
+                "define stream FooStream (message String);";
+
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
+        InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
+
+        siddhiAppRuntime.start();
+        fooStream.send(new Object[]{"Request 1"});
+        Thread.sleep(1000);
+        siddhiAppRuntime.shutdown();
+        server.start();
+
+        final List<LoggingEvent> log = appender.getLog();
+        List<String> logMessages = new ArrayList<>();
+        for (LoggingEvent logEvent : log) {
+            String message = String.valueOf(logEvent.getMessage());
+            if (message.contains("FooStream: ")) {
+                message = message.split("FooStream: ")[1];
+            }
+            logMessages.add(message);
+        }
+        Assert.assertTrue(logMessages.contains("UNAVAILABLE: io exception caused by UNAVAILABLE: io exception"));
+    }
+
+    @Test
+    public void testCaseWithSiddhiAppShutdown() throws Exception {
+        log.info("Test case to call consume with 2 requests");
+        final TestAppender appender = new TestAppender();
+        final Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(Level.DEBUG);
+        rootLogger.addAppender(appender);
+        SiddhiManager siddhiManager = new SiddhiManager();
+        siddhiManager.setPersistenceStore(new InMemoryPersistenceStore());
+
+        String inStreamDefinition = ""
+                + "@sink(type='grpc', publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
+                "@map(type='json', @payload('{{message}}'))) " +
+                "define stream FooStream (message String);";
+
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
+        InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
+
+        siddhiAppRuntime.start();
+        fooStream.send(new Object[]{"Request 1"});
+        Thread.sleep(1000);
+        siddhiManager.persist();
+        Thread.sleep(100);
+        siddhiAppRuntime.shutdown();
+        Thread.sleep(100);
+
+        siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
+        fooStream = siddhiAppRuntime.getInputHandler("FooStream");
+        siddhiAppRuntime.start();
+        siddhiManager.restoreLastState();
+
+        fooStream.send(new Object[]{"Request 2"});
+        Thread.sleep(1000);
+        siddhiAppRuntime.shutdown();
+
+        final List<LoggingEvent> log = appender.getLog();
+        List<String> logMessages = new ArrayList<>();
+        for (LoggingEvent logEvent : log) {
+            String message = String.valueOf(logEvent.getMessage());
+            logMessages.add(message);
+        }
+        Assert.assertTrue(logMessages.contains("Server consume hit with payload = [Request 1] and Headers = {{}}"));
+        Assert.assertTrue(logMessages.contains("Server consume hit with payload = [Request 2] and Headers = {{}}"));
     }
 }

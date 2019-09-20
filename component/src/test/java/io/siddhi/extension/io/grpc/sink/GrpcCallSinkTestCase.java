@@ -23,36 +23,52 @@ import io.siddhi.core.event.Event;
 import io.siddhi.core.query.output.callback.QueryCallback;
 import io.siddhi.core.stream.input.InputHandler;
 import io.siddhi.core.util.EventPrinter;
-import io.siddhi.extension.io.grpc.GenericTestServer;
-import io.siddhi.extension.io.grpc.TestServer;
+import io.siddhi.extension.io.grpc.utils.TestAppender;
+import io.siddhi.extension.io.grpc.utils.TestServer;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.apache.log4j.spi.LoggingEvent;
 import org.testng.Assert;
+import org.testng.annotations.AfterTest;
+import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class GrpcCallSinkTestCase {
     private static final Logger logger = Logger.getLogger(GrpcSinkTestCase.class.getName());
-    private TestServer server = new TestServer();
-    private GenericTestServer server2 = new GenericTestServer();
+    private TestServer server = new TestServer(8889);
     private AtomicInteger eventCount = new AtomicInteger(0);
+
+    @BeforeTest
+    public void init() throws IOException {
+        server.start();
+    }
+
+    @AfterTest
+    public void stop() throws InterruptedException {
+        server.stop();
+    }
 
     @Test
     public void test1() throws Exception {
-        logger.info("Test case to call process sending 2 requests");
-        logger.setLevel(Level.DEBUG);
+        logger.info("Test case to call process sending a request");
+        final TestAppender appender = new TestAppender();
+        final Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(Level.DEBUG);
+        rootLogger.addAppender(appender);
         SiddhiManager siddhiManager = new SiddhiManager();
 
-        server.start();
-//        String port = String.valueOf(server.getPort());
         String inStreamDefinition = ""
                 + "@sink(type='grpc-call', " +
-                "url = 'grpc://localhost:8888/org.wso2.grpc.EventService/process/mySeq', " +
+                "publisher.url = 'grpc://localhost:8889/org.wso2.grpc.EventService/process/mySeq', " +
                 "sink.id= '1', @map(type='json')) "
                 + "define stream FooStream (message String);";
 
-        String stream2 = "@source(type='grpc-call-response', sequence='mySeq', sink.id= '1', @map(type='json')) " +
+        String stream2 = "@source(type='grpc-call-response', sink.id= '1', @map(type='json')) " +
                 "define stream BarStream (message String);";
         String query = "@info(name = 'query') "
                 + "from BarStream "
@@ -69,7 +85,7 @@ public class GrpcCallSinkTestCase {
                     eventCount.incrementAndGet();
                     switch (i) {
                         case 0:
-                            Assert.assertEquals((String) inEvents[i].getData()[0], "Benjamin Watson");
+                            Assert.assertEquals((String) inEvents[i].getData()[0], "Hello from Server!");
                             break;
                         default:
                             Assert.fail();
@@ -78,34 +94,180 @@ public class GrpcCallSinkTestCase {
             }
         });
         InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
-        try {
-            siddhiAppRuntime.start();
-            fooStream.send(new Object[]{"Request 1"});
-            Thread.sleep(1000);
-            siddhiAppRuntime.shutdown();
-        } finally {
-            server.stop();
+
+        siddhiAppRuntime.start();
+        fooStream.send(new Object[]{"Request 1"});
+        Thread.sleep(1000);
+        siddhiAppRuntime.shutdown();
+
+        final List<LoggingEvent> log = appender.getLog();
+        List<String> logMessages = new ArrayList<>();
+        for (LoggingEvent logEvent : log) {
+            String message = String.valueOf(logEvent.getMessage());
+            logMessages.add(message);
         }
+        Assert.assertTrue(logMessages.contains("Server process hit with payload = [{\"event\":{\"message\":\"" +
+                "Request 1\"}}] and Headers = {{sequence=mySeq}}"));
+    }
+
+    @Test//(dependsOnMethods = "test1")
+    public void testWithHeaders() throws Exception {
+        logger.info("Test case to call process sending 2 requests");
+        final TestAppender appender = new TestAppender();
+        final Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(Level.DEBUG);
+        rootLogger.addAppender(appender);
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String inStreamDefinition = ""
+                + "@sink(type='grpc-call', " +
+                "publisher.url = 'grpc://localhost:8889/org.wso2.grpc.EventService/process/mySeq', " +
+                "sink.id= '2', " +
+                "headers='{{headers}}', " +
+                "@map(type='json', @payload('{{message}}'))) "
+                + "define stream FooStream (message String, headers String);";
+
+        String stream2 = "@source(type='grpc-call-response', sink.id= '2', @map(type='json')) " +
+                "define stream BarStream (message String);";
+        String query = "@info(name = 'query') "
+                + "from BarStream "
+                + "select *  "
+                + "insert into outputStream;";
+
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition + stream2 +
+                query);
+        siddhiAppRuntime.addCallback("query", new QueryCallback() {
+            @Override
+            public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
+                EventPrinter.print(timeStamp, inEvents, removeEvents);
+                for (int i = 0; i < inEvents.length; i++) {
+                    eventCount.incrementAndGet();
+                    switch (i) {
+                        case 0:
+                            Assert.assertEquals((String) inEvents[i].getData()[0], "Hello from Server!");
+                            break;
+                        default:
+                            Assert.fail();
+                    }
+                }
+            }
+        });
+        InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
+        siddhiAppRuntime.start();
+        fooStream.send(new Object[]{"Request 1", "'Name:John','Age:23','Content-Type:text'"});
+        fooStream.send(new Object[]{"Request 2", "'Name:Nash','Age:54','Content-Type:json'"});
+        Thread.sleep(1000);
+        siddhiAppRuntime.shutdown();
+
+        final List<LoggingEvent> log = appender.getLog();
+        List<String> logMessages = new ArrayList<>();
+        for (LoggingEvent logEvent : log) {
+            String message = String.valueOf(logEvent.getMessage());
+            logMessages.add(message);
+        }
+        Assert.assertTrue(logMessages.contains("Server process hit with payload = [Request 1] and Headers = " +
+                "{{Name=John, Age=23, Content-Type=text, sequence=mySeq}}"));
+        Assert.assertTrue(logMessages.contains("Server process hit with payload = [Request 2] and Headers = " +
+                "{{Name=Nash, Age=54, Content-Type=json, sequence=mySeq}}"));
     }
 
     @Test
-    public void testWithHeaders() throws Exception {
+    public void testWithoutRelevantSource() throws Exception {
+        logger.info("Test case to call process sending 2 requests");
+        final TestAppender appender = new TestAppender();
+        final Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(Level.DEBUG);
+        rootLogger.addAppender(appender);
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String inStreamDefinition = ""
+                + "@sink(type='grpc-call', " +
+                "publisher.url = 'grpc://localhost:8889/org.wso2.grpc.EventService/process/mySeq', " +
+                "sink.id= '1', @map(type='json')) "
+                + "define stream FooStream (message String);";
+
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
+        InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
+        siddhiAppRuntime.start();
+        fooStream.send(new Object[]{"Request 1"});
+        Thread.sleep(1000);
+        siddhiAppRuntime.shutdown();
+
+        final List<LoggingEvent> log = appender.getLog();
+        List<String> logMessages = new ArrayList<>();
+        for (LoggingEvent logEvent : log) {
+            String message = String.valueOf(logEvent.getMessage());
+            if (message.contains("FooStream: ")) {
+                message = message.split("FooStream: ")[1];
+            }
+            logMessages.add(message);
+        }
+        Assert.assertTrue(logMessages.contains("For grpc-call sink to work a grpc-call-response source should be " +
+                "available with the same sink.id. In this case sink.id is 1. Please provide a grpc-call-response " +
+                "source with the sink.id 1"));
+    }
+
+    @Test
+    public void testWithMetaData() throws Exception {
+        logger.info("Test case to call consume with headers");
+        final TestAppender appender = new TestAppender();
+        final Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(Level.DEBUG);
+        rootLogger.addAppender(appender);
+        SiddhiManager siddhiManager = new SiddhiManager();
+//        server.start();
+
+        String inStreamDefinition = ""
+                + "@sink(type='grpc-call', " +
+                "publisher.url = 'grpc://localhost:8889/org.wso2.grpc.EventService/process', " +
+                "sink.id = '1', " +
+                "metadata='{{metadata}}', " +
+                "@map(type='json', @payload('{{message}}'))) " +
+                "define stream FooStream (message String, metadata String);";
+
+        String stream2 = "@source(type='grpc-call-response', sequence='mySeq', sink.id= '1', @map(type='json')) " +
+                "define stream BarStream (message String);";
+        String query = "@info(name = 'query') "
+                + "from BarStream "
+                + "select *  "
+                + "insert into outputStream;";
+
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition + stream2 + query);
+        InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
+
+        siddhiAppRuntime.start();
+        fooStream.send(new Object[]{"Request 1", "'Name:John','Age:23','Content-Type:text'"});
+        fooStream.send(new Object[]{"Request 2", "'Name:Nash','Age:54','Content-Type:json'"});
+        Thread.sleep(1000);
+        siddhiAppRuntime.shutdown();
+
+        final List<LoggingEvent> log = appender.getLog();
+        List<String> logMessages = new ArrayList<>();
+        for (LoggingEvent logEvent : log) {
+            String message = String.valueOf(logEvent.getMessage());
+            logMessages.add(message);
+        }
+        Assert.assertTrue(logMessages.contains("Server process hit with payload = [Request 1] and Headers = {{}}"));
+        Assert.assertTrue(logMessages.contains("Server process hit with payload = [Request 2] and Headers = {{}}"));
+        Assert.assertTrue(logMessages.contains("Metadata received: name: John"));
+        Assert.assertTrue(logMessages.contains("Metadata received: name: Nash"));
+    }
+
+    @Test
+    public void testOfEnrichingData() throws Exception {
         logger.info("Test case to call process sending 2 requests");
         logger.setLevel(Level.DEBUG);
         SiddhiManager siddhiManager = new SiddhiManager();
 
-        server.start();
-        String port = String.valueOf(server.getPort());
         String inStreamDefinition = ""
                 + "@sink(type='grpc-call', " +
-                "url = 'grpc://localhost:8888/org.wso2.grpc.EventService/process/mySeq', " +
-                "sink.id= '1', " +
-                "headers='{{headers}}', " +
-                "@map(type='json')) "
-                + "define stream FooStream (message String, headers String);";
+                "publisher.url = 'grpc://localhost:8889/org.wso2.grpc.EventService/process/mySeq', " +
+                "sink.id= '1', @map(type='json')) "
+                + "define stream FooStream (requestMessage String);";
 
-        String stream2 = "@source(type='grpc-call-response', sequence='mySeq', sink.id= '1', @map(type='json')) " +
-                "define stream BarStream (message String);";
+        String stream2 = "@source(type='grpc-call-response', sequence='mySeq', sink.id= '1', " +
+                "@map(type='json', @attributes(requestMessage='trp:requestMessage', message='message'))) " +
+                "define stream BarStream (message String, requestMessage String);";
         String query = "@info(name = 'query') "
                 + "from BarStream "
                 + "select *  "
@@ -121,7 +283,8 @@ public class GrpcCallSinkTestCase {
                     eventCount.incrementAndGet();
                     switch (i) {
                         case 0:
-                            Assert.assertEquals((String) inEvents[i].getData()[0], "Benjamin Watson");
+                            Assert.assertEquals((String) inEvents[i].getData()[0], "Hello from Server!");
+                            Assert.assertEquals((String) inEvents[i].getData()[1], "Request 1");
                             break;
                         default:
                             Assert.fail();
@@ -130,69 +293,10 @@ public class GrpcCallSinkTestCase {
             }
         });
         InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
-        try {
-            siddhiAppRuntime.start();
-            fooStream.send(new Object[]{"Request 1", "'Name:John','Age:23','Content-Type:text'"});
-//            Thread.sleep(5000);
-            fooStream.send(new Object[]{"Request 2", "'Name:Nash','Age:54','Content-Type:json'"});
-            Thread.sleep(1000);
-            siddhiAppRuntime.shutdown();
-        } finally {
-            server.stop();
-        }
-    }
 
-
-
-    @Test
-    public void test3() throws Exception {
-        logger.info("Test case to call process sending 1 requests");
-        logger.setLevel(Level.DEBUG);
-        SiddhiManager siddhiManager = new SiddhiManager();
-
-        server2.start();
-//        String port = String.valueOf(server2.getPort());
-        String inStreamDefinition = ""
-                + "@sink(type='grpc-call', " +
-                "url = 'grpc://localhost:8888/package01.test.MyService/process', " +
-                "sink.id= '1', @map(type='protobuf')) "
-                + "define stream FooStream (stringValue string, intValue int,longValue long,booleanValue bool,floatValue float,doubleValue double);";
-
-        String stream2 = "@source(type='grpc-call-response', url = 'grpc://localhost:8888/package01.test.MyService/process', " +
-                "sequence='mySeq', sink.id= '1', @map(type='protobuf')) " +
-                "define stream BarStream (stringValue string, intValue int,longValue long,booleanValue bool,floatValue float,doubleValue double);";
-        String query = "@info(name = 'query') "
-                + "from BarStream "
-                + "select *  "
-                + "insert into outputStream;";
-
-        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition + stream2 +
-                query);
-        siddhiAppRuntime.addCallback("query", new QueryCallback() {
-            @Override
-            public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
-                EventPrinter.print(timeStamp, inEvents, removeEvents);
-                for (int i = 0; i < inEvents.length; i++) {
-                    eventCount.incrementAndGet();
-                    System.out.println(inEvents[i]);
-                    switch (i) {
-                        case 0:
-                            Assert.assertEquals((String) inEvents[i].getData()[0], "Test 01");
-                            break;
-                        default:
-                            Assert.fail();
-                    }
-                }
-            }
-        });
-        InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
-        try {
-            siddhiAppRuntime.start();
-            fooStream.send(new Object[]{"Test 01", 60, 10000L, true, 522.7586f, 34.5668});
-            Thread.sleep(1000);
-            siddhiAppRuntime.shutdown();
-        } finally {
-            server2.stop();
-        }
+        siddhiAppRuntime.start();
+        fooStream.send(new Object[]{"Request 1"});
+        Thread.sleep(1000);
+        siddhiAppRuntime.shutdown();
     }
 }

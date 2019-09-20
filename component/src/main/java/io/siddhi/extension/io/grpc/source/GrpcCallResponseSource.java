@@ -17,6 +17,7 @@
  */
 package io.siddhi.extension.io.grpc.source;
 
+import com.google.protobuf.GeneratedMessageV3;
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
 import io.siddhi.annotation.Parameter;
@@ -30,45 +31,47 @@ import io.siddhi.core.util.config.ConfigReader;
 import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.core.util.transport.OptionHolder;
+import io.siddhi.extension.io.grpc.util.GrpcConstants;
 import io.siddhi.extension.io.grpc.util.GrpcSourceRegistry;
 import org.wso2.grpc.Event;
+
+import java.util.Map;
 
 /**
  * {@code GrpcSource} Handle receiving of responses for gRPC calls. Does not have connection logics as sink will add a
  * callback to inject responses into this source
  */
 
-@Extension(
-        name = "grpc-call-response",
-        namespace = "source",
-        description = "This grpc source receives responses received from gRPC server for requests sent from a gRPC " +
-                "sink. The source will receive responses for sink with the same sink.id. For example if you have a " +
-                "gRPC sink with sink.id 15 then we need to set the sink.id as 15 in the source to receives " +
-                "responses. Sinks and sources have 1:1 mapping. When using the source to listen to responses from " +
-                "Micro Integrator the optional parameter sequence should be given. Since the default Micro " +
-                "Integrator connection service can provide access to many different sequences this should be " +
-                "specified to separate and listen to only one sequence responses.",
+@Extension(name = "grpc-call-response", namespace = "source", description = "This grpc source receives responses " +
+        "received from gRPC server for requests sent from a grpc-call sink. The source will receive responses for " +
+        "sink with the same sink.id. For example if you have a gRPC sink with sink.id 15 then we need to set the " +
+        "sink.id as 15 in the source to receives responses. Sinks and sources have 1:1 mapping",
         parameters = {
-                @Parameter(name = "sink.id",
-                        description = "a unique ID that should be set for each gRPC source. There is a 1:1 mapping " +
-                                "between gRPC sinks and sources. Each sink has one particular source listening to " +
-                                "the responses to requests published from that sink. So the same sink.id should be " +
-                                "given when writing the sink also." ,
+                @Parameter(
+                        name = "sink.id",
+                        description = "a unique ID that should be set for each grpc-call source. There is a 1:1 " +
+                                "mapping between grpc-call sinks and grpc-call-response sources. Each sink has one " +
+                                "particular source listening to the responses to requests published from that sink. " +
+                                "So the same sink.id should be given when writing the sink also." ,
                         type = {DataType.INT}),
         },
         examples = {
-                @Example(
-                        syntax = "@source(type='grpc-call-response', sink.id= '1') " +
-                                "define stream BarStream (message String);",
+                @Example(syntax = "" +
+                        "@source(type='grpc-call-response', sink.id= '1')\n" +
+                        "define stream BarStream (message String);" +
+                        "@sink(type='grpc-call',\n" +
+                        "      publisher.url = 'grpc://194.23.98.100:8080/EventService/process',\n" +
+                        "      sink.id= '1', @map(type='json'))\n" +
+                        "define stream FooStream (message String);\n",
                         description = "Here we are listening to responses  for requests sent from the sink with " +
                                 "sink.id 1 will be received here. The results will be injected into BarStream"
                 )
         }
 )
 public class GrpcCallResponseSource extends Source {
-    private GrpcSourceRegistry grpcSourceRegistry = GrpcSourceRegistry.getInstance();
     private String sinkID;
     private SourceEventListener sourceEventListener;
+    private String[] requestedTransportPropertyNames;
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
@@ -89,16 +92,39 @@ public class GrpcCallResponseSource extends Source {
                              String[] requestedTransportPropertyNames, ConfigReader configReader,
                              SiddhiAppContext siddhiAppContext) {
         this.sourceEventListener = sourceEventListener;
-        sinkID = optionHolder.validateAndGetOption("sink.id").getValue();
-        grpcSourceRegistry.putGrpcCallResponseSource(sinkID, this);
+        this.requestedTransportPropertyNames = requestedTransportPropertyNames.clone();
+        sinkID = optionHolder.validateAndGetOption(GrpcConstants.SINK_ID).getValue();
+        GrpcSourceRegistry.getInstance().putGrpcCallResponseSource(sinkID, this);
         return null;
     }
 
-    public void onResponse(Event response) {
-        sourceEventListener.onEvent(response.getPayload(), new String[]{"1"});
+    public void onResponse(Event response, Map<String, String> siddhiRequestEventData) {
+        sourceEventListener.onEvent(response.getPayload(), getTransportProperties(response.getHeadersMap(),
+                siddhiRequestEventData));
     }
-    public void onResponse(Object response) {
-        sourceEventListener.onEvent(response, new String[]{"1"});
+    public void onResponse(Object response, Map<String, String> siddhiRequestEventData) {
+        sourceEventListener.onEvent(response, getTransportProperties(siddhiRequestEventData));
+    }
+
+    private String[] getTransportProperties(Map<String, String> headersMap,
+                                            Map<String, String> siddhiRequestEventData) {
+        siddhiRequestEventData.putAll(headersMap);
+        String[] transportProperties = new String[requestedTransportPropertyNames.length];
+        for (int i = 0; i < requestedTransportPropertyNames.length; i++) {
+            if (siddhiRequestEventData.containsKey(requestedTransportPropertyNames[i])) {
+                transportProperties[i] = siddhiRequestEventData.get(requestedTransportPropertyNames[i]);
+            }
+        }
+        return transportProperties;
+    }
+    private String[] getTransportProperties(Map<String, String> siddhiRequestEventData) {
+        String[] transportProperties = new String[requestedTransportPropertyNames.length];
+        for (int i = 0; i < requestedTransportPropertyNames.length; i++) {
+            if (siddhiRequestEventData.containsKey(requestedTransportPropertyNames[i])) {
+                transportProperties[i] = siddhiRequestEventData.get(requestedTransportPropertyNames[i]);
+            }
+        }
+        return transportProperties;
     }
 
     /**
@@ -109,7 +135,7 @@ public class GrpcCallResponseSource extends Source {
      */
     @Override
     public Class[] getOutputEventClasses() {
-        return new Class[]{String.class, Object.class};
+        return new Class[]{String.class, GeneratedMessageV3.class};
     }
 
     @Override
@@ -130,7 +156,7 @@ public class GrpcCallResponseSource extends Source {
      */
     @Override
     public void destroy() {
-        grpcSourceRegistry.removeGrpcCallResponseSource(sinkID);
+        GrpcSourceRegistry.getInstance().removeGrpcCallResponseSource(sinkID);
     }
 
     /**

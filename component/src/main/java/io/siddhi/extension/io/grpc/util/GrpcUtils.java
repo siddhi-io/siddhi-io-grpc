@@ -17,72 +17,67 @@
  */
 package io.siddhi.extension.io.grpc.util;
 
+import io.siddhi.core.exception.SiddhiAppRuntimeException;
+import io.siddhi.query.api.exception.SiddhiAppValidationException;
+
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
+/**
+ * Class to hold the static util methods needed
+ */
 public class GrpcUtils {
-    public static String getServiceName(String path) {
-        List<String> urlParts = new ArrayList<>(Arrays.asList(path.split(GrpcConstants.PORT_SERVICE_SEPARATOR)));
-        urlParts.removeAll(Collections.singletonList(GrpcConstants.EMPTY_STRING));
-        String[] fullyQualifiedServiceNameParts = urlParts.get(GrpcConstants.PATH_SERVICE_NAME_POSITION).split("\\.");
-        return fullyQualifiedServiceNameParts[fullyQualifiedServiceNameParts.length - 1];
-    }
-
-    public static String getMethodName(String path) {
-        List<String> urlParts = new ArrayList<>(Arrays.asList(path.split(GrpcConstants.PORT_SERVICE_SEPARATOR)));
-        urlParts.removeAll(Collections.singletonList(GrpcConstants.EMPTY_STRING));
-        return urlParts.get(GrpcConstants.PATH_METHOD_NAME_POSITION);
-    }
-
-    public static String getSequenceName(String path) {
-        List<String> urlParts = new ArrayList<>(Arrays.asList(path.split(GrpcConstants.PORT_SERVICE_SEPARATOR)));
-        urlParts.removeAll(Collections.singletonList(GrpcConstants.EMPTY_STRING));
-        return urlParts.get(GrpcConstants.PATH_SEQUENCE_NAME_POSITION);
-    }
-
-    public static boolean isSequenceNamePresent(String path) {
-        List<String> urlParts = new ArrayList<>(Arrays.asList(path.split(GrpcConstants.PORT_SERVICE_SEPARATOR)));
-        urlParts.removeAll(Collections.singletonList(GrpcConstants.EMPTY_STRING));
-        return urlParts.size() == 3;
-    }
-
-
-    public static String getPackageName(String path) {
-        List<String> urlParts = new ArrayList<>(Arrays.asList(path.split(GrpcConstants.PORT_SERVICE_SEPARATOR)));
-        urlParts.removeAll(Collections.singletonList(GrpcConstants.EMPTY_STRING));
-        return urlParts.get(GrpcConstants.PATH_SERVICE_NAME_POSITION).replace(getServiceName(path), "");
-    }
-
-    public static String getServiceFullName(String path) {
-        List<String> urlParts = new ArrayList<>(Arrays.asList(path.split(io.siddhi.extension.map.protobuf.utils.GrpcConstants.PORT_SERVICE_SEPARATOR)));
-        urlParts.removeAll(Collections.singletonList(io.siddhi.extension.map.protobuf.utils.GrpcConstants.EMPTY_STRING));
-        return urlParts.get(io.siddhi.extension.map.protobuf.utils.GrpcConstants.PATH_SERVICE_NAME_POSITION);
-
-    }
-
-    public static Class getRequestClass(String path) throws ClassNotFoundException {
-        String stubName = getServiceName(path) + "BlockingStub";
-        Method[] methods = Class.forName(getServiceFullName(path) + "Grpc" + "$" + stubName).getMethods();
-        for (Method m : methods) {
-            if (m.getName().equals(getMethodName(path))) {
-                return m.getParameterTypes()[0];
+    public static String[] extractHeaders(Map<String, String> headersMap, Map<String, String> metaDataMap,
+                                          String[] requestedTransportPropertyNames) {
+        if (requestedTransportPropertyNames == null) {
+            return new String[]{};
+        }
+        String[] headersArray = new String[requestedTransportPropertyNames.length];
+        for (int i = 0; i < requestedTransportPropertyNames.length; i++) {
+            if (headersMap != null) {
+                if (headersMap.containsKey(requestedTransportPropertyNames[i])) {
+                    headersArray[i] = headersMap.get(requestedTransportPropertyNames[i]);
+                }
+            }
+            if (metaDataMap.containsKey(requestedTransportPropertyNames[i])) {
+                headersArray[i] = metaDataMap.get(requestedTransportPropertyNames[i]);
             }
         }
-        return null;
+        List headersArrayList = Arrays.asList(headersArray);
+        if (headersArrayList.contains(null)) {
+            throw new SiddhiAppRuntimeException("Requested transport property '" +
+                    requestedTransportPropertyNames[headersArrayList.indexOf(null)] + "' not present in received " +
+                    "event");
+        }
+        return headersArray;
     }
 
-    public static Class getResponseClass(String path) throws ClassNotFoundException {
-        String stubName = getServiceName(path) + "BlockingStub";
-        Method[] methods = Class.forName(getServiceFullName(path) + "Grpc" + "$" + stubName).getMethods();
-        for (Method m : methods) {
-            if (m.getName().equals(getMethodName(path))) {
-                return m.getParameterTypes()[0];
+    /**
+     * @return methods that are available in the stub as list of String
+     */
+    public static List<String> getRpcMethodList(ServiceConfigs serviceConfigs, String siddhiAppName,
+                                                String streamID) {
+        List<String> rpcMethodNameList = new ArrayList<>();
+        String stubReference = serviceConfigs.getFullyQualifiedServiceName() + GrpcConstants.
+                GRPC_PROTOCOL_NAME_UPPERCAMELCASE + GrpcConstants.DOLLAR_SIGN + serviceConfigs.getServiceName()
+                + GrpcConstants.STUB;
+        Method[] methodsInStub;
+        try {
+            methodsInStub = Class.forName(stubReference).getMethods();
+        } catch (ClassNotFoundException e) {
+            throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid service name " +
+                    "provided in the url, provided service name: '" + serviceConfigs
+                    .getFullyQualifiedServiceName() + "'", e);
+        }
+        for (Method method : methodsInStub) {
+            if (method.getDeclaringClass().getName().equals(stubReference)) { //to ignore super class method
+                rpcMethodNameList.add(method.getName());
             }
         }
-        return null;
+        return rpcMethodNameList;
     }
 
 }

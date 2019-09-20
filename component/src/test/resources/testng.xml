@@ -2,11 +2,15 @@
 
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
 
-<suite name="Siddhi-IO-Grpc-Test-Suite">
-    <test name="Siddhi-io-grpc-tests" enabled="true" preserve-order="true" parallel="false">
+<suite name="Siddhi-IO-Grpc-Test-Suite" preserve-order="true">
+    <test name="Siddhi-io-grpc-tests" parallel="classes" thread-count="1">
         <classes>
             <class name="io.siddhi.extension.io.grpc.sink.GrpcSinkTestCase"/>
-            <!--todo: add all the test classes-->
+            <class name="io.siddhi.extension.io.grpc.sink.GrpcCallSinkTestCase"/>
+            <class name="io.siddhi.extension.io.grpc.source.GrpcSourceTestCase"/>
+            <class name="io.siddhi.extension.io.grpc.source.GrpcServiceSourceTestCase"/>
+            <class name="io.siddhi.extension.io.grpc.sink.GrpcSinkGenericTestCases"/>
+            <class name="io.siddhi.extension.io.grpc.sink.GrpcCallSinkGenericTestCase"/>
         </classes>
     </test>
 </suite>

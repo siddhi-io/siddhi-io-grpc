@@ -17,6 +17,7 @@
  */
 package io.siddhi.extension.io.grpc.sink;
 
+import com.google.protobuf.GeneratedMessageV3;
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
 import io.siddhi.annotation.Parameter;
@@ -37,40 +38,39 @@ import io.siddhi.query.api.definition.StreamDefinition;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.log4j.Logger;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-
-import static io.siddhi.extension.io.grpc.util.GrpcUtils.getMethodName;
-import static io.siddhi.extension.io.grpc.util.GrpcUtils.getServiceName;
-
 /**
  * {@code GrpcServiceResponseSink} Handle sending responses for requests received via grpc-service source.
  */
-@Extension(
-        name = "grpc-service-response", namespace = "sink",
+@Extension(name = "grpc-service-response", namespace = "sink",
         description = "This extension is used to send responses back to a gRPC client after receiving requests " +
-                "through grpc-service source. This calls a callback in grpc-service source to put response back in " +
-                "StreamObserver.",
+                "through grpc-service source. This correlates with the particular source using a unique source.id",
         parameters = {
-                @Parameter(name = "url",
-                        description = "The url to which the outgoing events should be published via this extension. " +
-                                "This url should consist the host address, port, service name, method name in the " +
-                                "following format. grpc://hostAddress:port/serviceName/methodName/sequenceName" ,
-                        type = {DataType.STRING}),
-                @Parameter(name = "source.id",
-                        description = "A unique id to identify the coorect source to which this sink is mapped. " +
+                @Parameter(
+                        name = "source.id",
+                        description = "A unique id to identify the correct source to which this sink is mapped. " +
                                 "There is a 1:1 mapping between source and sink" ,
                         type = {DataType.INT}),
         },
         examples = {
-                @Example(
-                        syntax = "@sink(type='grpc-service-response', " +
-                                "url = 'grpc://134.23.43.35:8080/org.wso2.grpc.EventService/consume/mySequence', " +
-                                "source.id='1'" +
-                                "@map(type='json')) "
-                                + "define stream FooStream (messageId String, message String);",
-                        description = "asdf"
-                        //todo: add an example for generic service access
+                @Example(syntax = "" +
+                        "@sink(type='grpc-service-response',\n" +
+                        "      source.id='1',\n" +
+                        "      @map(type='json'))\n" +
+                        "define stream BarStream (messageId String, message String);\n" +
+                        "\n" +
+                        "@source(type='grpc-service',\n" +
+                        "        url='grpc://134.23.43.35:8080/org.wso2.grpc.EventService/process',\n" +
+                        "        source.id='1',\n" +
+                        "        @map(type='json',\n" +
+                        "             @attributes(messageId='trp:messageId', message='message')))\n" +
+                        "define stream FooStream (messageId String, message String);" +
+                        "\n" +
+                        "from FooStream\n" +
+                        "select * \n" +
+                        "insert into BarStream;\n",
+                        description = "The grpc requests are received through the grpc-service sink. Each received " +
+                                "event is sent back through grpc-service-source. This is just a passthrough through " +
+                                "Siddhi as we are selecting everything from FooStream and inserting into BarStream."
                 )
         }
 )
@@ -79,74 +79,35 @@ public class GrpcServiceResponseSink extends Sink {
     protected GrpcSourceRegistry grpcSourceRegistry = GrpcSourceRegistry.getInstance();
     private String sourceId;
     private Option messageIdOption;
-    private SiddhiAppContext siddhiAppContext;
-    private String url;
-    private String serviceName;
-    private String methodName;
-    private String sinkID;
-    private String streamID;
-
-
-    private boolean defaultMode;
 
     @Override
     protected StateFactory init(StreamDefinition outputStreamDefinition, OptionHolder optionHolder,
                                 ConfigReader sinkConfigReader, SiddhiAppContext siddhiAppContext) {
-        this.siddhiAppContext = siddhiAppContext;
-        this.streamID = siddhiAppContext.getName() + GrpcConstants.PORT_HOST_SEPARATOR + outputStreamDefinition.getId();
-        this.url = optionHolder.validateAndGetOption(GrpcConstants.PUBLISHER_URL).getValue();
-        if (!url.substring(0,4).equalsIgnoreCase(GrpcConstants.GRPC_PROTOCOL_NAME)) {
-            throw new SiddhiAppValidationException(streamID + "The url must begin with \"" +
-                    GrpcConstants.GRPC_PROTOCOL_NAME + "\" for all grpc sinks");
-        }
-        URL aURL;
-        try {
-            aURL = new URL("http" + url.substring(4));
-        } catch (MalformedURLException e) {
-            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": MalformedURLException. "
-                    + e.getMessage());
-        }
-        this.serviceName = getServiceName(aURL.getPath());
-        this.methodName = getMethodName(aURL.getPath());
-        if (optionHolder.isOptionExists(GrpcConstants.SINK_ID)) {
-            this.sinkID = optionHolder.validateAndGetOption(GrpcConstants.SINK_ID).getValue();
+        String streamID = outputStreamDefinition.getId();
+        if (optionHolder.isOptionExists(GrpcConstants.SOURCE_ID)) {
+            this.sourceId = optionHolder.validateAndGetOption(GrpcConstants.SOURCE_ID).getValue();
         } else {
             if (optionHolder.validateAndGetOption(GrpcConstants.SINK_TYPE_OPTION)
-                    .getValue().equalsIgnoreCase(GrpcConstants.GRPC_CALL_SINK_NAME)) {
-                throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": For grpc-call sink the " +
-                        "parameter sink.id is mandatory for receiving responses. Please provide a sink.id");
+                    .getValue().equalsIgnoreCase(GrpcConstants.GRPC_SERVICE_RESPONSE_SINK_NAME)) {
+                throw new SiddhiAppValidationException(siddhiAppContext.getName() + ":" + streamID + ": For " +
+                        "grpc-service-response sink the parameter source.id is mandatory for receiving responses. " +
+                        "Please provide a source.id");
             }
         }
-        this.sourceId = optionHolder.validateAndGetOption(GrpcConstants.SOURCE_ID).getValue();
         this.messageIdOption = optionHolder.validateAndGetOption(GrpcConstants.MESSAGE_ID);
-        defaultMode = true;
-
-        if(!serviceName.equals("EventService"))
-        {
-            defaultMode = false;
-        }
-
         return null;
     }
 
     @Override
     public void publish(Object payload, DynamicOptions dynamicOptions, State state) {
-//        System.out.println("Payload :"+payload);
         String messageId = messageIdOption.getValue(dynamicOptions);
-        if(defaultMode)
-        {
-            grpcSourceRegistry.getGrpcServiceSource(sourceId).handleCallback(messageId,  payload);//todo changed parameter type to Object from String
-        }
-        else
-        {
-            grpcSourceRegistry.getGrpcServiceSource(sourceId).handleCallback(messageId, payload);
-        }
-
+        grpcSourceRegistry.getGrpcServiceSource(sourceId).handleCallback(messageId, payload);
     }
 
     @Override
     public void connect() throws ConnectionUnavailableException {
     }
+
     @Override
     public void disconnect() {
     }
@@ -158,8 +119,8 @@ public class GrpcServiceResponseSink extends Sink {
 
     @Override
     public Class[] getSupportedInputEventClasses() {
-        return new Class[]{Object.class}; // in default case json mapper will inject String. In custom gRPC service
-         // case protobuf mapper will inject gRPC message class
+        return new Class[]{String.class, GeneratedMessageV3.class}; // in default case json mapper will inject String.
+        // In custom gRPC service case protobuf mapper will inject gRPC message class
     }
 
     @Override

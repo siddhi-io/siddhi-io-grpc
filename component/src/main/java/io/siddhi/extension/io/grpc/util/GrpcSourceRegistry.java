@@ -20,7 +20,9 @@ package io.siddhi.extension.io.grpc.util;
 import io.siddhi.extension.io.grpc.source.GrpcCallResponseSource;
 import io.siddhi.extension.io.grpc.source.GrpcServiceSource;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * a class to register GrpcSource with respective sink.id or source.id. Used by GrpcCallSink and GrpcServiceResponseSink
@@ -28,8 +30,9 @@ import java.util.HashMap;
  */
 public class GrpcSourceRegistry {
     private static GrpcSourceRegistry instance = new GrpcSourceRegistry();
-    private HashMap<String, GrpcCallResponseSource> grpcCallResponseSourceHashMap = new HashMap<>();
-    private HashMap<String, GrpcServiceSource> grpcServiceSourceHashMap = new HashMap<>();
+    private Map<String, GrpcCallResponseSource> grpcCallResponseSourceHashMap = Collections.synchronizedMap(
+            new HashMap<>());
+    private Map<String, GrpcServiceSource> grpcServiceSourceHashMap = Collections.synchronizedMap(new HashMap<>());
 
     private GrpcSourceRegistry() {
 
@@ -47,7 +50,7 @@ public class GrpcSourceRegistry {
         grpcServiceSourceHashMap.put(key, source);
     }
 
-    public GrpcCallResponseSource getGrpcCallResponseSourceSource(String key) {
+    public GrpcCallResponseSource getGrpcCallResponseSource(String key) {
         return grpcCallResponseSourceHashMap.get(key);
     }
 

@@ -2,7 +2,9 @@ syntax = "proto3";
 
 option java_multiple_files = true;
 
-option java_package = "package01.test";
+option java_package = "io.siddhi.extension.io.grpc.proto";
+
+import "google/protobuf/empty.proto";
 
 message Request
 {
@@ -14,14 +16,11 @@ message Request
     double doubleValue = 6;
 
 }
-message Empty
-{
-    
-}
+
 
 message Response
 {
-    string StringValue = 1;
+    string stringValue = 1;
     int32 intValue = 2;
     int64 LongValue = 3;
     bool booleanValue = 4;
@@ -29,9 +28,31 @@ message Response
     double doubleValue = 6;
 }
 
+message RequestWithMap
+{
+    string stringValue =1;
+    int32 intValue = 2;
+    map<string,string> map = 3;
+
+}
+
+message ResponseWithMap
+{
+    string stringValue =1;
+    int32 intValue = 2;
+    map<string,string> map = 3;
+
+}
+
 
 service MyService
 {
-    rpc send(Request) returns(Empty);
+    rpc send(Request) returns(google.protobuf.Empty);
     rpc process(Request) returns(Response);
+    rpc testMap(RequestWithMap) returns(ResponseWithMap);
+}
+
+service StreamService {
+    rpc clientStream (stream Request) returns (google.protobuf.Empty);
+    rpc clientStreamWithMap (stream RequestWithMap) returns (google.protobuf.Empty);
 }

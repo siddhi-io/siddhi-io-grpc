@@ -17,62 +17,59 @@
  */
 package io.siddhi.extension.io.grpc.sink;
 
-import io.grpc.Channel;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.Metadata;
+import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
+import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
+import io.grpc.netty.shaded.io.netty.handler.ssl.SslContextBuilder;
+import io.grpc.stub.AbstractStub;
+import io.grpc.stub.MetadataUtils;
 import io.siddhi.core.config.SiddhiAppContext;
-import io.siddhi.core.exception.ConnectionUnavailableException;
-import io.siddhi.core.exception.SiddhiAppRuntimeException;
+import io.siddhi.core.exception.SiddhiAppCreationException;
 import io.siddhi.core.stream.ServiceDeploymentInfo;
 import io.siddhi.core.stream.output.sink.Sink;
 import io.siddhi.core.util.config.ConfigReader;
 import io.siddhi.core.util.snapshot.state.StateFactory;
+import io.siddhi.core.util.transport.DynamicOptions;
 import io.siddhi.core.util.transport.Option;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
+import io.siddhi.extension.io.grpc.util.ServiceConfigs;
 import io.siddhi.query.api.definition.StreamDefinition;
-import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.log4j.Logger;
-import org.wso2.grpc.EventServiceGrpc;
+import org.wso2.grpc.Event;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
-
-import static io.siddhi.extension.io.grpc.util.GrpcUtils.*;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLException;
+import javax.net.ssl.TrustManagerFactory;
 
 /**
  * {@code AbstractGrpcSink} is a super class extended by GrpcCallSink, and GrpcSink.
  * This provides most of the initialization implementations
  */
-
 public abstract class AbstractGrpcSink extends Sink {
     private static final Logger logger = Logger.getLogger(AbstractGrpcSink.class.getName());
-    protected SiddhiAppContext siddhiAppContext;
+    protected String siddhiAppName;
     protected ManagedChannel channel;
-    protected String serviceName; //todo change private to protected, it's needed in the GrpcSinkClass
-    protected String methodName;
-    private String sequenceName;
-    protected boolean isDefaultMode = false;
-    protected String url;
-    protected String streamID; //todo: no need. check if we need this for error throwing
-    protected String address;
-    protected EventServiceGrpc.EventServiceFutureStub futureStub;
+    protected String streamID;
     protected Option headersOption;
+    protected Option metadataOption;
     protected ManagedChannelBuilder managedChannelBuilder;
-    private long channelTerminationWaitingTime;
-
-
-
-
-    //-------------------------------
-    protected String packageName;
-    protected Class stubClass; // TODO: 8/5/19 can't  move this inside to the call response class???
-    protected Object stubObject;
-    protected Class requestClass;
+    protected long channelTerminationWaitingTimeInMillis = -1L;
+    protected ServiceConfigs serviceConfigs;
+    protected StreamDefinition streamDefinition;
+    protected Map<String, String> headersMap;
 
     /**
      * Returns the list of classes which this sink can consume.
@@ -101,7 +98,7 @@ public abstract class AbstractGrpcSink extends Sink {
      */
     @Override
     public String[] getSupportedDynamicOptions() {
-        return new String[]{GrpcConstants.HEADERS};
+        return new String[]{GrpcConstants.HEADERS, GrpcConstants.METADATA};
     }
 
     /**
@@ -116,149 +113,130 @@ public abstract class AbstractGrpcSink extends Sink {
     @Override
     protected StateFactory init(StreamDefinition streamDefinition, OptionHolder optionHolder, ConfigReader configReader,
                                 SiddhiAppContext siddhiAppContext) {
-        this.siddhiAppContext = siddhiAppContext;
-        this.url = optionHolder.validateAndGetOption(GrpcConstants.PUBLISHER_URL).getValue();
-        this.streamID = siddhiAppContext.getName() + GrpcConstants.PORT_HOST_SEPARATOR + streamDefinition.getId();
+        this.siddhiAppName = siddhiAppContext.getName();
+        this.streamID = streamDefinition.getId();
+        this.streamDefinition = streamDefinition;
         if (optionHolder.isOptionExists(GrpcConstants.HEADERS)) {
             this.headersOption = optionHolder.validateAndGetOption(GrpcConstants.HEADERS);
         }
-        if (!url.substring(0,4).equalsIgnoreCase(GrpcConstants.GRPC_PROTOCOL_NAME)) {
-            throw new SiddhiAppValidationException(streamID + "The url must begin with \"" +
-                    GrpcConstants.GRPC_PROTOCOL_NAME + "\" for all grpc sinks");
+        if (optionHolder.isOptionExists(GrpcConstants.METADATA)) {
+            this.metadataOption = optionHolder.validateAndGetOption(GrpcConstants.METADATA);
         }
-        URL aURL;
-        try {
-            aURL = new URL("http" + url.substring(4));
-        } catch (MalformedURLException e) {
-            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": MalformedURLException. "
-                    + e.getMessage());
-        }
-        this.serviceName = getServiceName(aURL.getPath());
-        this.methodName = getMethodName(aURL.getPath());
-        this.address = aURL.getAuthority();
-        this.channelTerminationWaitingTime = Integer.parseInt(optionHolder.getOrCreateOption(
-                GrpcConstants.CHANNEL_TERMINATION_WAITING_TIME, GrpcConstants.CHANNEL_TERMINATION_WAITING_TIME_DEFAULT)
-                .getValue());
+        this.serviceConfigs = new ServiceConfigs(optionHolder, siddhiAppContext, streamID);
 
-        //ManagedChannelBuilder Properties. i.e gRPC connection parameters
-        this.managedChannelBuilder = ManagedChannelBuilder.forTarget(address).usePlaintext();
-        managedChannelBuilder.idleTimeout(Long.parseLong(optionHolder.getOrCreateOption(GrpcConstants.IDLE_TIMEOUT,
-                GrpcConstants.IDLE_TIMEOUT_DEFAULT).getValue()), TimeUnit.SECONDS);
-        managedChannelBuilder.keepAliveTime(Long.parseLong(optionHolder.getOrCreateOption(GrpcConstants.KEEP_ALIVE_TIME,
-                GrpcConstants.KEEP_ALIVE_TIME_DEFAULT).getValue()), TimeUnit.SECONDS);
-        managedChannelBuilder.keepAliveTimeout(Long.parseLong(optionHolder.getOrCreateOption(
-                GrpcConstants.KEEP_ALIVE_TIMEOUT, GrpcConstants.KEEP_ALIVE_TIMEOUT_DEFAULT).getValue()),
-                TimeUnit.SECONDS);
-        managedChannelBuilder.keepAliveWithoutCalls(Boolean.parseBoolean(optionHolder.getOrCreateOption(
-                GrpcConstants.KEEP_ALIVE_WITHOUT_CALLS, GrpcConstants.KEEP_ALIVE_WITHOUT_CALLS_DEFAULT).getValue()));
-        managedChannelBuilder.maxRetryAttempts(Integer.parseInt(optionHolder.getOrCreateOption(
-                GrpcConstants.MAX_RETRY_ATTEMPTS, GrpcConstants.MAX_RETRY_ATTEMPTS_DEFAULT).getValue()));
-        managedChannelBuilder.maxHedgedAttempts(Integer.parseInt(optionHolder.getOrCreateOption(
-                GrpcConstants.MAX_HEDGED_ATTEMPTS, GrpcConstants.MAX_HEDGED_ATTEMPTS_DEFAULT).getValue()));
+        managedChannelBuilder = NettyChannelBuilder.forTarget(serviceConfigs.getHostPort());
+
+        if (serviceConfigs.getTruststoreFilePath() != null || serviceConfigs.getKeystoreFilePath() != null) {
+            SslContextBuilder sslContextBuilder = GrpcSslContexts.forClient();
+            if (serviceConfigs.getTruststoreFilePath() != null) {
+                sslContextBuilder.trustManager(getTrustManagerFactory(serviceConfigs.getTruststoreFilePath(),
+                        serviceConfigs.getTruststorePassword(), serviceConfigs.getTruststoreAlgorithm(),
+                        serviceConfigs.getTlsStoreType()));
+            }
+            if (serviceConfigs.getKeystoreFilePath() != null) {
+                sslContextBuilder.keyManager(getKeyManagerFactory(serviceConfigs.getKeystoreFilePath(),
+                        serviceConfigs.getKeystorePassword(), serviceConfigs.getKeystoreAlgorithm(),
+                        serviceConfigs.getTlsStoreType()));
+            }
+            try {
+                managedChannelBuilder = ((NettyChannelBuilder) managedChannelBuilder).sslContext(sslContextBuilder
+                        .build());
+            } catch (SSLException e) {
+                throw new SiddhiAppCreationException(siddhiAppContext.getName() + ": " + streamID + ": Error while " +
+                        "creating gRPC channel. " + e.getMessage(), e);
+            }
+        } else {
+                managedChannelBuilder = managedChannelBuilder.usePlaintext();
+        }
+
+        if (optionHolder.isOptionExists(GrpcConstants.IDLE_TIMEOUT_MILLIS)) {
+            managedChannelBuilder.idleTimeout(Long.parseLong(optionHolder.validateAndGetOption(
+                    GrpcConstants.IDLE_TIMEOUT_MILLIS).getValue()), TimeUnit.MILLISECONDS);
+        }
+        if (optionHolder.isOptionExists(GrpcConstants.KEEP_ALIVE_TIME_MILLIS)) {
+            managedChannelBuilder.keepAliveTime(Long.parseLong(optionHolder.validateAndGetOption(
+                    GrpcConstants.KEEP_ALIVE_TIME_MILLIS).getValue()), TimeUnit.MILLISECONDS);
+        }
+        if (optionHolder.isOptionExists(GrpcConstants.KEEP_ALIVE_TIMEOUT_MILLIS)) {
+            managedChannelBuilder.keepAliveTimeout(Long.parseLong(optionHolder.validateAndGetOption(
+                    GrpcConstants.KEEP_ALIVE_TIMEOUT_MILLIS).getValue()), TimeUnit.MILLISECONDS);
+        }
+        if (optionHolder.isOptionExists(GrpcConstants.KEEP_ALIVE_WITHOUT_CALLS)) {
+            managedChannelBuilder.keepAliveWithoutCalls(Boolean.parseBoolean(optionHolder.validateAndGetOption(
+                    GrpcConstants.KEEP_ALIVE_WITHOUT_CALLS).getValue()));
+        }
         if (Boolean.parseBoolean(optionHolder.getOrCreateOption(GrpcConstants.ENABLE_RETRY,
                 GrpcConstants.ENABLE_RETRY_DEFAULT).getValue())) {
             managedChannelBuilder.enableRetry();
-            managedChannelBuilder.retryBufferSize(Long.parseLong(optionHolder.getOrCreateOption(
-                    GrpcConstants.RETRY_BUFFER_SIZE, GrpcConstants.RETRY_BUFFER_SIZE_DEFAULT).getValue()));
-            managedChannelBuilder.perRpcBufferLimit(Long.parseLong(optionHolder.getOrCreateOption(
-                    GrpcConstants.PER_RPC_BUFFER_SIZE, GrpcConstants.PER_RPC_BUFFER_SIZE_DEFAULT).getValue()));
+            if (optionHolder.isOptionExists(GrpcConstants.MAX_RETRY_ATTEMPTS)) {
+                managedChannelBuilder.maxRetryAttempts(Integer.parseInt(optionHolder.validateAndGetOption(
+                        GrpcConstants.MAX_RETRY_ATTEMPTS).getValue()));
+            }
+            if (optionHolder.isOptionExists(GrpcConstants.RETRY_BUFFER_SIZE)) {
+                managedChannelBuilder.retryBufferSize(Long.parseLong(optionHolder.validateAndGetOption(
+                        GrpcConstants.RETRY_BUFFER_SIZE).getValue()));
+            }
+            if (optionHolder.isOptionExists(GrpcConstants.PER_RPC_BUFFER_SIZE)) {
+                managedChannelBuilder.perRpcBufferLimit(Long.parseLong(optionHolder.validateAndGetOption(
+                        GrpcConstants.PER_RPC_BUFFER_SIZE).getValue()));
+            }
         }
         initSink(optionHolder);
-
-        if (serviceName.equals(GrpcConstants.DEFAULT_SERVICE_NAME)
-                && (methodName.equals(GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE)
-                || methodName.equals(GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE))) {
-            this.isDefaultMode = true;
-            if (isSequenceNamePresent(aURL.getPath())) {
-                this.sequenceName = getSequenceName(aURL.getPath());
+        if (headersOption != null && headersOption.isStatic()) {
+            headersMap = new HashMap<>();
+            String headers = headersOption.getValue();
+            headers = headers.replaceAll(GrpcConstants.INVERTED_COMMA_STRING, GrpcConstants.EMPTY_STRING);
+            String[] headersArray = headers.split(GrpcConstants.COMMA_STRING);
+            for (String headerKeyValue: headersArray) {
+                String[] headerKeyValueArray = headerKeyValue.split(GrpcConstants.SEMI_COLON_STRING);
+                headersMap.put(headerKeyValueArray[0], headerKeyValueArray[1]);
             }
-        } else {
-            //todo: handle generic grpc service
-            this.packageName = getPackageName(aURL.getPath());
-//            String futureStubName = this.packageName + this.serviceName + "Grpc$" + this.serviceName + "Stub";
-
-            try {
-//                stubClass = Class.forName(futureStubName);
-//                Constructor constructor = stubClass.getDeclaredConstructor(Channel.class);
-//                constructor.setAccessible(true);
-//                this.stubObject = constructor.newInstance(this.channel);
-
-
-                String stubName = serviceName + "BlockingStub"; // TODO: 8/6/19 add as a constant
-                Method[] methods = Class.forName(this.packageName + this.serviceName + "Grpc" + "$" + stubName).getMethods();
-                for (Method m : methods) {
-                    if (m.getName().equals(methodName)) {
-                        this.requestClass = m.getParameterTypes()[0];
-                        break;
-                    }
-                }
-
-
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
+            if (serviceConfigs.getSequenceName() != null) {
+                headersMap.put(GrpcConstants.SEQUENCE_HEADER_KEY, serviceConfigs.getSequenceName());
             }
-
         }
         return null;
     }
 
-    public abstract void initSink(OptionHolder optionHolder);
-
-    /**
-     * This method will be called before the processing method.
-     * Intention to establish connection to publish event.
-     * @throws ConnectionUnavailableException if end point is unavailable the ConnectionUnavailableException thrown
-     *                                        such that the  system will take care retrying for connection
-     */
-    @Override
-    public void connect() throws ConnectionUnavailableException {
-        this.channel = ManagedChannelBuilder.forTarget(address).usePlaintext().build();
-        if(isDefaultMode) {
-
-            this.futureStub = EventServiceGrpc.newFutureStub(channel);
-            if (!channel.isShutdown()) {
-                logger.info(streamID + " has successfully connected to " + url);
-            }
-        }
-        else
-        {
-            String futureStubName = this.packageName + this.serviceName + "Grpc$" + this.serviceName + "FutureStub";
-
-            try {
-                stubClass = Class.forName(futureStubName);
-                Constructor constructor = stubClass.getDeclaredConstructor(Channel.class);
-                constructor.setAccessible(true);
-                this.stubObject = constructor.newInstance(this.channel);
-
-
-            } catch (ClassNotFoundException e) {
-
-            } catch (InstantiationException e) {
-                e.printStackTrace();
-            } catch (InvocationTargetException e) {
-                e.printStackTrace();
-            } catch (NoSuchMethodException e) {
-                e.printStackTrace();
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            }
-
-        }
-    }
-
-    /**
-     * Called after all publishing is done, or when {@link ConnectionUnavailableException} is thrown
-     * Implementation of this method should contain the steps needed to disconnect from the sink.
-     */
-    @Override
-    public void disconnect() {
+    private TrustManagerFactory getTrustManagerFactory(String filePath, String password, String algorithm,
+                                                       String storeType)  {
+        char[] passphrase = password.toCharArray();
         try {
-            channel.shutdown().awaitTermination(5, TimeUnit.SECONDS); //todo: check for optimal time. check if we want user to configure this
-        } catch (InterruptedException e) {
-            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": Error in shutting down the channel. "
-                    + e.getMessage());
+            KeyStore keyStore = KeyStore.getInstance(storeType);
+            try (FileInputStream fis = new FileInputStream(filePath)) {
+                keyStore.load(fis, passphrase);
+            } catch (IOException e) {
+                throw new SiddhiAppCreationException(siddhiAppName + ": " + streamID + ": " + e.getMessage(), e);
+            }
+            TrustManagerFactory tmf = TrustManagerFactory.getInstance(algorithm);
+            tmf.init(keyStore);
+            return tmf;
+        } catch (CertificateException | NoSuchAlgorithmException | KeyStoreException e) {
+           throw new SiddhiAppCreationException(siddhiAppName + ": " + streamID + ": Error while reading truststore " +
+                   e.getMessage(), e);
         }
     }
+
+    private KeyManagerFactory getKeyManagerFactory(String filePath, String password, String algorithm,
+                                                   String storeType) {
+        try {
+            KeyStore keyStore = KeyStore.getInstance(storeType);
+            char[] passphrase = password.toCharArray();
+            try (FileInputStream fis = new FileInputStream(filePath)) {
+                keyStore.load(fis, passphrase);
+            } catch (IOException e) {
+                throw new SiddhiAppCreationException(siddhiAppName + ": " + streamID + ": " + e.getMessage(), e);
+            }
+            KeyManagerFactory kmf = KeyManagerFactory.getInstance(algorithm);
+            kmf.init(keyStore, passphrase);
+            return kmf;
+        } catch (CertificateException | UnrecoverableKeyException | NoSuchAlgorithmException | KeyStoreException e) {
+            throw new SiddhiAppCreationException(siddhiAppName + ": " + streamID + ": Error while reading keystore " +
+                    e.getMessage(), e);
+        }
+    }
+
+    public abstract void initSink(OptionHolder optionHolder);
 
     /**
      * The method can be called when removing an event receiver.
@@ -267,5 +245,39 @@ public abstract class AbstractGrpcSink extends Sink {
     @Override
     public void destroy() {
         channel = null;
+    }
+
+    public Event.Builder addHeadersToEventBuilder(DynamicOptions dynamicOptions, Event.Builder eventBuilder) {
+        if (headersOption != null) {
+            String headers = headersOption.getValue(dynamicOptions);
+            headers = headers.replaceAll(GrpcConstants.INVERTED_COMMA_STRING, GrpcConstants.EMPTY_STRING);
+            String[] headersArray = headers.split(GrpcConstants.COMMA_STRING);
+            for (String headerKeyValue: headersArray) {
+                String[] headerKeyValueArray = headerKeyValue.split(GrpcConstants.SEMI_COLON_STRING);
+                eventBuilder.putHeaders(headerKeyValueArray[0], headerKeyValueArray[1]);
+            }
+        }
+        if (serviceConfigs.getSequenceName() != null) {
+            eventBuilder.putHeaders(GrpcConstants.SEQUENCE_HEADER_KEY, serviceConfigs.getSequenceName());
+        }
+        return eventBuilder;
+    }
+
+    public AbstractStub attachMetaDataToStub(DynamicOptions dynamicOptions, AbstractStub stub) {
+        Metadata metadata = new Metadata();
+        String metadataString;
+        if (metadataOption.isStatic()) {
+            metadataString = metadataOption.getValue();
+        } else {
+            metadataString = metadataOption.getValue(dynamicOptions);
+        }
+        metadataString = metadataString.replaceAll(GrpcConstants.INVERTED_COMMA_STRING, GrpcConstants.EMPTY_STRING);
+        String[] metadataArray = metadataString.split(GrpcConstants.COMMA_STRING);
+        for (String metadataKeyValue: metadataArray) {
+            String[] headerKeyValueArray = metadataKeyValue.split(GrpcConstants.SEMI_COLON_STRING);
+            metadata.put(Metadata.Key.of(headerKeyValueArray[0], Metadata.ASCII_STRING_MARSHALLER),
+                    headerKeyValueArray[1]);
+        }
+        return MetadataUtils.attachHeaders(stub, metadata);
     }
 }

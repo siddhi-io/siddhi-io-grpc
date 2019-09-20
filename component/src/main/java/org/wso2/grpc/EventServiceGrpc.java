@@ -19,7 +19,7 @@ import static io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall;
  */
 @javax.annotation.Generated(
     value = "by gRPC proto compiler (version 1.21.0)",
-    comments = "Source: siddhi_MI_connect.proto")
+    comments = "Source: EventService.proto")
 public final class EventServiceGrpc {
 
   private EventServiceGrpc() {}
@@ -66,7 +66,7 @@ public final class EventServiceGrpc {
       fullMethodName = SERVICE_NAME + '/' + "consume",
       requestType = org.wso2.grpc.Event.class,
       responseType = com.google.protobuf.Empty.class,
-      methodType = io.grpc.MethodDescriptor.MethodType.UNARY)
+      methodType = io.grpc.MethodDescriptor.MethodType.CLIENT_STREAMING)
   public static io.grpc.MethodDescriptor<org.wso2.grpc.Event,
       com.google.protobuf.Empty> getConsumeMethod() {
     io.grpc.MethodDescriptor<org.wso2.grpc.Event, com.google.protobuf.Empty> getConsumeMethod;
@@ -75,7 +75,7 @@ public final class EventServiceGrpc {
         if ((getConsumeMethod = EventServiceGrpc.getConsumeMethod) == null) {
           EventServiceGrpc.getConsumeMethod = getConsumeMethod = 
               io.grpc.MethodDescriptor.<org.wso2.grpc.Event, com.google.protobuf.Empty>newBuilder()
-              .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
+              .setType(io.grpc.MethodDescriptor.MethodType.CLIENT_STREAMING)
               .setFullMethodName(generateFullMethodName(
                   "eventservice.EventService", "consume"))
               .setSampledToLocalTracing(true)
@@ -127,9 +127,9 @@ public final class EventServiceGrpc {
 
     /**
      */
-    public void consume(org.wso2.grpc.Event request,
+    public io.grpc.stub.StreamObserver<org.wso2.grpc.Event> consume(
         io.grpc.stub.StreamObserver<com.google.protobuf.Empty> responseObserver) {
-      asyncUnimplementedUnaryCall(getConsumeMethod(), responseObserver);
+      return asyncUnimplementedStreamingCall(getConsumeMethod(), responseObserver);
     }
 
     @Override public final io.grpc.ServerServiceDefinition bindService() {
@@ -143,7 +143,7 @@ public final class EventServiceGrpc {
                   this, METHODID_PROCESS)))
           .addMethod(
             getConsumeMethod(),
-            asyncUnaryCall(
+            asyncClientStreamingCall(
               new MethodHandlers<
                 org.wso2.grpc.Event,
                 com.google.protobuf.Empty>(
@@ -180,10 +180,10 @@ public final class EventServiceGrpc {
 
     /**
      */
-    public void consume(org.wso2.grpc.Event request,
+    public io.grpc.stub.StreamObserver<org.wso2.grpc.Event> consume(
         io.grpc.stub.StreamObserver<com.google.protobuf.Empty> responseObserver) {
-      asyncUnaryCall(
-          getChannel().newCall(getConsumeMethod(), getCallOptions()), request, responseObserver);
+      return asyncClientStreamingCall(
+          getChannel().newCall(getConsumeMethod(), getCallOptions()), responseObserver);
     }
   }
 
@@ -210,13 +210,6 @@ public final class EventServiceGrpc {
     public org.wso2.grpc.Event process(org.wso2.grpc.Event request) {
       return blockingUnaryCall(
           getChannel(), getProcessMethod(), getCallOptions(), request);
-    }
-
-    /**
-     */
-    public com.google.protobuf.Empty consume(org.wso2.grpc.Event request) {
-      return blockingUnaryCall(
-          getChannel(), getConsumeMethod(), getCallOptions(), request);
     }
   }
 
@@ -245,14 +238,6 @@ public final class EventServiceGrpc {
       return futureUnaryCall(
           getChannel().newCall(getProcessMethod(), getCallOptions()), request);
     }
-
-    /**
-     */
-    public com.google.common.util.concurrent.ListenableFuture<com.google.protobuf.Empty> consume(
-        org.wso2.grpc.Event request) {
-      return futureUnaryCall(
-          getChannel().newCall(getConsumeMethod(), getCallOptions()), request);
-    }
   }
 
   private static final int METHODID_PROCESS = 0;
@@ -279,10 +264,6 @@ public final class EventServiceGrpc {
           serviceImpl.process((org.wso2.grpc.Event) request,
               (io.grpc.stub.StreamObserver<org.wso2.grpc.Event>) responseObserver);
           break;
-        case METHODID_CONSUME:
-          serviceImpl.consume((org.wso2.grpc.Event) request,
-              (io.grpc.stub.StreamObserver<com.google.protobuf.Empty>) responseObserver);
-          break;
         default:
           throw new AssertionError();
       }
@@ -293,6 +274,9 @@ public final class EventServiceGrpc {
     public io.grpc.stub.StreamObserver<Req> invoke(
         io.grpc.stub.StreamObserver<Resp> responseObserver) {
       switch (methodId) {
+        case METHODID_CONSUME:
+          return (io.grpc.stub.StreamObserver<Req>) serviceImpl.consume(
+              (io.grpc.stub.StreamObserver<com.google.protobuf.Empty>) responseObserver);
         default:
           throw new AssertionError();
       }
@@ -305,7 +289,7 @@ public final class EventServiceGrpc {
 
     @Override
     public com.google.protobuf.Descriptors.FileDescriptor getFileDescriptor() {
-      return org.wso2.grpc.EventServiceProto.getDescriptor();
+      return org.wso2.grpc.EventServiceOuterClass.getDescriptor();
     }
 
     @Override

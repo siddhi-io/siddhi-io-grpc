@@ -1,7 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<!--
+  ~ Copyright (c) 2019, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+  ~
+  ~ WSO2 Inc. licenses this file to you under the Apache License,
+  ~ Version 2.0 (the "License"); you may not use this file except
+  ~ in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the License is distributed on an
+  ~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  ~ KIND, either express or implied. See the License for the
+  ~ specific language governing permissions and limitations
+  ~ under the License.
+  -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <groupId>io.siddhi.extension.io.grpc</groupId>
         <artifactId>siddhi-io-grpc-parent</artifactId>
@@ -63,9 +78,13 @@
             <artifactId>siddhi-annotations</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.wso2.transport.http</groupId>
-            <artifactId>org.wso2.transport.http.netty</artifactId>
-            <version>${transport.http.version}</version>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.siddhi.extension.map.protobuf</groupId>
+            <artifactId>siddhi-map-protobuf</artifactId>
+            <scope>test</scope>
         </dependency>
 
 
@@ -109,13 +128,6 @@
     </profiles>
 
     <build>
-        <!--<extensions>-->
-            <!--<extension>-->
-                <!--<groupId>kr.motd.maven</groupId>-->
-                <!--<artifactId>os-maven-plugin</artifactId>-->
-                <!--<version>1.5.0.Final</version>-->
-            <!--</extension>-->
-        <!--</extensions>-->
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -164,8 +176,8 @@
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Name>${project.artifactId}</Bundle-Name>
                         <Export-Package>
-                            org.wso2.extension.siddhi.io.grpc.*,
-                            org.wso2.extension.siddhi.io.grpc.*
+                            io.siddhi.extension.io.grpc.*,
+                            org.wso2.grpc.*
                         </Export-Package>
                         <Import-Package>
                             *;resolution:=optional
@@ -182,24 +194,6 @@
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
             </plugin>
-            <!--<plugin>-->
-                <!--<groupId>org.xolstice.maven.plugins</groupId>-->
-                <!--<artifactId>protobuf-maven-plugin</artifactId>-->
-                <!--<version>0.5.1</version>-->
-                <!--<configuration>-->
-                    <!--<protocArtifact>com.google.protobuf:protoc:3.7.1:exe:${os.detected.classifier}</protocArtifact>-->
-                    <!--<pluginId>grpc-java</pluginId>-->
-                    <!--<pluginArtifact>io.grpc:protoc-gen-grpc-java:1.21.0:exe:${os.detected.classifier}</pluginArtifact>-->
-                <!--</configuration>-->
-                <!--<executions>-->
-                    <!--<execution>-->
-                        <!--<goals>-->
-                            <!--<goal>compile</goal>-->
-                            <!--<goal>compile-custom</goal>-->
-                        <!--</goals>-->
-                    <!--</execution>-->
-                <!--</executions>-->
-            <!--</plugin>-->
         </plugins>
     </build>
     <properties>
