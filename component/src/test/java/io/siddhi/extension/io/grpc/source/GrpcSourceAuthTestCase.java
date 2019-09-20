@@ -21,6 +21,7 @@ import com.google.protobuf.Empty;
 import io.grpc.ManagedChannel;
 import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
+import io.grpc.stub.StreamObserver;
 import io.siddhi.core.SiddhiAppRuntime;
 import io.siddhi.core.SiddhiManager;
 import io.siddhi.core.query.output.callback.QueryCallback;
@@ -95,14 +96,32 @@ public class GrpcSourceAuthTestCase {
         String truststoreAlgorithm = "SunX509";
 
         requestBuilder.setPayload(json);
+        requestBuilder.putHeaders("stream.id", "BarStream");
         Event sequenceCallRequest = requestBuilder.build();
         ManagedChannel channel = NettyChannelBuilder.forTarget("localhost:8888").sslContext(GrpcSslContexts
                 .forClient().trustManager(getTrustManagerFactory(truststoreFilePath, truststorePassword,
                         truststoreAlgorithm)).build()).build();
-        EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
+        EventServiceGrpc.EventServiceStub asyncStub = EventServiceGrpc.newStub(channel);
+
+        StreamObserver<Empty> responseObserver = new StreamObserver<Empty>() {
+            @Override
+            public void onNext(Empty event) {
+            }
+
+            @Override
+            public void onError(Throwable t) {
+            }
+
+            @Override
+            public void onCompleted() {
+            }
+        };
 
         siddhiAppRuntime.start();
-        Empty emptyResponse = blockingStub.consume(sequenceCallRequest);
+        StreamObserver requestObserver  = asyncStub.consume(responseObserver);
+        requestObserver.onNext(sequenceCallRequest);
+        Thread.sleep(10);
+        requestObserver.onCompleted();
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
     }
@@ -156,16 +175,34 @@ public class GrpcSourceAuthTestCase {
         String truststoreAlgorithm = "SunX509";
 
         requestBuilder.setPayload(json);
+        requestBuilder.putHeaders("stream.id", "BarStream");
         Event sequenceCallRequest = requestBuilder.build();
         ManagedChannel channel = NettyChannelBuilder.forTarget("localhost:8888").sslContext(GrpcSslContexts
                 .forClient().trustManager(getTrustManagerFactory(truststoreFilePath, truststorePassword,
                         truststoreAlgorithm))
                 .keyManager(getKeyManagerFactory(truststoreFilePath, truststorePassword, truststoreAlgorithm))
                 .build()).build();
-        EventServiceGrpc.EventServiceBlockingStub blockingStub = EventServiceGrpc.newBlockingStub(channel);
+        EventServiceGrpc.EventServiceStub asyncStub = EventServiceGrpc.newStub(channel);
+
+        StreamObserver<Empty> responseObserver = new StreamObserver<Empty>() {
+            @Override
+            public void onNext(Empty event) {
+            }
+
+            @Override
+            public void onError(Throwable t) {
+            }
+
+            @Override
+            public void onCompleted() {
+            }
+        };
 
         siddhiAppRuntime.start();
-        Empty emptyResponse = blockingStub.consume(sequenceCallRequest);
+        StreamObserver requestObserver  = asyncStub.consume(responseObserver);
+        requestObserver.onNext(sequenceCallRequest);
+        Thread.sleep(10);
+        requestObserver.onCompleted();
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
     }
@@ -222,6 +259,7 @@ public class GrpcSourceAuthTestCase {
                 String truststoreAlgorithm = "SunX509";
 
                 requestBuilder.setPayload(json);
+                requestBuilder.putHeaders("stream.id", "FooStream");
                 Event sequenceCallRequest = requestBuilder.build();
                 ManagedChannel channel = null;
                 try {
@@ -296,6 +334,7 @@ public class GrpcSourceAuthTestCase {
                 String truststoreAlgorithm = "SunX509";
 
                 requestBuilder.setPayload(json);
+                requestBuilder.putHeaders("stream.id", "FooStream");
                 Event sequenceCallRequest = requestBuilder.build();
                 ManagedChannel channel = null;
                 try {

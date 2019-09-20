@@ -26,6 +26,7 @@ public class GrpcConstants {
     public static final String RECEIVER_URL = "receiver.url";
     public static final String PORT_SERVICE_SEPARATOR = "/";
     public static final String SINK_ID = "sink.id";
+    public static final String STREAM_ID = "stream.id";
     public static final String DEFAULT_METHOD_NAME_WITH_RESPONSE = "process";
     public static final String DEFAULT_METHOD_NAME_WITHOUT_RESPONSE = "consume";
     public static final String EMPTY_STRING = "";
@@ -35,6 +36,7 @@ public class GrpcConstants {
     public static final String GRPC_PROTOCOL_NAME = "grpc";
     public static final String DUMMY_PROTOCOL_NAME = "http";
     public static final String DEFAULT_SERVICE_NAME = "EventService";
+    public static final String DEFAULT_FULLY_QUALIFIED_SERVICE_NAME = "org.wso2.grpc.EventService";
     public static final String SINK_TYPE_OPTION = "type";
     public static final String GRPC_CALL_SINK_NAME = "grpc-call";
     public static final String GRPC_SERVICE_RESPONSE_SINK_NAME = "grpc-service-response";
@@ -51,14 +53,14 @@ public class GrpcConstants {
     public static final String TRUSTSTORE_ALGORITHM = "truststore.algorithm";
     public static final String SEQUENCE_HEADER_KEY = "sequence";
     public static final String METADATA = "metadata";
-
-    public static final String BLOCKING_STUB_NAME = "BlockingStub";
-    public static final String FUTURE_STUB_NAME = "FutureStub";
-    public static final String FUTURE_STUB_METHOD_NAME = "newFutureStub";
-    public static final String GRPC_PROTOCOL_NAME_UPPERCAMELCASE = "Grpc";
-    public static final String DOLLAR_SIGN = "$";
-    public static final String NEW_STUB_NAME = "newStub";
-    public static final String PARSE_FROM_METHOD_NAME = "parseFrom";
+    public static final String THREADPOOL_SIZE = "threadpool.size";
+    public static final String THREADPOOL_SIZE_DEFAULT = "100";
+    public static final String THREADPOOL_BUFFER_SIZE = "threadpool.buffer.size";
+    public static final String THREADPOOL_BUFFER_SIZE_DEFAULT = "100";
+    public static final String ENABLE_SSL = "enable.ssl";
+    public static final String DEFAULT_TRUSTSTORE_FILE_PATH = "src/main/resources/security/wso2carbon.jks";
+    public static final String DEFAULT_TRUSTSTORE_PASSWORD = "wso2carbon";
+    public static final String DEFAULT_TRUSTSTORE_ALGORITHM = "SunX509";
 
     public static final int PATH_SERVICE_NAME_POSITION = 0;
     public static final int PATH_METHOD_NAME_POSITION = 1;
@@ -95,4 +97,20 @@ public class GrpcConstants {
     public static final String SERVICE_TIMEOUT = "service.timeout";
     public static final String SERVICE_TIMEOUT_DEFAULT = "10000";
     public static final String TIMEOUT_CHECK_INTERVAL = "timeout.check.interval";
+
+    public static final String STUB = "Stub";
+    public static final String FUTURE_STUB = "FutureStub";
+    public static final String FUTURE_STUB_METHOD_NAME = "newFutureStub";
+    public static final String GRPC_PROTOCOL_NAME_UPPERCAMELCASE = "Grpc";
+    public static final String DOLLAR_SIGN = "$";
+    public static final String NEW_STUB_NAME = "newStub";
+    public static final String PARSE_FROM_METHOD_NAME = "parseFrom";
+    public static final String METHOD_NAME = "Method";
+    public static final String GETTER = "get";
+
+    public static final int REQUEST_CLASS_POSITION = 0;
+    public static final int RESPONSE_CLASS_POSITION = 1;
+    public static final int EMPTY_METHOD_ID = 1;
+    public static final int NON_EMPTY_METHOD_ID = 2;
+    public static final int CLIENT_STREAM_METHOD_ID = 3;
 }

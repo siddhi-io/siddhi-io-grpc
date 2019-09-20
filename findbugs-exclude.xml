@@ -35,7 +35,15 @@
         <Bug pattern="NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE"/>
     </Match>
     <Match>
-        <Class name="io.siddhi.extension.io.grpc.source.AbstractGrpcSource"/>
+        <Class name="io.siddhi.extension.io.grpc.source.GrpcEventServiceServer"/>
         <Bug pattern="MS_SHOULD_BE_FINAL"/>
+    </Match>
+    <Match>
+        <Class name="io.siddhi.extension.io.grpc.source.GenericServiceServer"/>
+        <Bug pattern="MS_SHOULD_BE_FINAL"/>
+    </Match>
+    <Match>
+        <Class name="io.siddhi.extension.io.grpc.source.AbstractGrpcSource"/>
+        <Bug pattern="DM_CONVERT_CASE"/>
     </Match>
 </FindBugsFilter>

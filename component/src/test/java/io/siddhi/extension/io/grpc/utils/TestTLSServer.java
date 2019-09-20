@@ -99,15 +99,29 @@ public class TestTLSServer {
                                 responseObserver.onCompleted();
                             }
 
+                    @Override
+                    public StreamObserver<Event> consume(StreamObserver<Empty> responseObserver) {
+                        return new StreamObserver<Event>() {
                             @Override
-                            public void consume(Event request,
-                                                StreamObserver<Empty> responseObserver) {
+                            public void onNext(Event request) {
                                 if (logger.isDebugEnabled()) {
-                                    logger.debug("Server consume hit with " + request.getPayload());
+                                    logger.debug("Server consume hit with payload = " + request.getPayload() +
+                                            " and Headers = {" + request.getHeadersMap().toString() + "}");
                                 }
+                            }
+
+                            @Override
+                            public void onError(Throwable t) {
+
+                            }
+
+                            @Override
+                            public void onCompleted() {
                                 responseObserver.onNext(Empty.getDefaultInstance());
                                 responseObserver.onCompleted();
                             }
+                        };
+                    }
                         })
                 .sslContext(getCarbonSslContext())
                 .build();

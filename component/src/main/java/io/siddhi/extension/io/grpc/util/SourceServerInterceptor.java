@@ -23,8 +23,8 @@ import io.grpc.Metadata;
 import io.grpc.ServerCall;
 import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
-import io.siddhi.core.config.SiddhiAppContext;
-import io.siddhi.extension.io.grpc.source.AbstractGrpcSource;
+import io.siddhi.extension.io.grpc.source.GenericServiceServer;
+import io.siddhi.extension.io.grpc.source.GrpcEventServiceServer;
 import org.apache.log4j.Logger;
 
 import java.util.HashMap;
@@ -35,30 +35,28 @@ import java.util.Set;
  * Server interceptor to receive headers
  */
 public class SourceServerInterceptor implements ServerInterceptor {
-  private static final Logger logger = Logger.getLogger(SourceServerInterceptor.class.getName());
-  private SiddhiAppContext siddhiAppContext;
-  private String streamID;
+    private static final Logger logger = Logger.getLogger(SourceServerInterceptor.class.getName());
+    private boolean isDefaultService;
 
-  public SourceServerInterceptor(SiddhiAppContext siddhiAppContext,
-                                 String streamID) {
-    this.siddhiAppContext = siddhiAppContext;
-    this.streamID = streamID;
-  }
+    public SourceServerInterceptor(boolean isDefaultService) {
+        this.isDefaultService = isDefaultService;
+    }
 
   @Override
   public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> serverCall,
                                                                Metadata metadata,
                                                                ServerCallHandler<ReqT, RespT> serverCallHandler) {
-    logger.error("Interceptor thread is: " + Thread.currentThread().getId());
+    logger.debug("Interceptor thread is: " + Thread.currentThread().getId());
     Set<String> metadataKeys = metadata.keys();
     Map<String, String> metaDataMap = new HashMap<>();
     for (String key: metadataKeys) {
       metaDataMap.put(key, metadata.get(Metadata.Key.of(key, io.grpc.Metadata.ASCII_STRING_MARSHALLER)));
     }
-    AbstractGrpcSource.metaDataMap.set(metaDataMap);
-    if (logger.isDebugEnabled()) {
-      logger.debug(siddhiAppContext.getName() + ":" + streamID + ": Metadata received: " + metaDataMap.toString());
-    }
+      if (isDefaultService) {
+          GrpcEventServiceServer.metaDataMap.set(metaDataMap);
+      } else {
+          GenericServiceServer.metaDataMap.set(metaDataMap);
+      }
     return Contexts.interceptCall(Context.ROOT, serverCall, metadata, serverCallHandler);
   }
 }

@@ -26,11 +26,11 @@ import io.siddhi.annotation.Extension;
 import io.siddhi.annotation.Parameter;
 import io.siddhi.annotation.util.DataType;
 import io.siddhi.core.exception.ConnectionUnavailableException;
-import io.siddhi.core.exception.SiddhiAppCreationException;
 import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.transport.DynamicOptions;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
+import io.siddhi.extension.io.grpc.util.ServiceConfigs;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
@@ -40,7 +40,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
 
-import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRPCmethodList;
+import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
 
 /**
  * {@code GrpcSink} Handle the gRPC publishing tasks.
@@ -57,8 +57,11 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRPCmethodList;
                 @Parameter(
                         name = "publisher.url",
                         description = "The url to which the outgoing events should be published via this extension. " +
-                                "This url should consist the host address, port, service name, method name in the " +
-                                "following format. `grpc://0.0.0.0:9763/<serviceName>/<methodName>`",
+                                "This url should consist the host hostPort, port, fully qualified service name, " +
+                                "method name in the following format. `grpc://0.0.0.0:9763/<serviceName>/" +
+                                "<methodName>`\n" +
+                                "For example:\n" +
+                                "grpc://0.0.0.0:9763/org.wso2.grpc.EventService/consume",
                         type = {DataType.STRING}),
                 @Parameter(
                         name = "headers",
@@ -176,6 +179,13 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRPCmethodList;
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "-"),
+                @Parameter(
+                        name = "enable.ssl",
+                        description = "to enable ssl. If set to true and truststore.file is not given then it will " +
+                                "be set to default carbon jks by default" ,
+                        type = {DataType.BOOL},
+                        optional = true,
+                        defaultValue = "FALSE"),
         },
         examples = {
                 @Example(syntax = "" +
@@ -202,31 +212,133 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRPCmethodList;
                 ),
                 @Example(syntax = "" +
                         "@sink(type='grpc',\n" +
-                        "      publisher.url = 'grpc://134.23.43.35:8080/org.wso2.grpc.test.MyService/send',\n" +
+                        "      publisher.url = 'grpc://134.23.43.35:8080/org.wso2.grpc.MyService/send',\n" +
                         "      @map(type='protobuf'),\n" +
                         "define stream FooStream (stringValue string, intValue int,longValue long,booleanValue bool," +
                         "floatValue float,doubleValue double);",
-                        description = "Here a stream named FooStream is defined with grpc sink.A grpc server" +
-                                "should be running at 194.23.98.100 listening to port 8080, since there is no mapper " +
-                                "provided, attributes of stream definition should be same as the attributes of " +
+                        description = "Here a stream named FooStream is defined with grpc sink. A grpc server should" +
+                                " be running at 134.23.43.35 listening to port 8080 since there is no mapper " +
+                                "provided, attributes of stream definition should be as same as the attributes of " +
                                 "protobuf message definition"
+                ),
+                @Example(syntax = "" +
+                        "@sink(type='grpc',\n" +
+                        "      publisher.url = 'grpc://134.23.43.35:8080/org.wso2.grpc.MyService/testMap',\n" +
+                        "      @map(type='protobuf'),\n" +
+                        "define stream FooStream (stringValue string, intValue int,map object);",
+                        description = "Here a stream named FooStream is defined with grpc sink. A grpc server should " +
+                                "be running at 134.23.43.35 listening to port 8080. The 'map object' in the stream " +
+                                "definition defines that this stream is going to use Map object with grpc service. " +
+                                "We can use any map object that extends 'java.util.AbstractMap' class."
+                ),
+                @Example(syntax = "" +
+                        "@sink(type='grpc',\n" +
+                        "      publisher.url = 'grpc://134.23.43.35:8080/org.wso2.grpc.MyService/testMap',\n" +
+                        "      @map(type='protobuf', \n" +
+                        "@payload(stringValue='a',longValue='b',intValue='c',booleanValue='d',floatValue = 'e', " +
+                        "doubleValue = 'f'))) \n" +
+                        "define stream FooStream (a string, b long, c int,d bool,e float,f double);",
+                        description = "Here a stream named FooStream is defined with grpc sink. A grpc server should " +
+                                "be running at 194.23.98.100 listening to port 8080. @payload is provided in this " +
+                                "stream, therefore we can use any name for the attributes in the stream definition, " +
+                                "but we should correctly map those names with protobuf message attributes. If we are " +
+                                "planning to send metadata within a stream we should use @payload to map attributes " +
+                                "to identify the metadata attribute and the protobuf attributes separately. "
+                ),
+                @Example(syntax = "" +
+                        "@sink(type='grpc',\n" +
+                        "      publisher.url = 'grpc://194.23.98.100:8888/org.wso2.grpc.test.StreamService/" +
+                        "clientStream',\n" +
+                        "      @map(type='protobuf')) \n" +
+                        "define stream FooStream (stringValue string, intValue int,longValue long,booleanValue bool," +
+                        "floatValue float,doubleValue double);",
+                        description = "Here in the grpc sink, we are sending a stream of requests to the server that " +
+                                "runs on 194.23.98.100 and port 8888. When we need to send a stream of requests from " +
+                                "the grpc sink we have to define a client stream RPC method(look the sample proto " +
+                                "file that provided in the resource folder [here](https://github.com/siddhi-io/siddhi" +
+                                "-io-grpc/tree/master/component/src/main/resources)).Then the siddhi will identify " +
+                                "whether it's a unary method or a stream method and send requests according to the " +
+                                "method type."
                 )
         }
 )
 
 public class GrpcSink extends AbstractGrpcSink {
     private static final Logger logger = Logger.getLogger(GrpcSink.class.getName());
+    private StreamObserver responseObserver;
     private AbstractStub asyncStub;
+    private StreamObserver requestObserver;
+    private Method rpcMethod;
+
 
     @Override
     public void initSink(OptionHolder optionHolder) {
-        if (isDefaultMode) {
-            if (methodName == null) {
-                methodName = GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE;
-            } else if (!methodName.equalsIgnoreCase(GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE)) {
+        if (serviceConfigs.isDefaultService()) {
+            responseObserver = new StreamObserver<Empty>() {
+                @Override
+                public void onNext(Empty event) {
+                }
+
+                @Override
+                public void onError(Throwable t) {
+                    logger.error(siddhiAppName + ":" + streamID + ": " + t.getMessage() + " caused by "
+                            + t.getMessage(), t);
+                }
+
+                @Override
+                public void onCompleted() {
+                }
+            };
+            if (serviceConfigs.getMethodName() == null) {
+                serviceConfigs.setMethodName(GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE);
+            } else if (!serviceConfigs.getMethodName().equalsIgnoreCase(GrpcConstants
+                    .DEFAULT_METHOD_NAME_WITHOUT_RESPONSE)) {
                 throw new SiddhiAppValidationException(siddhiAppName + ": " + streamID + ": In default " +
                         "mode grpc-sink when using EventService the method name should be '" +
-                        GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE + "' but given " + methodName);
+                        GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE + "' but given " + serviceConfigs
+                        .getMethodName());
+            }
+            this.channel = managedChannelBuilder.build();
+            this.asyncStub = EventServiceGrpc.newStub(channel);
+            if (metadataOption != null) {
+                if (metadataOption.isStatic()) {
+                    asyncStub = attachMetaDataToStub(null, asyncStub);
+                }
+            }
+            requestObserver = ((EventServiceGrpc.EventServiceStub) asyncStub).consume(responseObserver);
+        } else {
+            responseObserver = new StreamObserver<Object>() {
+                @Override
+                public void onNext(Object event) {
+                }
+
+                @Override
+                public void onError(Throwable t) {
+                    logger.error(siddhiAppName + ":" + streamID + ": " + t.getMessage() + " caused by "
+                            + t.getMessage(), t);
+                }
+
+                @Override
+                public void onCompleted() {
+                }
+            };
+            this.channel = managedChannelBuilder.build();
+            rpcMethod = getRpcMethod(serviceConfigs, siddhiAppName, streamID);
+            this.asyncStub = createStub(serviceConfigs);
+            if (metadataOption != null) {
+                if (metadataOption.isStatic()) {
+                    asyncStub = attachMetaDataToStub(null, asyncStub);
+                }
+            }
+            try {
+                if (rpcMethod.getParameterCount() == 1) {
+                    requestObserver = (StreamObserver) rpcMethod.invoke(asyncStub, responseObserver);
+                }
+            } catch (IllegalAccessException | InvocationTargetException e) { //throws from 'invoke'
+                throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid method name " +
+                        "provided in the url, provided method name: " + serviceConfigs.getMethodName() +
+                        "expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName,
+                        streamID), e);
             }
         }
     }
@@ -234,55 +346,30 @@ public class GrpcSink extends AbstractGrpcSink {
     @Override
     public void publish(Object payload, DynamicOptions dynamicOptions, State state)
             throws ConnectionUnavailableException {
-        StreamObserver<Empty> responseObserver = new StreamObserver<Empty>() {
-            //try to send all the siddhi events using one stream observer - impossible without adding client
-            // side streaming in protobuf definition
-            @Override
-            public void onNext(Empty event) {
-            }
-
-            @Override //todo latch based error???
-            public void onError(Throwable t) { //parent method doest have error in its signature. so cant throw
-                // from here
-//                    if (((StatusRuntimeException) t).getStatus().getCode().equals(Status.UNAVAILABLE)) {
-//                        throw new ConnectionUnavailableException(siddhiAppName.getName() + ": " + streamID + ": "
-//                        + t.getMessage());
-//                    }
-                logger.error(siddhiAppName + ":" + streamID + ": " + t.getMessage() + " caused by "
-                        + t.getCause());
-            }
-            @Override
-            public void onCompleted() {
-            }
-        };
-        if (isDefaultMode) {
+        if (serviceConfigs.isDefaultService()) {
             Event.Builder eventBuilder = Event.newBuilder().setPayload(payload.toString());
-            EventServiceGrpc.EventServiceStub currentAsyncStub = (EventServiceGrpc.EventServiceStub) asyncStub;
 
-            if (headersOption != null || sequenceName != null) {
-                eventBuilder = addHeadersToEventBuilder(dynamicOptions, eventBuilder);
-            }
-            if (metadataOption != null) {
-                currentAsyncStub = (EventServiceGrpc.EventServiceStub) attachMetaDataToStub(dynamicOptions,
-                        currentAsyncStub);
-            }
-            currentAsyncStub.consume(eventBuilder.build(), responseObserver);
-        } else {
-            try {
-                AbstractStub currentAsyncStubObject = asyncStub;
-                if (metadataOption != null) {
-                    currentAsyncStubObject = attachMetaDataToStub(dynamicOptions,
-                            currentAsyncStubObject);
+            if (headersOption != null || serviceConfigs.getSequenceName() != null) {
+                if (headersOption != null && headersOption.isStatic()) {
+                    eventBuilder.putAllHeaders(headersMap);
+                } else {
+                    eventBuilder = addHeadersToEventBuilder(dynamicOptions, eventBuilder);
                 }
-
-                Class[] parameterTypes = new Class[]{requestClass, StreamObserver.class};
+            }
+            requestObserver.onNext(eventBuilder.build());
+        } else {
+            if (requestObserver == null) {
                 Object[] arguments = new Object[]{payload, responseObserver};
-                Method rpcMethod = this.asyncStub.getClass().getDeclaredMethod(super.methodName, parameterTypes);
-                rpcMethod.invoke(currentAsyncStubObject, arguments);
-            } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-                throw new SiddhiAppCreationException(siddhiAppName + ": Invalid method name provided " +
-                        "in the url, provided method name : '" + methodName + "' expected one of these methods : " +
-                        getRPCmethodList(serviceReference, siddhiAppName) + ". " + e.getMessage(), e);
+                try {
+                    rpcMethod.invoke(asyncStub, arguments);
+                } catch (IllegalAccessException | InvocationTargetException e) {
+                    throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid method name " +
+                            "provided in the url, provided method name: " + serviceConfigs.getMethodName() +
+                            "expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName,
+                            streamID), e);
+                }
+            } else {
+                requestObserver.onNext(payload);
             }
         }
     }
@@ -296,33 +383,20 @@ public class GrpcSink extends AbstractGrpcSink {
      */
     @Override
     public void connect() throws ConnectionUnavailableException {
-        this.channel = managedChannelBuilder.build();
-        if (isDefaultMode) {
-            this.asyncStub = EventServiceGrpc.newStub(channel);
-        } else {
-            String serviceClassName =
-                    super.serviceReference + GrpcConstants.GRPC_PROTOCOL_NAME_UPPERCAMELCASE;
-            try {
-                Class serviceClass = Class.forName(serviceClassName);
-                Method newStub = serviceClass.getDeclaredMethod(GrpcConstants.NEW_STUB_NAME, Channel.class);
-                asyncStub = (AbstractStub) newStub.invoke(serviceClass, this.channel);
-                // object and remove
-            } catch (ClassNotFoundException e) {
-                throw new SiddhiAppCreationException(siddhiAppName + ": " +
-                        "Invalid service name provided in the url, provided service name : '" + serviceReference +
-                        "'. " + e.getMessage(), e);
-            } catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
-                throw new SiddhiAppCreationException(siddhiAppName + ": Invalid method name provided " +
-                        "in the url, provided method name : '" + methodName + "' expected one of these methods : " +
-                        getRPCmethodList(serviceReference, siddhiAppName) + ". " + e.getMessage(), e);
+        if (channel == null || channel.isShutdown()) {
+            this.channel = managedChannelBuilder.build();
+            if (serviceConfigs.isDefaultService()) {
+                this.asyncStub = EventServiceGrpc.newStub(channel);
+            } else {
+                this.asyncStub = createStub(serviceConfigs);
             }
-        }
-        if (!channel.isShutdown()) {
-            logger.info(siddhiAppName + ": gRPC service on " + streamID + " has successfully connected to "
-                    + url);
-        } else {
-            throw new ConnectionUnavailableException(siddhiAppName + ": gRPC service on" + streamID + " could not " +
-                    "connect to " + url);
+            if (!channel.isShutdown()) {
+                logger.info(siddhiAppName + ": gRPC service on " + streamID + " has successfully connected to "
+                        + serviceConfigs.getUrl());
+            } else {
+                throw new ConnectionUnavailableException(siddhiAppName + ": gRPC service on" + streamID +
+                        " could not connect to " + serviceConfigs.getUrl());
+            }
         }
     }
 
@@ -333,7 +407,10 @@ public class GrpcSink extends AbstractGrpcSink {
     @Override
     public void disconnect() {
         try {
-            if (channelTerminationWaitingTimeInMillis > 0) {
+            if (requestObserver != null) {
+                requestObserver.onCompleted();
+            }
+            if (channelTerminationWaitingTimeInMillis > 0L) {
                 channel.shutdown().awaitTermination(channelTerminationWaitingTimeInMillis, TimeUnit.MILLISECONDS);
             } else {
                 channel.shutdown();
@@ -342,6 +419,57 @@ public class GrpcSink extends AbstractGrpcSink {
         } catch (InterruptedException e) {
             logger.error(siddhiAppName + ": " + streamID + ": Error in shutting " + "down the channel. " +
                     e.getMessage(), e);
+        }
+    }
+
+    /**
+     * to get the rpc method from the service
+     */
+    private static Method getRpcMethod(ServiceConfigs serviceConfigs, String siddhiAppName, String streamID) {
+
+        Method rpcMethod = null;
+        String stubReference = serviceConfigs.getFullyQualifiedServiceName() + GrpcConstants.
+                GRPC_PROTOCOL_NAME_UPPERCAMELCASE + GrpcConstants.DOLLAR_SIGN + serviceConfigs.getServiceName()
+                + GrpcConstants.STUB;
+        try {
+            Method[] methodsInStub = Class.forName(stubReference).getMethods();
+            for (Method method : methodsInStub) {
+                if (method.getName().equalsIgnoreCase(serviceConfigs.getMethodName())) {
+                    rpcMethod = method;
+                    break;
+                }
+            }
+            if (rpcMethod == null) { //only if user has provided a wrong method name
+                throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid method name " +
+                        "provided in the url, provided method name: " + serviceConfigs.getMethodName() +
+                        "expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName,
+                        streamID));
+            }
+        } catch (ClassNotFoundException e) {
+            throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid service name " +
+                    "provided in the url, provided service name: '" + serviceConfigs
+                    .getFullyQualifiedServiceName() + "'", e);
+        }
+        return rpcMethod;
+    }
+
+    /**
+     * to create Stub object in generic way
+     */
+    private AbstractStub createStub(ServiceConfigs serviceConfigs) {
+        try {
+            Class serviceClass = Class.forName(serviceConfigs.getFullyQualifiedServiceName() + GrpcConstants
+                    .GRPC_PROTOCOL_NAME_UPPERCAMELCASE);
+            Method newStub = serviceClass.getDeclaredMethod(GrpcConstants.NEW_STUB_NAME, Channel.class);
+            return (AbstractStub) newStub.invoke(serviceClass, this.channel);
+        } catch (ClassNotFoundException e) {
+            throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid service name " +
+                    "provided in the url, provided service name: '" + serviceConfigs
+                    .getFullyQualifiedServiceName() + "'", e);
+        } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+            throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid method name " +
+                    "provided in the url, provided method name: " + serviceConfigs.getMethodName() +
+                    "expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName, streamID));
         }
     }
 }

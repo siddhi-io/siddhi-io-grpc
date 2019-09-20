@@ -1,20 +1,3 @@
-/*
- * Copyright (c) 2019, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
- *
- * WSO2 Inc. licenses this file to you under the Apache License,
- * Version 2.0 (the "License"); you may not use this file except
- * in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
 package io.siddhi.extension.io.grpc.utils;
 
 import com.google.protobuf.Empty;
@@ -22,36 +5,49 @@ import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.ServerInterceptors;
 import io.grpc.stub.StreamObserver;
+import io.siddhi.extension.io.grpc.proto.MyServiceGrpc;
+import io.siddhi.extension.io.grpc.proto.Request;
+import io.siddhi.extension.io.grpc.proto.RequestWithMap;
+import io.siddhi.extension.io.grpc.proto.Response;
+import io.siddhi.extension.io.grpc.proto.ResponseWithMap;
+import io.siddhi.extension.io.grpc.proto.StreamServiceGrpc;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.wso2.grpc.test.MyServiceGrpc;
-import org.wso2.grpc.test.Request;
-import org.wso2.grpc.test.Response;
-
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 public class GenericTestServer {
-
-    private static final Logger logger = Logger.getLogger(TestServer.class.getName());
-    TestServerInterceptor testInterceptor = new TestServerInterceptor();
+    private static final Logger logger = Logger.getLogger(GenericTestServer.class.getName());
+    private TestServerInterceptor testInterceptor = new TestServerInterceptor();
     private Server server;
+    private int port;
+
+    public GenericTestServer(int port) {
+        this.port = port;
+    }
 
     public void start() throws IOException {
         if (server != null) {
             throw new IllegalStateException("Already started");
         }
         server = ServerBuilder
-                .forPort(8888)
+                .forPort(port)
                 .addService(ServerInterceptors.intercept(new MyServiceGrpc.MyServiceImplBase() {
                     @Override
                     public void send(Request request, StreamObserver<Empty> responseObserver) {
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("Server hits with request :\n" + request);
+                        }
                         responseObserver.onNext(Empty.getDefaultInstance());
                         responseObserver.onCompleted();
                     }
 
                     @Override
                     public void process(Request request, StreamObserver<Response> responseObserver) {
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("Server hits with request :\n" + request);
+                        }
                         Response response = Response.newBuilder()
                                 .setIntValue(request.getIntValue())
                                 .setStringValue(request.getStringValue())
@@ -65,10 +61,69 @@ public class GenericTestServer {
                         responseObserver.onCompleted();
 
                     }
+
+                    @Override
+                    public void testMap(RequestWithMap request, StreamObserver<ResponseWithMap> responseObserver) {
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("Server hits with request :\n" + request);
+                        }
+                        ResponseWithMap response = ResponseWithMap.newBuilder()
+                                .setIntValue(request.getIntValue())
+                                .setStringValue(request.getStringValue())
+                                .putAllMap(request.getMapMap()).build();
+                        responseObserver.onNext(response);
+                        responseObserver.onCompleted();
+                    }
+                }, testInterceptor)).addService(ServerInterceptors.intercept(
+                        new StreamServiceGrpc.StreamServiceImplBase() {
+                    @Override
+                    public StreamObserver<Request> clientStream(StreamObserver<Empty> responseObserver) {
+                        return new StreamObserver<Request>() {
+                            @Override
+                            public void onNext(Request value) {
+                                logger.log(Level.INFO, "Request : \n" + value);
+                            }
+
+                            @Override
+                            public void onError(Throwable t) {
+
+                            }
+
+                            @Override
+                            public void onCompleted() {
+                                logger.info("Done Streaming");
+                                responseObserver.onNext(Empty.getDefaultInstance());
+                                responseObserver.onCompleted();
+                            }
+                        };
+                    }
+
+                    @Override
+                    public StreamObserver<RequestWithMap> clientStreamWithMap(StreamObserver<Empty> responseObserver) {
+                        return new StreamObserver<RequestWithMap>() {
+                            @Override
+                            public void onNext(RequestWithMap value) {
+                                logger.log(Level.INFO, "Request : \n" + value);
+                            }
+
+                            @Override
+                            public void onError(Throwable t) {
+
+                            }
+
+                            @Override
+                            public void onCompleted() {
+                                logger.info("Done Streaming");
+                                responseObserver.onNext(Empty.getDefaultInstance());
+                                responseObserver.onCompleted();
+                            }
+                        };
+                    }
                 }, testInterceptor)).build();
+
         server.start();
         if (logger.isDebugEnabled()) {
-            logger.debug("Server started");
+            logger.debug("Generic Server started");
         }
     }
 
@@ -80,20 +135,18 @@ public class GenericTestServer {
         server = null;
         s.shutdown();
         if (s.awaitTermination(1, TimeUnit.SECONDS)) {
-
             if (logger.isDebugEnabled()) {
-                logger.debug("Server stopped");
+                logger.debug("Generic Server stopped");
             }
             return;
         }
         s.shutdownNow();
         if (s.awaitTermination(1, TimeUnit.SECONDS)) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Generic Server stopped");
+            }
             return;
         }
         throw new RuntimeException("Unable to shutdown server");
-    }
-
-    public int getPort() {
-        return server.getPort();
     }
 }

@@ -43,19 +43,20 @@ public class GrpcSinkAuthTestCase {
 
     private void setCarbonHome() {
         Path carbonHome = Paths.get("");
-        carbonHome = Paths.get(carbonHome.toString(), "src", "org/wso2/grpc/test");
+        carbonHome = Paths.get(carbonHome.toString(), "src", "test");
         System.setProperty(CARBON_HOME, carbonHome.toString());
 
     }
 
     @Test
     public void testForServerAuthentication() throws Exception {
-        TestTLSServer server = new TestTLSServer(8888, false);
+        TestTLSServer server = new TestTLSServer(5656, false);
         setCarbonHome();
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inStreamDefinition = ""
-                + "@sink(type='grpc', publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume'," +
+                + "@sink(type='grpc', publisher.url = 'grpc://localhost:5656/org.wso2.grpc.EventService/consume', " +
+                "enable.ssl = 'true', " +
                 "truststore.file = 'src/test/resources/security/wso2carbon.jks'," +
                 "truststore.password = 'wso2carbon', " +
                 "truststore.algorithm = 'SunX509', " +
@@ -78,12 +79,13 @@ public class GrpcSinkAuthTestCase {
 
     @Test
     public void testForMutualAuthentication() throws Exception {
-        TestTLSServer server = new TestTLSServer(8888, true);
+        TestTLSServer server = new TestTLSServer(5657, true);
         setCarbonHome();
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inStreamDefinition = ""
-                + "@sink(type='grpc', publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume'," +
+                + "@sink(type='grpc', publisher.url = 'grpc://localhost:5657/org.wso2.grpc.EventService/consume'," +
+                "enable.ssl = 'true', " +
                 "truststore.file = 'src/test/resources/security/wso2carbon.jks'," +
                 "truststore.password = 'wso2carbon', " +
                 "truststore.algorithm = 'SunX509', " +
@@ -109,13 +111,14 @@ public class GrpcSinkAuthTestCase {
 
     @Test
     public void testCallSinkForServerAuthentication() throws Exception {
-        TestTLSServer server = new TestTLSServer(8888, false);
+        TestTLSServer server = new TestTLSServer(5658, false);
         setCarbonHome();
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inStreamDefinition = ""
                 + "@sink(type='grpc-call', " +
-                "publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/process'," +
+                "publisher.url = 'grpc://localhost:5658/org.wso2.grpc.EventService/process'," +
+                "enable.ssl = 'true', " +
                 "truststore.file = 'src/test/resources/security/wso2carbon.jks'," +
                 "truststore.password = 'wso2carbon', " +
                 "truststore.algorithm = 'SunX509', " +
@@ -146,7 +149,7 @@ public class GrpcSinkAuthTestCase {
 
     @Test
     public void testCallSinkForServerAuthenticationFailure() throws Exception {
-        TestTLSServer server = new TestTLSServer(8888, false);
+        TestTLSServer server = new TestTLSServer(5659, false);
         final TestAppender appender = new TestAppender();
         final Logger rootLogger = Logger.getRootLogger();
         rootLogger.setLevel(Level.DEBUG);
@@ -156,7 +159,7 @@ public class GrpcSinkAuthTestCase {
 
         String inStreamDefinition = ""
                 + "@sink(type='grpc-call', " +
-                "publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/process'," +
+                "publisher.url = 'grpc://localhost:5659/org.wso2.grpc.EventService/process'," +
                 "sink.id = '1', " +
                 "@map(type='json', @payload('{{message}}'))) " +
                 "define stream FooStream (message String);";
@@ -194,13 +197,14 @@ public class GrpcSinkAuthTestCase {
 
     @Test
     public void testCallSinkForMutualAuthentication() throws Exception {
-        TestTLSServer server = new TestTLSServer(8888, true);
+        TestTLSServer server = new TestTLSServer(5670, true);
         setCarbonHome();
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inStreamDefinition = ""
                 + "@sink(type='grpc-call', " +
-                "publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/process'," +
+                "publisher.url = 'grpc://localhost:5670/org.wso2.grpc.EventService/process'," +
+                "enable.ssl = 'true', " +
                 "truststore.file = 'src/test/resources/security/wso2carbon.jks'," +
                 "truststore.password = 'wso2carbon', " +
                 "truststore.algorithm = 'SunX509', " +

@@ -38,8 +38,7 @@ import java.util.List;
 
 public class GrpcSinkTestCase {
     private static final Logger log = Logger.getLogger(GrpcSinkTestCase.class.getName());
-    private TestServer server = new TestServer(8888);
-
+    private TestServer server = new TestServer(5003);
 
     @BeforeTest
     public void init() throws IOException {
@@ -61,7 +60,7 @@ public class GrpcSinkTestCase {
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inStreamDefinition = ""
-                + "@sink(type='grpc', publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
+                + "@sink(type='grpc', publisher.url = 'grpc://localhost:5003/org.wso2.grpc.EventService/consume', " +
                 "@map(type='json', @payload('{{message}}'))) " +
                 "define stream FooStream (message String);";
 
@@ -92,7 +91,7 @@ public class GrpcSinkTestCase {
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inStreamDefinition = ""
-                + "@sink(type='grpc', publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
+                + "@sink(type='grpc', publisher.url = 'grpc://localhost:5003/org.wso2.grpc.EventService/consume', " +
                 "@map(type='json', @payload('{{message}}'))) " +
                 "define stream FooStream (message String);";
 
@@ -126,7 +125,7 @@ public class GrpcSinkTestCase {
 
         String inStreamDefinition = ""
                 + "@sink(type='grpc', " +
-                "publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
+                "publisher.url = 'grpc://localhost:5003/org.wso2.grpc.EventService/consume', " +
                 "headers='{{headers}}', " +
                 "@map(type='json', @payload('{{message}}'))) " +
                 "define stream FooStream (message String, headers String);";
@@ -162,7 +161,7 @@ public class GrpcSinkTestCase {
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inStreamDefinition = ""
-                + "@sink(type='grpc', publisher.url = 'grc://localhost:8888/org.wso2.grpc.EventService/consume', " +
+                + "@sink(type='grpc', publisher.url = 'grc://localhost:5003/org.wso2.grpc.EventService/consume', " +
                 "@map(type='json', @payload('{{message}}'))) " +
                 "define stream FooStream (message String);";
 
@@ -174,7 +173,30 @@ public class GrpcSinkTestCase {
     }
 
     @Test
-    public void testCaseWithMalformedURL() throws Exception {
+    public void testCaseWithMalformedURL1() throws Exception {
+        log.info("Test case to call consume");
+        final TestAppender appender = new TestAppender();
+        final Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(Level.DEBUG);
+        rootLogger.addAppender(appender);
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String inStreamDefinition = ""
+                + "@sink(type='grpc', publisher.url = 'grpc://localhost:5003', " +
+                "@map(type='json', @payload('{{message}}'))) " +
+                "define stream FooStream (message String);";
+
+        try {
+            SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
+        } catch (SiddhiAppValidationException e) {
+            Assert.assertTrue(e.getMessage().contains("URL not properly given. Expected format is " +
+                    "`grpc://0.0.0.0:9763/<serviceName>/<methodName>` or `grpc://0.0.0.0:9763/<sequenceName>` but " +
+                    "the provided url is grpc://localhost:5003. "));
+        }
+    }
+
+    @Test
+    public void testCaseWithMalformedURL2() throws Exception {
         log.info("Test case to call consume");
         final TestAppender appender = new TestAppender();
         final Logger rootLogger = Logger.getRootLogger();
@@ -190,9 +212,27 @@ public class GrpcSinkTestCase {
         try {
             SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
         } catch (SiddhiAppValidationException e) {
-            Assert.assertTrue(e.getMessage().contains("Malformed URL. After port number at least two sections should " +
-                    "be available separated by '/' as in 'grpc://<host>:<port>/<ServiceName>/<MethodName>'"));
+            Assert.assertTrue(e.getMessage().contains("URL not properly given. Expected format is " +
+                    "`grpc://0.0.0.0:9763/<serviceName>/<methodName>` or `grpc://0.0.0.0:9763/<sequenceName>` but " +
+                    "the provided url is grpc:dfasf. "));
         }
+    }
+
+    @Test
+    public void testCaseWithShortURL() throws Exception {
+        log.info("Test case to call consume");
+        final TestAppender appender = new TestAppender();
+        final Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(Level.DEBUG);
+        rootLogger.addAppender(appender);
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String inStreamDefinition = ""
+                + "@sink(type='grpc', publisher.url = 'grpc://localhost:5003/mySeq', " +
+                "@map(type='json', @payload('{{message}}'))) " +
+                "define stream FooStream (message String);";
+
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
     }
 
     @Test
@@ -205,7 +245,7 @@ public class GrpcSinkTestCase {
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inStreamDefinition = ""
-                + "@sink(type='grpc', publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
+                + "@sink(type='grpc', publisher.url = 'grpc://localhost:5003/org.wso2.grpc.EventService/consume', " +
                 "@map(type='xml', @payload('{{message}}'))) " +
                 "define stream FooStream (message String);";
 
@@ -237,7 +277,7 @@ public class GrpcSinkTestCase {
 
         String inStreamDefinition = ""
                 + "@sink(type='grpc', " +
-                "publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume/mySeq', " +
+                "publisher.url = 'grpc://localhost:5003/org.wso2.grpc.EventService/consume/mySeq', " +
                 "@map(type='xml', @payload('{{message}}'))) " +
                 "define stream FooStream (message String);";
 
@@ -270,7 +310,7 @@ public class GrpcSinkTestCase {
 
         String inStreamDefinition = ""
                 + "@sink(type='grpc', " +
-                "publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume/mySeq', " +
+                "publisher.url = 'grpc://localhost:5003/org.wso2.grpc.EventService/consume/mySeq', " +
                 "headers='{{headers}}', " +
                 "@map(type='json', @payload('{{message}}'))) " +
                 "define stream FooStream (message String, headers String);";
@@ -307,17 +347,16 @@ public class GrpcSinkTestCase {
 
         String inStreamDefinition = ""
                 + "@sink(type='grpc', " +
-                "publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
-                "metadata='{{metadata}}', " +
-                "@map(type='json', @payload('{{message}}'))) " +
-                "define stream FooStream (message String, metadata String);";
+                "publisher.url = 'grpc://localhost:5003/org.wso2.grpc.EventService/consume', " +
+                "metadata = \"'Name:John','Age:23','Content-Type:text'\", " +
+                "@map(type='json')) " +
+                "define stream FooStream (message String);";
 
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
         InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
 
         siddhiAppRuntime.start();
-        fooStream.send(new Object[]{"Request 1", "'Name:John','Age:23','Content-Type:text'"});
-        fooStream.send(new Object[]{"Request 2", "'Name:Nash','Age:54','Content-Type:json'"});
+        fooStream.send(new Object[]{"Request 1"});
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
@@ -327,12 +366,10 @@ public class GrpcSinkTestCase {
             String message = String.valueOf(logEvent.getMessage());
             logMessages.add(message);
         }
-        Assert.assertTrue(logMessages.contains("Server consume hit with payload = [Request 1] and Headers = {{}}"));
-        Assert.assertTrue(logMessages.contains("Server consume hit with payload = [Request 2] and Headers = {{}}"));
+        Assert.assertTrue(logMessages.contains("Server consume hit with payload = " +
+                "[{\"event\":{\"message\":\"Request 1\"}}] and Headers = {{}}"));
         Assert.assertTrue(logMessages.contains("Metadata received: name: John"));
         Assert.assertTrue(logMessages.contains("Metadata received: age: 23"));
-        Assert.assertTrue(logMessages.contains("Metadata received: name: Nash"));
-        Assert.assertTrue(logMessages.contains("Metadata received: age: 54"));
     }
 
     @Test
@@ -346,7 +383,7 @@ public class GrpcSinkTestCase {
         server.stop();
 
         String inStreamDefinition = ""
-                + "@sink(type='grpc', publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
+                + "@sink(type='grpc', publisher.url = 'grpc://localhost:5003/org.wso2.grpc.EventService/consume', " +
                 "@map(type='json', @payload('{{message}}'))) " +
                 "define stream FooStream (message String);";
 
@@ -358,6 +395,17 @@ public class GrpcSinkTestCase {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
         server.start();
+
+        final List<LoggingEvent> log = appender.getLog();
+        List<String> logMessages = new ArrayList<>();
+        for (LoggingEvent logEvent : log) {
+            String message = String.valueOf(logEvent.getMessage());
+            if (message.contains("FooStream: ")) {
+                message = message.split("FooStream: ")[1];
+            }
+            logMessages.add(message);
+        }
+        Assert.assertTrue(logMessages.contains("UNAVAILABLE: io exception caused by UNAVAILABLE: io exception"));
     }
 
     @Test
@@ -371,7 +419,7 @@ public class GrpcSinkTestCase {
         siddhiManager.setPersistenceStore(new InMemoryPersistenceStore());
 
         String inStreamDefinition = ""
-                + "@sink(type='grpc', publisher.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
+                + "@sink(type='grpc', publisher.url = 'grpc://localhost:5003/org.wso2.grpc.EventService/consume', " +
                 "@map(type='json', @payload('{{message}}'))) " +
                 "define stream FooStream (message String);";
 
@@ -404,8 +452,4 @@ public class GrpcSinkTestCase {
         Assert.assertTrue(logMessages.contains("Server consume hit with payload = [Request 1] and Headers = {{}}"));
         Assert.assertTrue(logMessages.contains("Server consume hit with payload = [Request 2] and Headers = {{}}"));
     }
-
-
-
-
 }

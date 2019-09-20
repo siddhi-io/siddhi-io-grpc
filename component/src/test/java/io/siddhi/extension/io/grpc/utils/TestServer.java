@@ -53,14 +53,27 @@ public class TestServer {
         }
 
         @Override
-        public void consume(Event request,
-                            StreamObserver<Empty> responseObserver) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("Server consume hit with payload = " + request.getPayload() + " and Headers = {"
-                        + request.getHeadersMap().toString() + "}");
-            }
-            responseObserver.onNext(Empty.getDefaultInstance());
-            responseObserver.onCompleted();
+        public StreamObserver<Event> consume(StreamObserver<Empty> responseObserver) {
+            return new StreamObserver<Event>() {
+                @Override
+                public void onNext(Event request) {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Server consume hit with payload = " + request.getPayload() + " and Headers = {"
+                                + request.getHeadersMap().toString() + "}");
+                    }
+                }
+
+                @Override
+                public void onError(Throwable t) {
+
+                }
+
+                @Override
+                public void onCompleted() {
+                    responseObserver.onNext(Empty.getDefaultInstance());
+                    responseObserver.onCompleted();
+                }
+            };
         }
     };
 

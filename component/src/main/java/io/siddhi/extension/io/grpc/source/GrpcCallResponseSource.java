@@ -52,13 +52,17 @@ import java.util.Map;
                         description = "a unique ID that should be set for each grpc-call source. There is a 1:1 " +
                                 "mapping between grpc-call sinks and grpc-call-response sources. Each sink has one " +
                                 "particular source listening to the responses to requests published from that sink. " +
-                                "So the same sink.id should be given when writing the sink also.",
+                                "So the same sink.id should be given when writing the sink also." ,
                         type = {DataType.INT}),
         },
         examples = {
                 @Example(syntax = "" +
                         "@source(type='grpc-call-response', sink.id= '1')\n" +
-                        "define stream BarStream (message String);",
+                        "define stream BarStream (message String);" +
+                        "@sink(type='grpc-call',\n" +
+                        "      publisher.url = 'grpc://194.23.98.100:8080/EventService/process',\n" +
+                        "      sink.id= '1', @map(type='json'))\n" +
+                        "define stream FooStream (message String);\n",
                         description = "Here we are listening to responses  for requests sent from the sink with " +
                                 "sink.id 1 will be received here. The results will be injected into BarStream"
                 )
@@ -77,7 +81,6 @@ public class GrpcCallResponseSource extends Source {
     /**
      * The initialization method for {@link Source}, will be called before other methods. It used to validate
      * all configurations and to get initial values.
-     *
      * @param sourceEventListener After receiving events, the source should trigger onEvent() of this listener.
      *                            Listener will then pass on the events to the appropriate mappers for processing .
      * @param optionHolder        Option holder containing static configuration related to the {@link Source}
@@ -99,7 +102,6 @@ public class GrpcCallResponseSource extends Source {
         sourceEventListener.onEvent(response.getPayload(), getTransportProperties(response.getHeadersMap(),
                 siddhiRequestEventData));
     }
-
     public void onResponse(Object response, Map<String, String> siddhiRequestEventData) {
         sourceEventListener.onEvent(response, getTransportProperties(siddhiRequestEventData));
     }
@@ -115,8 +117,7 @@ public class GrpcCallResponseSource extends Source {
         }
         return transportProperties;
     }
-
-    private String[] getTransportProperties(Map<String, String> siddhiRequestEventData) { //overloaded method for
+    private String[] getTransportProperties(Map<String, String> siddhiRequestEventData) {
         String[] transportProperties = new String[requestedTransportPropertyNames.length];
         for (int i = 0; i < requestedTransportPropertyNames.length; i++) {
             if (siddhiRequestEventData.containsKey(requestedTransportPropertyNames[i])) {

@@ -23,8 +23,11 @@ import io.grpc.Metadata;
 import io.grpc.ServerCall;
 import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
+import io.siddhi.extension.io.grpc.source.GrpcEventServiceServer;
 import org.apache.log4j.Logger;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
@@ -40,6 +43,11 @@ public class TestServerInterceptor implements ServerInterceptor {
                                                                Metadata metadata,
                                                                ServerCallHandler<ReqT, RespT> serverCallHandler) {
     Set<String> metadataKeys = metadata.keys();
+    Map<String, String> metaDataMap = new HashMap<>();
+    for (String key: metadataKeys) {
+      metaDataMap.put(key, metadata.get(Metadata.Key.of(key, io.grpc.Metadata.ASCII_STRING_MARSHALLER)));
+    }
+    GrpcEventServiceServer.metaDataMap.set(metaDataMap);
     for (String key: metadataKeys) {
       if (logger.isDebugEnabled()) {
         logger.debug("Metadata received: " + key + ": " + metadata.get(Metadata.Key.of(key, ASCII_STRING_MARSHALLER)));

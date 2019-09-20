@@ -78,12 +78,13 @@
             <artifactId>siddhi-annotations</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.wso2.transport.http</groupId>
-            <artifactId>org.wso2.transport.http.netty</artifactId>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
         </dependency>
         <dependency>
             <groupId>io.siddhi.extension.map.protobuf</groupId>
             <artifactId>siddhi-map-protobuf</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
