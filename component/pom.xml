@@ -169,8 +169,14 @@
                             io.siddhi.extension.io.grpc.*,
                             org.wso2.grpc.*
                         </Export-Package>
+                        <Private-Package>
+                            io.grpc.*,
+                            com.google.*,
+                            io.opencensus.*,
+                        </Private-Package>
                         <Import-Package>
-                            *;resolution:=optional
+                            io.grpc.*;version="${grpc.version.range}",
+                            com.google.*;version="${grpc.version.range}",
                         </Import-Package>
                         <DynamicImport-Package>*</DynamicImport-Package>
                         <Include-Resource>
