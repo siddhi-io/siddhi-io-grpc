@@ -189,51 +189,12 @@
                     </execution>
                 </executions>
             </plugin>
-            <!--<plugin>-->
-                <!--<groupId>org.apache.maven.plugins</groupId>-->
-                <!--<artifactId>maven-shade-plugin</artifactId>-->
-                <!--<version>3.2.1</version>-->
-                <!--<executions>-->
-                    <!--<execution>-->
-                        <!--<phase>package</phase>-->
-                        <!--<goals>-->
-                            <!--<goal>shade</goal>-->
-                        <!--</goals>-->
-                        <!--<configuration>-->
-                            <!--<transformers>-->
-                                <!--<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">-->
-                                    <!--<mainClass>package.Main</mainClass>-->
-                                <!--</transformer>-->
-                            <!--</transformers>-->
-                            <!--<minimizeJar>true</minimizeJar>-->
-                            <!--<filters>-->
-                                <!--<filter>-->
-                                    <!--<artifact>io.grpc:grpc-netty-shaded</artifact>-->
-                                    <!--<includes>-->
-                                        <!--<include>**</include>-->
-                                    <!--</includes>-->
-                                <!--</filter>-->
-                                <!--<filter>-->
-                                    <!--<artifact>io.grpc:grpc-protobuf</artifact>-->
-                                    <!--<includes>-->
-                                        <!--<include>**</include>-->
-                                    <!--</includes>-->
-                                <!--</filter>-->
-                                <!--<filter>-->
-                                    <!--<artifact>io.grpc:grpc-stub</artifact>-->
-                                    <!--<includes>-->
-                                        <!--<include>**</include>-->
-                                    <!--</includes>-->
-                                <!--</filter>-->
-                            <!--</filters>-->
-                        <!--</configuration>-->
-                    <!--</execution>-->
-                <!--</executions>-->
-            <!--</plugin>-->
         </plugins>
     </build>
     <properties>
         <grpc.version.range>[1.22.1, 1.23.0)</grpc.version.range>
+        <com.protobuf.version.range>[3.7.1,3.8.0)</com.protobuf.version.range>
+        <guava.version.range>[26.0-android, 27.0-android)</guava.version.range>
         <commons.lang3.version>3.9</commons.lang3.version>
         <testng.version>6.11</testng.version>
         <grpc.version>1.22.1</grpc.version>

@@ -69,6 +69,11 @@
             <groupId>io.grpc</groupId>
             <artifactId>grpc-protobuf</artifactId>
         </dependency>
+        <!--<dependency>-->
+            <!--<groupId>io.grpc</groupId>-->
+            <!--<artifactId>grpc-core</artifactId>-->
+            <!--<version>${grpc.version}</version>-->
+        <!--</dependency>-->
         <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-stub</artifactId>
@@ -170,13 +175,15 @@
                             org.wso2.grpc.*
                         </Export-Package>
                         <Private-Package>
-                            io.grpc.*,
-                            com.google.*,
+                            io.grpc.*;-split-package:=merge-first,
+                            com.google.*;-split-package:=merge-first,
                             io.opencensus.*,
+                            io.perfmark.*,
                         </Private-Package>
                         <Import-Package>
                             io.grpc.*;version="${grpc.version.range}",
-                            com.google.*;version="${grpc.version.range}",
+                            com.google.guava*;version="${guava.version.range}",
+                            *;resolution:=optional
                         </Import-Package>
                         <DynamicImport-Package>*</DynamicImport-Package>
                         <Include-Resource>
