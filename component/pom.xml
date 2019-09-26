@@ -164,16 +164,16 @@
                         <Export-Package>
                             io.siddhi.extension.io.grpc.*,
                             io.grpc.*,
+                            com.google.*,
                             org.wso2.grpc.*,
                             com.google.protobuf.*
                         </Export-Package>
                         <Private-Package>
-                            com.google.*;-split-package:=merge-first,
                             io.opencensus.*,
                             io.perfmark.*,
                         </Private-Package>
                         <Import-Package>
-                            com.google.guava*;version="${guava.version.range}",
+                            com.google.guava.*;version="${guava.version.range}",
                             *;resolution:=optional
                         </Import-Package>
                         <DynamicImport-Package>*</DynamicImport-Package>
