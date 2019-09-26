@@ -123,21 +123,21 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
                 @Parameter(
                         name = "enable.ssl",
                         description = "to enable ssl. If set to true and truststore.file is not given then it will " +
-                                "be set to default carbon jks by default" ,
+                                "be set to default carbon jks by default",
                         type = {DataType.BOOL},
                         optional = true,
                         defaultValue = "FALSE"),
                 @Parameter(
                         name = "threadpool.size",
                         description = "Sets the maximum size of threadpool dedicated to serve requests at the gRPC " +
-                                "server" ,
+                                "server",
                         type = {DataType.INT},
                         optional = true,
                         defaultValue = "100"),
                 @Parameter(
                         name = "threadpool.buffer.size",
                         description = "Sets the maximum size of threadpool buffer " +
-                                "server" ,
+                                "server",
                         type = {DataType.INT},
                         optional = true,
                         defaultValue = "100"),
@@ -266,8 +266,8 @@ public class GrpcSource extends AbstractGrpcSource {
             }
             if (rpcMethod == null) { //only if user has provided a wrong method name
                 throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid method name " +
-                        "provided in the url, provided method name: " + serviceConfigs.getMethodName() +
-                        "expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName,
+                        "provided in the url, provided method name: '" + serviceConfigs.getMethodName() +
+                        "', expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName,
                         streamID));
             }
         } catch (ClassNotFoundException e) {

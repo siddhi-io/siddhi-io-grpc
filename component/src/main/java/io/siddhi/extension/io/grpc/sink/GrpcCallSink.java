@@ -209,7 +209,7 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
                 @Parameter(
                         name = "enable.ssl",
                         description = "to enable ssl. If set to true and truststore.file is not given then it will " +
-                                "be set to default carbon jks by default" ,
+                                "be set to default carbon jks by default",
                         type = {DataType.BOOL},
                         optional = true,
                         defaultValue = "FALSE"),
@@ -308,9 +308,9 @@ public class GrpcCallSink extends AbstractGrpcSink {
                 }
             }
             if (rpcMethod == null) { //only if user has provided a wrong method name
-                throw new SiddhiAppValidationException(siddhiAppName + ": " + streamID + ": Invalid method name " +
-                        "provided in the url, provided method name: " + serviceConfigs.getMethodName() +
-                        "expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName,
+                throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid method name " +
+                        "provided in the url, provided method name: '" + serviceConfigs.getMethodName() +
+                        "', expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName,
                         streamID));
             }
         } catch (ClassNotFoundException e) {
@@ -391,10 +391,10 @@ public class GrpcCallSink extends AbstractGrpcSink {
             try {
                 genericFutureResponse = (ListenableFuture) rpcMethod.invoke(currentStub, payload);
             } catch (IllegalAccessException | InvocationTargetException e) {
-                throw new SiddhiAppValidationException(siddhiAppName + ": " + streamID + ": Invalid method name " +
-                        "provided in the url, provided method name: " + serviceConfigs.getMethodName() +
-                        "expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName,
-                        streamID), e);
+                throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid method name " +
+                        "provided in the url, provided method name: '" + serviceConfigs.getMethodName() +
+                        "', expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName,
+                        streamID));
             }
             Futures.addCallback(genericFutureResponse, new FutureCallback<Object>() {
                 Map<String, String> siddhiRequestEventData = getRequestEventDataMap(dynamicOptions);
@@ -486,8 +486,8 @@ public class GrpcCallSink extends AbstractGrpcSink {
                     .getFullyQualifiedServiceName() + "'", e);
         } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
             throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid method name " +
-                    "provided in the url, provided method name: " + serviceConfigs.getMethodName() +
-                    "expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName, streamID));
+                    "provided in the url, provided method name: '" + serviceConfigs.getMethodName() +
+                    "', expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName, streamID));
         }
     }
 }

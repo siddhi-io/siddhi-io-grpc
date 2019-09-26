@@ -182,7 +182,7 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
                 @Parameter(
                         name = "enable.ssl",
                         description = "to enable ssl. If set to true and truststore.file is not given then it will " +
-                                "be set to default carbon jks by default" ,
+                                "be set to default carbon jks by default",
                         type = {DataType.BOOL},
                         optional = true,
                         defaultValue = "FALSE"),
@@ -270,6 +270,36 @@ public class GrpcSink extends AbstractGrpcSink {
     private StreamObserver requestObserver;
     private Method rpcMethod;
 
+    /**
+     * to get the rpc method from the service
+     */
+    private static Method getRpcMethod(ServiceConfigs serviceConfigs, String siddhiAppName, String streamID) {
+
+        Method rpcMethod = null;
+        String stubReference = serviceConfigs.getFullyQualifiedServiceName() + GrpcConstants.
+                GRPC_PROTOCOL_NAME_UPPERCAMELCASE + GrpcConstants.DOLLAR_SIGN + serviceConfigs.getServiceName()
+                + GrpcConstants.STUB;
+        try {
+            Method[] methodsInStub = Class.forName(stubReference).getMethods();
+            for (Method method : methodsInStub) {
+                if (method.getName().equalsIgnoreCase(serviceConfigs.getMethodName())) {
+                    rpcMethod = method;
+                    break;
+                }
+            }
+            if (rpcMethod == null) { //only if user has provided a wrong method name
+                throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid method name " +
+                        "provided in the url, provided method name: " + serviceConfigs.getMethodName() +
+                        "expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName,
+                        streamID));
+            }
+        } catch (ClassNotFoundException e) {
+            throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid service name " +
+                    "provided in the url, provided service name: '" + serviceConfigs
+                    .getFullyQualifiedServiceName() + "'", e);
+        }
+        return rpcMethod;
+    }
 
     @Override
     public void initSink(OptionHolder optionHolder) {
@@ -336,9 +366,9 @@ public class GrpcSink extends AbstractGrpcSink {
                 }
             } catch (IllegalAccessException | InvocationTargetException e) { //throws from 'invoke'
                 throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid method name " +
-                        "provided in the url, provided method name: " + serviceConfigs.getMethodName() +
-                        "expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName,
-                        streamID), e);
+                        "provided in the url, provided method name: '" + serviceConfigs.getMethodName() +
+                        "', expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName,
+                        streamID));
             }
         }
     }
@@ -364,9 +394,9 @@ public class GrpcSink extends AbstractGrpcSink {
                     rpcMethod.invoke(asyncStub, arguments);
                 } catch (IllegalAccessException | InvocationTargetException e) {
                     throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid method name " +
-                            "provided in the url, provided method name: " + serviceConfigs.getMethodName() +
-                            "expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName,
-                            streamID), e);
+                            "provided in the url, provided method name: '" + serviceConfigs.getMethodName() +
+                            "', expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName,
+                            streamID));
                 }
             } else {
                 requestObserver.onNext(payload);
@@ -423,37 +453,6 @@ public class GrpcSink extends AbstractGrpcSink {
     }
 
     /**
-     * to get the rpc method from the service
-     */
-    private static Method getRpcMethod(ServiceConfigs serviceConfigs, String siddhiAppName, String streamID) {
-
-        Method rpcMethod = null;
-        String stubReference = serviceConfigs.getFullyQualifiedServiceName() + GrpcConstants.
-                GRPC_PROTOCOL_NAME_UPPERCAMELCASE + GrpcConstants.DOLLAR_SIGN + serviceConfigs.getServiceName()
-                + GrpcConstants.STUB;
-        try {
-            Method[] methodsInStub = Class.forName(stubReference).getMethods();
-            for (Method method : methodsInStub) {
-                if (method.getName().equalsIgnoreCase(serviceConfigs.getMethodName())) {
-                    rpcMethod = method;
-                    break;
-                }
-            }
-            if (rpcMethod == null) { //only if user has provided a wrong method name
-                throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid method name " +
-                        "provided in the url, provided method name: " + serviceConfigs.getMethodName() +
-                        "expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName,
-                        streamID));
-            }
-        } catch (ClassNotFoundException e) {
-            throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid service name " +
-                    "provided in the url, provided service name: '" + serviceConfigs
-                    .getFullyQualifiedServiceName() + "'", e);
-        }
-        return rpcMethod;
-    }
-
-    /**
      * to create Stub object in generic way
      */
     private AbstractStub createStub(ServiceConfigs serviceConfigs) {
@@ -468,8 +467,8 @@ public class GrpcSink extends AbstractGrpcSink {
                     .getFullyQualifiedServiceName() + "'", e);
         } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
             throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid method name " +
-                    "provided in the url, provided method name: " + serviceConfigs.getMethodName() +
-                    "expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName, streamID));
+                    "provided in the url, provided method name: '" + serviceConfigs.getMethodName() +
+                    "', expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName, streamID));
         }
     }
 }
