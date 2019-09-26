@@ -43,9 +43,14 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
                 "service mode. By default this uses EventService. Please find the proto " +
                 "definition [here]" +
                 "(https://github.com/siddhi-io/siddhi-io-grpc/tree/master/component/src/main/resources/" +
-                "EventService.proto) In the default mode this source will use " +
-                "EventService consume method. This " +
-                "method will receive requests and injects them into stream through a mapper.",
+                "EventService.proto). In the default mode this source will use " +
+                "EventService consume method. If we want to use our " +
+                "custom gRPC services, we have to  pack auto-generated gRPC service classes and  protobuf classes " +
+                "into a jar file and add it into the project classpath (or to the `jars` folder in the `siddhi-" +
+                "tooling` folder if we use it with `siddhi-tooling`). Please find the custom protobuf definition that" +
+                " uses in examples [here](https://github.com/siddhi-io/siddhi-io-grpc/tree/master/component/src/main/" +
+                "resources/sample.proto)." +
+                " This method will receive requests and injects them into stream through a mapper.",
         parameters = {
                 @Parameter(
                         name = "receiver.url",

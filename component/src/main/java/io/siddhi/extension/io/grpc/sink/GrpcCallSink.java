@@ -57,7 +57,12 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
         description = "This extension publishes event data encoded into GRPC Classes as defined in the user input " +
                 "jar. This extension has a default gRPC service classes jar added. The default service is called " +
                 "\"EventService\". Please find the protobuf definition [here](https://github.com/siddhi-io/" +
-                "siddhi-io-grpc/tree/master/component/src/main/resources/EventService.proto). This grpc-call sink is " +
+                "siddhi-io-grpc/tree/master/component/src/main/resources/EventService.proto). If we want to use our " +
+                "custom gRPC services, we have to  pack auto-generated gRPC service classes and  protobuf classes " +
+                "into a jar file and add it into the project classpath (or to the `jars` folder in the `siddhi-" +
+                "tooling` folder if we use it with `siddhi-tooling`). Please find the custom protobuf definition that" +
+                " uses in examples [here](https://github.com/siddhi-io/siddhi-io-grpc/tree/master/component/src/main/" +
+                "resources/sample.proto). This grpc-call sink is " +
                 "used for scenarios where we send a request out and expect a response back. In default mode this " +
                 "will use EventService process method. grpc-call-response source is used to receive the responses. " +
                 "A unique sink.id is used to correlate between the sink and its corresponding source.",

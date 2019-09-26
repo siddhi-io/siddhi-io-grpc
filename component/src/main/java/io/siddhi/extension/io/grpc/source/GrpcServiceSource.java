@@ -58,7 +58,12 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
                 "service as given in the url. This source also has a default mode and a user defined grpc service " +
                 "mode. By default this uses EventService. Please find the proto definition [here](https://github.com/" +
                 "siddhi-io/siddhi-io-grpc/tree/master/component/src/main/resources/EventService.proto) In the default" +
-                " mode this will use the EventService process method. This accepts grpc message class Event as " +
+                " mode this will use the EventService process method. If we want to use our " +
+                "custom gRPC services, we have to  pack auto-generated gRPC service classes and  protobuf classes " +
+                "into a jar file and add it into the project classpath (or to the `jars` folder in the `siddhi-" +
+                "tooling` folder if we use it with `siddhi-tooling`). Please find the custom protobuf definition that" +
+                " uses in examples [here](https://github.com/siddhi-io/siddhi-io-grpc/tree/master/component/src/main/" +
+                "resources/sample.proto). This accepts grpc message class Event as " +
                 "defined in the EventService proto. This uses GrpcServiceResponse sink to send reponses back in the " +
                 "same Event message format.",
         parameters = {
@@ -69,17 +74,17 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
                                 "name, method name in the following format. `grpc://0.0.0.0:9763/<serviceName>/" +
                                 "<methodName>`\n" +
                                 "For example:\n" +
-                                "grpc://0.0.0.0:9763/org.wso2.grpc.EventService/consume" ,
+                                "grpc://0.0.0.0:9763/org.wso2.grpc.EventService/consume",
                         type = {DataType.STRING}),
                 @Parameter(
                         name = "max.inbound.message.size",
-                        description = "Sets the maximum message size in bytes allowed to be received on the server." ,
+                        description = "Sets the maximum message size in bytes allowed to be received on the server.",
                         type = {DataType.INT},
                         optional = true,
                         defaultValue = "4194304"),
                 @Parameter(
                         name = "max.inbound.metadata.size",
-                        description = "Sets the maximum size of metadata in bytes allowed to be received." ,
+                        description = "Sets the maximum size of metadata in bytes allowed to be received.",
                         type = {DataType.INT},
                         optional = true,
                         defaultValue = "8192"),
@@ -87,80 +92,80 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
                         name = "service.timeout",
                         description = "The period of time in milliseconds to wait for siddhi to respond to a " +
                                 "request received. After this time period of receiving a request it will be closed " +
-                                "with an error message." ,
+                                "with an error message.",
                         type = {DataType.INT},
                         optional = true,
                         defaultValue = "10000"),
                 @Parameter(
                         name = "server.shutdown.waiting.time",
                         description = "The time in seconds to wait for the server to shutdown, giving up " +
-                                "if the timeout is reached." ,
+                                "if the timeout is reached.",
                         type = {DataType.LONG},
                         optional = true,
                         defaultValue = "5"),
                 @Parameter(
                         name = "truststore.file",
                         description = "the file path of truststore. If this is provided then server authentication " +
-                                "is enabled" ,
+                                "is enabled",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "-"),
                 @Parameter(
                         name = "truststore.password",
                         description = "the password of truststore. If this is provided then the integrity of the " +
-                                "keystore is checked" ,
+                                "keystore is checked",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "-"),
                 @Parameter(
                         name = "truststore.algorithm",
-                        description = "the encryption algorithm to be used for server authentication" ,
+                        description = "the encryption algorithm to be used for server authentication",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "-"),
                 @Parameter(
                         name = "tls.store.type",
-                        description = "TLS store type" ,
+                        description = "TLS store type",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "-"),
                 @Parameter(
                         name = "keystore.file",
                         description = "the file path of keystore. If this is provided then client authentication " +
-                                "is enabled" ,
+                                "is enabled",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "-"),
                 @Parameter(
                         name = "keystore.password",
-                        description = "the password of keystore" ,
+                        description = "the password of keystore",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "-"),
                 @Parameter(
                         name = "keystore.algorithm",
-                        description = "the encryption algorithm to be used for client authentication" ,
+                        description = "the encryption algorithm to be used for client authentication",
                         type = {DataType.STRING},
                         optional = true,
                         defaultValue = "-"),
                 @Parameter(
                         name = "enable.ssl",
                         description = "to enable ssl. If set to true and truststore.file is not given then it will " +
-                                "be set to default carbon jks by default" ,
+                                "be set to default carbon jks by default",
                         type = {DataType.BOOL},
                         optional = true,
                         defaultValue = "FALSE"),
                 @Parameter(
                         name = "threadpool.size",
                         description = "Sets the maximum size of threadpool dedicated to serve requests at the gRPC " +
-                                "server" ,
+                                "server",
                         type = {DataType.INT},
                         optional = true,
                         defaultValue = "100"),
                 @Parameter(
                         name = "threadpool.buffer.size",
                         description = "Sets the maximum size of threadpool buffer " +
-                                "server" ,
+                                "server",
                         type = {DataType.INT},
                         optional = true,
                         defaultValue = "100"),
@@ -238,43 +243,17 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
 )
 public class GrpcServiceSource extends AbstractGrpcSource {
     private static final Logger logger = Logger.getLogger(GrpcServiceSource.class.getName());
+    protected Server server;
     private Map<String, StreamObserver<Event>> streamObserverMap = Collections.synchronizedMap(new HashMap<>());
     private Map<String, StreamObserver<Any>> genericStreamObserverMap = Collections.synchronizedMap(new HashMap<>());
     private String sourceId;
     private long serviceTimeout;
-    protected Server server;
     private Timer timer;
     private GenericServiceServer genericServiceServer;
 
     public void scheduleServiceTimeout(String messageId) {
         timer.schedule(new GrpcServiceSource.ServiceSourceTimeoutChecker(messageId,
                 siddhiAppContext.getTimestampGenerator().currentTime()), serviceTimeout);
-    }
-
-    class ServiceSourceTimeoutChecker extends TimerTask {
-        private String messageId;
-        private long requestReceivedTime;
-
-        public ServiceSourceTimeoutChecker(String messageId, long requestReceivedTime) {
-            this.messageId = messageId;
-            this.requestReceivedTime = requestReceivedTime;
-        }
-
-        @Override
-        public void run() {
-            while (requestReceivedTime > siddhiAppContext.getTimestampGenerator().currentTime() - serviceTimeout) {
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": " + streamID + ": " +
-                            e.getMessage(), e);
-                }
-            }
-            StreamObserver streamObserver = streamObserverMap.remove(messageId);
-            if (streamObserver != null) {
-                streamObserver.onError(new io.grpc.StatusRuntimeException(Status.DEADLINE_EXCEEDED));
-            }
-        }
     }
 
     public void initSource(OptionHolder optionHolder, String[] requestedTransportPropertyNames) {
@@ -367,5 +346,31 @@ public class GrpcServiceSource extends AbstractGrpcSource {
     @Override
     public void logError(String message) {
         logger.error(siddhiAppContext.getName() + ": " + streamID + ": " + message);
+    }
+
+    class ServiceSourceTimeoutChecker extends TimerTask {
+        private String messageId;
+        private long requestReceivedTime;
+
+        public ServiceSourceTimeoutChecker(String messageId, long requestReceivedTime) {
+            this.messageId = messageId;
+            this.requestReceivedTime = requestReceivedTime;
+        }
+
+        @Override
+        public void run() {
+            while (requestReceivedTime > siddhiAppContext.getTimestampGenerator().currentTime() - serviceTimeout) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": " + streamID + ": " +
+                            e.getMessage(), e);
+                }
+            }
+            StreamObserver streamObserver = streamObserverMap.remove(messageId);
+            if (streamObserver != null) {
+                streamObserver.onError(new io.grpc.StatusRuntimeException(Status.DEADLINE_EXCEEDED));
+            }
+        }
     }
 }

@@ -332,14 +332,6 @@ public class GrpcSink extends AbstractGrpcSink {
                         GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE + "' but given " + serviceConfigs
                         .getMethodName());
             }
-            this.channel = managedChannelBuilder.build();
-            this.asyncStub = EventServiceGrpc.newStub(channel);
-            if (metadataOption != null) {
-                if (metadataOption.isStatic()) {
-                    asyncStub = attachMetaDataToStub(null, asyncStub);
-                }
-            }
-            requestObserver = ((EventServiceGrpc.EventServiceStub) asyncStub).consume(responseObserver);
         } else {
             responseObserver = new StreamObserver<Object>() {
                 @Override
@@ -356,24 +348,6 @@ public class GrpcSink extends AbstractGrpcSink {
                 public void onCompleted() {
                 }
             };
-            this.channel = managedChannelBuilder.build();
-            rpcMethod = getRpcMethod(serviceConfigs, siddhiAppName, streamID);
-            this.asyncStub = createStub(serviceConfigs);
-            if (metadataOption != null) {
-                if (metadataOption.isStatic()) {
-                    asyncStub = attachMetaDataToStub(null, asyncStub);
-                }
-            }
-            try {
-                if (rpcMethod.getParameterCount() == 1) {
-                    requestObserver = (StreamObserver) rpcMethod.invoke(asyncStub, responseObserver);
-                }
-            } catch (IllegalAccessException | InvocationTargetException e) { //throws from 'invoke'
-                throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid method name " +
-                        "provided in the url, provided method name: '" + serviceConfigs.getMethodName() +
-                        "', expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName,
-                        streamID), e);
-            }
         }
     }
 
@@ -421,8 +395,30 @@ public class GrpcSink extends AbstractGrpcSink {
             this.channel = managedChannelBuilder.build();
             if (serviceConfigs.isDefaultService()) {
                 this.asyncStub = EventServiceGrpc.newStub(channel);
+                if (metadataOption != null) {
+                    if (metadataOption.isStatic()) {
+                        asyncStub = attachMetaDataToStub(null, asyncStub);
+                    }
+                }
+                requestObserver = ((EventServiceGrpc.EventServiceStub) asyncStub).consume(responseObserver);
             } else {
+                rpcMethod = getRpcMethod(serviceConfigs, siddhiAppName, streamID);
                 this.asyncStub = createStub(serviceConfigs);
+                if (metadataOption != null) {
+                    if (metadataOption.isStatic()) {
+                        asyncStub = attachMetaDataToStub(null, asyncStub);
+                    }
+                }
+                try {
+                    if (rpcMethod.getParameterCount() == 1) {
+                        requestObserver = (StreamObserver) rpcMethod.invoke(asyncStub, responseObserver);
+                    }
+                } catch (IllegalAccessException | InvocationTargetException e) { //throws from 'invoke'
+                    throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid method name " +
+                            "provided in the url, provided method name: '" + serviceConfigs.getMethodName() +
+                            "', expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName,
+                            streamID), e);
+                }
             }
             if (!channel.isShutdown()) {
                 logger.info(siddhiAppName + ": gRPC service on " + streamID + " has successfully connected to "
