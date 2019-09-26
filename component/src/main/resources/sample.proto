@@ -6,8 +6,7 @@ option java_package = "io.siddhi.extension.io.grpc.proto";
 
 import "google/protobuf/empty.proto";
 
-message Request
-{
+message Request {
     string stringValue = 1;
     int32 intValue = 2;
     int64 longValue = 3;
@@ -17,9 +16,7 @@ message Request
 
 }
 
-
-message Response
-{
+message Response {
     string stringValue = 1;
     int32 intValue = 2;
     int64 LongValue = 3;
@@ -28,25 +25,21 @@ message Response
     double doubleValue = 6;
 }
 
-message RequestWithMap
-{
+message RequestWithMap {
     string stringValue =1;
     int32 intValue = 2;
     map<string,string> map = 3;
 
 }
 
-message ResponseWithMap
-{
+message ResponseWithMap {
     string stringValue =1;
     int32 intValue = 2;
     map<string,string> map = 3;
 
 }
 
-
-service MyService
-{
+service MyService {
     rpc send(Request) returns(google.protobuf.Empty);
     rpc process(Request) returns(Response);
     rpc testMap(RequestWithMap) returns(ResponseWithMap);

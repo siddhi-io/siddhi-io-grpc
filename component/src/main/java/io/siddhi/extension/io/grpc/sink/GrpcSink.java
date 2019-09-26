@@ -50,9 +50,14 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
                 "This extension publishes event data encoded into GRPC Classes as defined in the user input " +
                 "jar. This extension has a default gRPC service classes added. The default service is called " +
                 "\"EventService\". Please find the protobuf definition [here](https://github.com/siddhi-io/" +
-                "siddhi-io-grpc/tree/master/component/src/main/resources/EventService.proto). This grpc sink is " +
-                "used for scenarios where we send a request and don't expect a response back. I.e getting a " +
-                "google.protobuf.Empty response back.",
+                "siddhi-io-grpc/tree/master/component/src/main/resources/EventService.proto). If we want to use our " +
+                "custom gRPC services, we have to  pack auto-generated gRPC service classes and  protobuf classes " +
+                "into a jar file and add it into the project classpath (or to the `jars` folder in the `siddhi-" +
+                "tooling` folder if we use it with `siddhi-tooling`). Please find the custom protobuf definition that" +
+                " uses in examples [here](https://github.com/siddhi-io/siddhi-io-grpc/tree/master/component/src/main/" +
+                "resources/sample.proto). This grpc sink is used for scenarios where we send a request and don't " +
+                "expect a response back. I.e getting a google.protobuf.Empty response back.",
+
         parameters = {
                 @Parameter(
                         name = "publisher.url",
@@ -219,7 +224,8 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
                         description = "Here a stream named FooStream is defined with grpc sink. A grpc server should" +
                                 " be running at 134.23.43.35 listening to port 8080 since there is no mapper " +
                                 "provided, attributes of stream definition should be as same as the attributes of " +
-                                "protobuf message definition"
+                                "protobuf message definition."
+
                 ),
                 @Example(syntax = "" +
                         "@sink(type='grpc',\n" +
@@ -254,11 +260,9 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
                         "floatValue float,doubleValue double);",
                         description = "Here in the grpc sink, we are sending a stream of requests to the server that " +
                                 "runs on 194.23.98.100 and port 8888. When we need to send a stream of requests from " +
-                                "the grpc sink we have to define a client stream RPC method(look the sample proto " +
-                                "file that provided in the resource folder [here](https://github.com/siddhi-io/siddhi" +
-                                "-io-grpc/tree/master/component/src/main/resources)).Then the siddhi will identify " +
-                                "whether it's a unary method or a stream method and send requests according to the " +
-                                "method type."
+                                "the grpc sink we have to define a client stream RPC method.Then the siddhi will " +
+                                "identify whether it's a unary method or a stream method and send requests according " +
+                                "to the method type."
                 )
         }
 )
