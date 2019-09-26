@@ -74,10 +74,6 @@
             <artifactId>grpc-stub</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.siddhi</groupId>
-            <artifactId>siddhi-annotations</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
         </dependency>
@@ -167,16 +163,16 @@
                         <Bundle-Name>${project.artifactId}</Bundle-Name>
                         <Export-Package>
                             io.siddhi.extension.io.grpc.*,
-                            org.wso2.grpc.*
+                            io.grpc.*,
+                            org.wso2.grpc.*,
+                            com.google.protobuf.*
                         </Export-Package>
                         <Private-Package>
-                            io.grpc.*;-split-package:=merge-first,
                             com.google.*;-split-package:=merge-first,
                             io.opencensus.*,
                             io.perfmark.*,
                         </Private-Package>
                         <Import-Package>
-                            io.grpc.*;version="${grpc.version.range}",
                             com.google.guava*;version="${guava.version.range}",
                             *;resolution:=optional
                         </Import-Package>
@@ -187,10 +183,6 @@
                         </Include-Resource>
                     </instructions>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
             </plugin>
         </plugins>
     </build>

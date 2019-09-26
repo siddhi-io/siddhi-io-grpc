@@ -368,7 +368,7 @@ public class GrpcSink extends AbstractGrpcSink {
                 throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid method name " +
                         "provided in the url, provided method name: '" + serviceConfigs.getMethodName() +
                         "', expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName,
-                        streamID));
+                        streamID), e);
             }
         }
     }
@@ -396,7 +396,7 @@ public class GrpcSink extends AbstractGrpcSink {
                     throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid method name " +
                             "provided in the url, provided method name: '" + serviceConfigs.getMethodName() +
                             "', expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName,
-                            streamID));
+                            streamID), e);
                 }
             } else {
                 requestObserver.onNext(payload);
@@ -468,7 +468,8 @@ public class GrpcSink extends AbstractGrpcSink {
         } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
             throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid method name " +
                     "provided in the url, provided method name: '" + serviceConfigs.getMethodName() +
-                    "', expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName, streamID));
+                    "', expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName, streamID)
+            , e);
         }
     }
 }
