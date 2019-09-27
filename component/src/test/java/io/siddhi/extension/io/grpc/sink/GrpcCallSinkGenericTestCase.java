@@ -385,7 +385,6 @@ public class GrpcCallSinkGenericTestCase {
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
         InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
         siddhiAppRuntime.start();
-        fooStream.send(new Object[]{"Test 01", 60, 10000L, true, 522.7586f, 34.5668});
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
