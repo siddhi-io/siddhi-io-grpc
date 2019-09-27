@@ -26,6 +26,7 @@ import io.siddhi.annotation.Extension;
 import io.siddhi.annotation.Parameter;
 import io.siddhi.annotation.util.DataType;
 import io.siddhi.core.exception.ConnectionUnavailableException;
+import io.siddhi.core.exception.SiddhiAppRuntimeException;
 import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.transport.DynamicOptions;
 import io.siddhi.core.util.transport.OptionHolder;
@@ -381,7 +382,7 @@ public class GrpcSink extends AbstractGrpcSink {
                         requestObserver = (StreamObserver) rpcMethod.invoke(asyncStub, responseObserver);
                     }
                 } catch (IllegalAccessException | InvocationTargetException e) { //throws from 'invoke'
-                    throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid method name " +
+                    throw new SiddhiAppRuntimeException(siddhiAppName + ":" + streamID + ": Invalid method name " +
                             "provided in the url, provided method name: '" + serviceConfigs.getMethodName() +
                             "', expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName,
                             streamID), e);
@@ -429,11 +430,11 @@ public class GrpcSink extends AbstractGrpcSink {
             Method newStub = serviceClass.getDeclaredMethod(GrpcConstants.NEW_STUB_NAME, Channel.class);
             return (AbstractStub) newStub.invoke(serviceClass, this.channel);
         } catch (ClassNotFoundException e) {
-            throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid service name " +
+            throw new SiddhiAppRuntimeException(siddhiAppName + ":" + streamID + ": Invalid service name " +
                     "provided in the url, provided service name: '" + serviceConfigs
                     .getFullyQualifiedServiceName() + "'", e);
         } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-            throw new SiddhiAppValidationException(siddhiAppName + ":" + streamID + ": Invalid method name " +
+            throw new SiddhiAppRuntimeException(siddhiAppName + ":" + streamID + ": Invalid method name " +
                     "provided in the url, provided method name: '" + serviceConfigs.getMethodName() +
                     "', expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName, streamID)
             , e);

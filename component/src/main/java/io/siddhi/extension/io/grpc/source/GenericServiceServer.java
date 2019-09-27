@@ -226,7 +226,7 @@ public class GenericServiceServer {
             }
         } catch (IOException e) {
             if (e.getCause() instanceof BindException) {
-                throw new SiddhiAppValidationException(siddhiAppName + ": " + streamID + ": Another " +
+                throw new SiddhiAppRuntimeException(siddhiAppName + ": " + streamID + ": Another " +
                         "server is already running on the port " + grpcServerConfigs.getServiceConfigs().getPort() +
                         ". Please provide a different port");
             } else {
