@@ -5,15 +5,15 @@ repo_url: https://github.com/siddhi-io/siddhi-io-grpc
 copyright: Siddhi - Documentation
 theme:
   name: material
-  logo: images/siddhi-logo-w.svg
+  logo: images/siddhi-logo.svg
   favicon: images/favicon.ico
   palette:
     primary: teal
     accent: teal
 extra_css:
-- assets/stylesheets/extra.css
+  - assets/stylesheets/extra.css
 extra_javascript:
-- assets/javascripts/extra.js
+  - assets/javascripts/extra.js
 extra:
   social:
   - type: github
