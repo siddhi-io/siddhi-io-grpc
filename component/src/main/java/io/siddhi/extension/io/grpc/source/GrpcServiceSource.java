@@ -313,7 +313,7 @@ public class GrpcServiceSource extends AbstractGrpcSource {
             StreamObserver<Any> genericStreamObserver = genericStreamObserverMap.remove(messageId);
             if (genericStreamObserver != null) {
                 try {
-                    Method toByteString = AbstractMessageLite.class.getDeclaredMethod("toByteString");
+                    Method toByteString = AbstractMessageLite.class.getDeclaredMethod(GrpcConstants.TO_BYTE_STRING);
                     ByteString responseByteString = (ByteString) toByteString.invoke(responsePayload);
                     Any response = Any.parseFrom(responseByteString);
                     genericStreamObserver.onNext(response);

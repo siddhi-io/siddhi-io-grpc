@@ -107,6 +107,7 @@ public class GrpcConstants {
     public static final String PARSE_FROM_METHOD_NAME = "parseFrom";
     public static final String METHOD_NAME = "Method";
     public static final String GETTER = "get";
+    public static final String TO_BYTE_STRING = "toByteString";
 
     public static final int REQUEST_CLASS_POSITION = 0;
     public static final int RESPONSE_CLASS_POSITION = 1;
