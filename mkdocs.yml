@@ -11,9 +11,9 @@ theme:
     primary: teal
     accent: teal
 extra_css:
-  - assets/stylesheets/extra.css
+- assets/stylesheets/extra.css
 extra_javascript:
-  - assets/javascripts/extra.js
+- assets/javascripts/extra.js
 extra:
   social:
   - type: github
@@ -33,6 +33,7 @@ pages:
 - Information: index.md
 - API Docs:
   - latest: api/latest.md
+  - 1.0.2: api/1.0.2.md
   - 1.0.1: api/1.0.1.md
   - 1.0.0-beta: api/1.0.0-beta.md
   - 1.0.0: api/1.0.0.md
