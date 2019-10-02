@@ -46,4 +46,16 @@
         <Class name="io.siddhi.extension.io.grpc.source.AbstractGrpcSource"/>
         <Bug pattern="DM_CONVERT_CASE"/>
     </Match>
+    <Match>
+        <Class name="io.siddhi.extension.io.grpc.sink.GrpcCallSink$ListenableFutureWrapper$1"/>
+        <Bug pattern="BC_UNCONFIRMED_CAST"/>
+    </Match>
+    <Match>
+        <Class name="io.siddhi.extension.io.grpc.sink.GrpcCallSink$ListenableFutureWrapper$2"/>
+        <Bug pattern="BC_UNCONFIRMED_CAST"/>
+    </Match>
+    <Match>
+        <Class name="io.siddhi.extension.io.grpc.sink.GrpcCallSink$ListenableFutureWrapper$1"/>
+        <Bug pattern="NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE"/>
+    </Match>
 </FindBugsFilter>
