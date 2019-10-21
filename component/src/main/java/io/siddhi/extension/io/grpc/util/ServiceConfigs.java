@@ -52,7 +52,7 @@ public class ServiceConfigs {
     private String keystoreAlgorithm;
     private String tlsStoreType;
     private boolean isSslEnabled;
-     Logger log = LoggerFactory.getLogger(ServiceConfigs.class.getName());
+    private static final Logger log = LoggerFactory.getLogger(ServiceConfigs.class.getName());
 
     public ServiceConfigs(OptionHolder optionHolder, SiddhiAppContext siddhiAppContext,
                           String streamID, ConfigReader configReader) {
