@@ -48,6 +48,13 @@ public abstract class AbstractGrpcSource extends Source {
     protected String siddhiAppName;
     protected Class requestClass;
 
+//    public static  String configKeyStoreFile = null;
+//    public static  String configKeyStorePassword = null;
+//    public static  String configKeyStoreAlgorithm = null;
+//    public static  String configTruststoreFile = null;
+//    public static  String configTruststorePassword = null;
+//    public static  String configTruststoreAlgorithm = null;
+
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
         return serviceDeploymentInfo;
@@ -70,8 +77,9 @@ public abstract class AbstractGrpcSource extends Source {
         this.siddhiAppContext = siddhiAppContext;
         this.siddhiAppName = siddhiAppContext.getName();
         this.sourceEventListener = sourceEventListener;
+
         this.requestedTransportPropertyNames = requestedTransportPropertyNames.clone();
-        this.grpcServerConfigs = new GrpcServerConfigs(optionHolder, siddhiAppContext, streamID);
+        this.grpcServerConfigs = new GrpcServerConfigs(optionHolder, siddhiAppContext, streamID , configReader);
         if (!grpcServerConfigs.getServiceConfigs().isDefaultService()) {
             requestClass = getRequestClass();
         }

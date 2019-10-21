@@ -18,6 +18,7 @@
 package io.siddhi.extension.io.grpc.util;
 
 import io.siddhi.core.config.SiddhiAppContext;
+import io.siddhi.core.util.config.ConfigReader;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -28,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.logging.Logger;
 
 /**
  * class to hold grpc service configs
@@ -49,16 +51,24 @@ public class ServiceConfigs {
     private String keystoreAlgorithm;
     private String tlsStoreType;
     private boolean isSslEnabled;
+    Logger log = Logger.getLogger(ServiceConfigs.class.getName());
 
-    public ServiceConfigs(OptionHolder optionHolder, SiddhiAppContext siddhiAppContext, String streamID) {
+    public ServiceConfigs(OptionHolder optionHolder, SiddhiAppContext siddhiAppContext,
+                          String streamID, ConfigReader configReader) {
         if (optionHolder.isOptionExists(GrpcConstants.RECEIVER_URL)) {
             this.url = optionHolder.validateAndGetOption(GrpcConstants.RECEIVER_URL).getValue();
-        } else if (optionHolder.isOptionExists(GrpcConstants.PUBLISHER_URL)) {
-            this.url = optionHolder.validateAndGetOption(GrpcConstants.PUBLISHER_URL).getValue();
+            log.info("GRPC Service : " + this.url + " started");
         } else {
-            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": " + streamID + ": either " +
-                    "receiver.url or publisher.url should be given. But found neither");
+            this.url = configReader.readConfig(GrpcConstants.RECEIVER_URL , GrpcConstants.DEFAULT_RECEIVER_URL);
+            log.info("Default GRPC Service Started : : " + this.url + " started");
         }
+        if (optionHolder.isOptionExists(GrpcConstants.PUBLISHER_URL)) {
+            this.url = optionHolder.validateAndGetOption(GrpcConstants.PUBLISHER_URL).getValue();
+        }
+//        else {
+//            throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": " + streamID + ": either " +
+//                    "receiver.url or publisher.url should be given. But found neither");
+//        }
         if (!url.startsWith(GrpcConstants.GRPC_PROTOCOL_NAME)) {
             throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": " + streamID + ": The url must " +
                     "begin with \"" + GrpcConstants.GRPC_PROTOCOL_NAME + "\" for all grpc sinks");
@@ -102,35 +112,67 @@ public class ServiceConfigs {
                 this.sequenceName = urlPathParts.get(GrpcConstants.PATH_SEQUENCE_NAME_POSITION);
             }
         }
-
+        //Validates and enables SSL feature
         if (optionHolder.isOptionExists(GrpcConstants.ENABLE_SSL)) {
             isSslEnabled = Boolean.parseBoolean(optionHolder.validateAndGetOption(GrpcConstants.ENABLE_SSL).getValue());
+            //log.info(">>>> Logger App file value : ");
+        } else {
+            isSslEnabled = true;
+//            log.info(">>>> Logger Initiated isSslEnabled : ");
         }
-
-        if (isSslEnabled && !optionHolder.isOptionExists(GrpcConstants.TRUSTSTORE_FILE)) {
-            truststoreFilePath = GrpcConstants.DEFAULT_TRUSTSTORE_FILE_PATH;
-            truststorePassword = GrpcConstants.DEFAULT_TRUSTSTORE_PASSWORD;
-            truststoreAlgorithm = GrpcConstants.DEFAULT_TRUSTSTORE_ALGORITHM;
-        }
-
-        if (optionHolder.isOptionExists(GrpcConstants.TRUSTSTORE_FILE)) {
-            truststoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_FILE).getValue();
-            if (optionHolder.isOptionExists(GrpcConstants.TRUSTSTORE_PASSWORD)) {
-                truststorePassword = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_PASSWORD)
-                        .getValue();
-            }
-            truststoreAlgorithm = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_ALGORITHM).getValue();
-            tlsStoreType = optionHolder.getOrCreateOption(GrpcConstants.TLS_STORE_TYPE,
-                    GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
-        }
-
+        //retrieves KeyStore File
         if (optionHolder.isOptionExists(GrpcConstants.KEYSTORE_FILE)) {
             keystoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_FILE).getValue();
             keystorePassword = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_PASSWORD).getValue();
             keystoreAlgorithm = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_ALGORITHM).getValue();
             tlsStoreType = optionHolder.getOrCreateOption(GrpcConstants.TLS_STORE_TYPE,
                     GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
+        } else {
+
+//            log.info(">>>> Logger Initiated");
+            keystoreFilePath = configReader.readConfig(GrpcConstants.KEYSTORE_FILE,
+                    GrpcConstants.DEFAULT_KEYSTORE_FILE);
+            keystorePassword = configReader.readConfig(GrpcConstants.KEYSTORE_PASSWORD,
+                    GrpcConstants.DEFAULT_KEYSTORE_PASSWORD);
+            keystoreAlgorithm = configReader.readConfig(GrpcConstants.KEYSTORE_ALGORITHM,
+                        GrpcConstants.DEFAULT_KEYSTORE_ALGORITHM);
+            tlsStoreType = optionHolder.getOrCreateOption(GrpcConstants.TLS_STORE_TYPE,
+                    GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
+//            log.info(">>>> Logger Initiated : " + keystoreFilePath);
+//            log.info(">>>> Logger Initiated : " + keystorePassword);
+//            log.info(">>>> Logger Initiated : " + keystoreAlgorithm);
         }
+        //retrieves Truststore file
+        if (optionHolder.isOptionExists(GrpcConstants.SYS_TRUSTSTORE_FILE_PATH)) {
+            truststoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.SYS_TRUSTSTORE_FILE_PATH).getValue();
+            truststorePassword = optionHolder.validateAndGetOption(GrpcConstants.SYS_TRUSTSTORE_PASSWORD).getValue();
+            truststoreAlgorithm = optionHolder.validateAndGetOption(GrpcConstants.SYS_TRUSTSTORE_ALGORITHM).getValue();
+        } else {
+            truststoreFilePath = configReader.readConfig(GrpcConstants.SYS_TRUSTSTORE_FILE_PATH,
+                    GrpcConstants.DEFAULT_TRUSTSTORE_FILE);
+            truststorePassword = configReader.readConfig(GrpcConstants.SYS_TRUSTSTORE_PASSWORD,
+                    GrpcConstants.DEFAULT_TRUSTSTORE_PASSWORD);
+            truststoreAlgorithm = configReader.readConfig(GrpcConstants.SYS_TRUSTSTORE_ALGORITHM,
+                    GrpcConstants.DEFAULT_TRUSTSTORE_ALGORITHM);
+            tlsStoreType = optionHolder.getOrCreateOption(GrpcConstants.TLS_STORE_TYPE,
+                    GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
+            //log.info(">>>> Logger Initiated : " + truststoreFilePath);
+            //log.info(">>>> Logger Initiated : " + truststorePassword);
+            //log.info(">>>> Logger Initiated : " + truststoreAlgorithm + "\n");
+        }
+
+//        if (optionHolder.isOptionExists(GrpcConstants.TRUSTSTORE_FILE)) {
+//            truststoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_FILE).getValue();
+//            if (optionHolder.isOptionExists(GrpcConstants.TRUSTSTORE_PASSWORD)) {
+//                truststorePassword = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_PASSWORD)
+//                        .getValue();
+//            }
+//            truststoreAlgorithm = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_ALGORITHM).getValue();
+//            tlsStoreType = optionHolder.getOrCreateOption(GrpcConstants.TLS_STORE_TYPE,
+//                    GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
+//        }
+
+
     }
 
     public String getServiceName() {
