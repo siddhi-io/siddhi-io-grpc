@@ -112,9 +112,7 @@ public class ServiceConfigs {
         //Validates and enables SSL feature
         if (optionHolder.isOptionExists(GrpcConstants.ENABLE_SSL)) {
             isSslEnabled = Boolean.parseBoolean(optionHolder.validateAndGetOption(GrpcConstants.ENABLE_SSL).getValue());
-        } else {
-            isSslEnabled = true;
-        }
+        } 
         //retrieves KeyStore File
         if (optionHolder.isOptionExists(GrpcConstants.KEYSTORE_FILE)) {
             keystoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_FILE).getValue();
