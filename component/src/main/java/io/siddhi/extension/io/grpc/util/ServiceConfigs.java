@@ -130,7 +130,7 @@ public class ServiceConfigs {
                     GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
         }
         //retrieves Truststore file
-        if (isSslEnabled && optionHolder.isOptionExists(GrpcConstants.TRUSTSTORE_FILE)) {
+        if (optionHolder.isOptionExists(GrpcConstants.TRUSTSTORE_FILE)) {
             truststoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_FILE).getValue();
             if (optionHolder.isOptionExists(GrpcConstants.TRUSTSTORE_PASSWORD)) {
                 truststorePassword = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_PASSWORD)
@@ -148,7 +148,7 @@ public class ServiceConfigs {
                     GrpcConstants.DEFAULT_TRUSTSTORE_ALGORITHM);
             tlsStoreType = optionHolder.getOrCreateOption(GrpcConstants.TLS_STORE_TYPE,
                     GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
-        } else {
+        } else if(isSslEnabled){
             truststoreFilePath = GrpcConstants.DEFAULT_TRUSTSTORE_FILE;
             truststorePassword = GrpcConstants.DEFAULT_TRUSTSTORE_PASSWORD;
             truststoreAlgorithm = GrpcConstants.DEFAULT_TRUSTSTORE_ALGORITHM;
