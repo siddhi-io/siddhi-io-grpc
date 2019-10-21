@@ -139,7 +139,7 @@ public class GrpcEventServiceServer {
                                             grpcServerConfigs.getServiceConfigs().getPort());
                                     responseObserver.onError(new StatusRuntimeException(Status.DATA_LOSS));
                                 } else {
-                                    logger.error("server thread is: " + Thread.currentThread().getId());
+
                                     try {
                                         GrpcSource relevantSource = subscribersForConsume.get(request.getHeadersMap()
                                                 .get(GrpcConstants.STREAM_ID));
