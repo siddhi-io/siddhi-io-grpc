@@ -130,10 +130,12 @@ public class ServiceConfigs {
                     GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
         }
         //retrieves Truststore file
-        if (optionHolder.isOptionExists(GrpcConstants.TRUSTSTORE_FILE)) {
+        if (isSslEnabled && optionHolder.isOptionExists(GrpcConstants.TRUSTSTORE_FILE)) {
             truststoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_FILE).getValue();
             truststorePassword = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_PASSWORD).getValue();
             truststoreAlgorithm = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_ALGORITHM).getValue();
+            tlsStoreType = optionHolder.getOrCreateOption(GrpcConstants.TLS_STORE_TYPE,
+                    GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
         } else if (configReader.readConfig(GrpcConstants.SYS_TRUSTSTORE_FILE_PATH ,  null) != null) {
             truststoreFilePath = configReader.readConfig(GrpcConstants.SYS_TRUSTSTORE_FILE_PATH,
                     GrpcConstants.DEFAULT_TRUSTSTORE_FILE);
@@ -147,24 +149,10 @@ public class ServiceConfigs {
             truststoreFilePath = GrpcConstants.DEFAULT_TRUSTSTORE_FILE;
             truststorePassword = GrpcConstants.DEFAULT_TRUSTSTORE_PASSWORD;
             truststoreAlgorithm = GrpcConstants.DEFAULT_TRUSTSTORE_ALGORITHM;
-        }
-
-
-
-        if (isSslEnabled && optionHolder.isOptionExists(GrpcConstants.TRUSTSTORE_FILE)) {
-            truststoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_FILE).getValue();
-            truststorePassword = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_PASSWORD).getValue();
-            truststoreAlgorithm = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_ALGORITHM).getValue();
-        } else {
-            truststoreFilePath = configReader.readConfig(GrpcConstants.SYS_TRUSTSTORE_FILE_PATH,
-                    GrpcConstants.DEFAULT_TRUSTSTORE_FILE);
-            truststorePassword = configReader.readConfig(GrpcConstants.SYS_TRUSTSTORE_PASSWORD,
-                    GrpcConstants.DEFAULT_TRUSTSTORE_PASSWORD);
-            truststoreAlgorithm = configReader.readConfig(GrpcConstants.SYS_TRUSTSTORE_ALGORITHM,
-                    GrpcConstants.DEFAULT_TRUSTSTORE_ALGORITHM);
             tlsStoreType = optionHolder.getOrCreateOption(GrpcConstants.TLS_STORE_TYPE,
                     GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
         }
+
     }
 
     public String getServiceName() {
