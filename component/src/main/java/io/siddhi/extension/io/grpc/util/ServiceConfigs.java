@@ -58,11 +58,8 @@ public class ServiceConfigs {
                           String streamID, ConfigReader configReader) {
         if (optionHolder.isOptionExists(GrpcConstants.RECEIVER_URL)) {
             this.url = optionHolder.validateAndGetOption(GrpcConstants.RECEIVER_URL).getValue();
-            log.debug("GRPC Service for : " + streamID + " started");
-        } else if (configReader.readConfig(GrpcConstants.RECEIVER_URL , GrpcConstants.DEFAULT_RECEIVER_URL) != null) {
-            this.url = configReader.readConfig(GrpcConstants.RECEIVER_URL , GrpcConstants.DEFAULT_RECEIVER_URL);
-            log.debug("Default GRPC Service for  : " + streamID + " started");
-        } else if (optionHolder.isOptionExists(GrpcConstants.PUBLISHER_URL)) {
+            log.info("GRPC Service for : " + streamID + " started" + this.url);
+        }  else if (optionHolder.isOptionExists(GrpcConstants.PUBLISHER_URL)) {
             this.url = optionHolder.validateAndGetOption(GrpcConstants.PUBLISHER_URL).getValue();
         } else {
             throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": " + streamID + ": either " +
@@ -114,8 +111,6 @@ public class ServiceConfigs {
         //Validates and enables SSL feature
         if (optionHolder.isOptionExists(GrpcConstants.ENABLE_SSL)) {
             isSslEnabled = Boolean.parseBoolean(optionHolder.validateAndGetOption(GrpcConstants.ENABLE_SSL).getValue());
-        } else {
-            isSslEnabled = true;
         }
         //retrieves KeyStore File
         if (optionHolder.isOptionExists(GrpcConstants.KEYSTORE_FILE)) {
@@ -125,20 +120,20 @@ public class ServiceConfigs {
             tlsStoreType = optionHolder.getOrCreateOption(GrpcConstants.TLS_STORE_TYPE,
                     GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
         } else {
-            keystoreFilePath = configReader.readConfig(GrpcConstants.KEYSTORE_FILE,
+            keystoreFilePath = configReader.readConfig(GrpcConstants.SYS_KEYSTORE_FILE,
                     GrpcConstants.DEFAULT_KEYSTORE_FILE);
-            keystorePassword = configReader.readConfig(GrpcConstants.KEYSTORE_PASSWORD,
+            keystorePassword = configReader.readConfig(GrpcConstants.SYS_KEYSTORE_PASSWORD,
                     GrpcConstants.DEFAULT_KEYSTORE_PASSWORD);
-            keystoreAlgorithm = configReader.readConfig(GrpcConstants.KEYSTORE_ALGORITHM,
+            keystoreAlgorithm = configReader.readConfig(GrpcConstants.SYS_KEYSTORE_ALGORITHM,
                         GrpcConstants.DEFAULT_KEYSTORE_ALGORITHM);
             tlsStoreType = optionHolder.getOrCreateOption(GrpcConstants.TLS_STORE_TYPE,
                     GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
         }
         //retrieves Truststore file
-        if (isSslEnabled && optionHolder.isOptionExists(GrpcConstants.SYS_TRUSTSTORE_FILE_PATH)) {
-            truststoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.SYS_TRUSTSTORE_FILE_PATH).getValue();
-            truststorePassword = optionHolder.validateAndGetOption(GrpcConstants.SYS_TRUSTSTORE_PASSWORD).getValue();
-            truststoreAlgorithm = optionHolder.validateAndGetOption(GrpcConstants.SYS_TRUSTSTORE_ALGORITHM).getValue();
+        if (isSslEnabled && optionHolder.isOptionExists(GrpcConstants.TRUSTSTORE_FILE)) {
+            truststoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_FILE).getValue();
+            truststorePassword = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_PASSWORD).getValue();
+            truststoreAlgorithm = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_ALGORITHM).getValue();
         } else {
             truststoreFilePath = configReader.readConfig(GrpcConstants.SYS_TRUSTSTORE_FILE_PATH,
                     GrpcConstants.DEFAULT_TRUSTSTORE_FILE);

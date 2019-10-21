@@ -46,9 +46,9 @@ public class GrpcConstants {
     public static final String HEADERS = "headers";
 
     //SSL feature variables
-    public static final String KEYSTORE_FILE = "keyStoreFile";
-    public static final String KEYSTORE_PASSWORD = "keyStorePassword";
-    public static final String KEYSTORE_ALGORITHM = "keyStoreAlgorithm";
+    public static final String SYS_KEYSTORE_FILE = "keyStoreFile";
+    public static final String SYS_KEYSTORE_PASSWORD = "keyStorePassword";
+    public static final String SYS_KEYSTORE_ALGORITHM = "keyStoreAlgorithm";
     public static final String DEFAULT_KEYSTORE_FILE = "src/main/resources/security/wso2carbon.jks";
     public static final String DEFAULT_KEYSTORE_PASSWORD = "wso2carbon";
     public static final String DEFAULT_KEYSTORE_ALGORITHM = "SunX509";
@@ -59,9 +59,15 @@ public class GrpcConstants {
     public static final String DEFAULT_TRUSTSTORE_PASSWORD = "wso2carbon";
     public static final String DEFAULT_TRUSTSTORE_ALGORITHM = "SunX509";
 
+    public static final String KEYSTORE_FILE = "keystore.file";
+    public static final String KEYSTORE_PASSWORD = "keystore.password";
+    public static final String KEYSTORE_ALGORITHM = "keystore.algorithm";
+    public static final String TRUSTSTORE_FILE = "truststore.file";
+    public static final String TRUSTSTORE_PASSWORD = "truststore.password";
+    public static final String TRUSTSTORE_ALGORITHM = "truststore.algorithm";
+
     public static final String TLS_STORE_TYPE = "tls.store.type";
     public static final String DEFAULT_TLS_STORE_TYPE = "JKS";
-    public static final String TRUSTSTORE_ALGORITHM = "truststore.algorithm";
     public static final String SEQUENCE_HEADER_KEY = "sequence";
     public static final String METADATA = "metadata";
     public static final String THREADPOOL_SIZE = "threadpool.size";
