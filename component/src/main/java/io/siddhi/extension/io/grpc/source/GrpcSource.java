@@ -219,8 +219,8 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
                         possibleParameters = "-"),
                 @SystemParameter(name = "trustStoreFile",
                         description = "This is the trust store file with the path",
-                        defaultValue = "valid path for a trust store file",
-                        possibleParameters = ""),
+                        defaultValue = "src/main/resources/security/client-truststore.jks",
+                        possibleParameters = "-"),
                 @SystemParameter(name = "trustStorePassword",
                         description = "This is the password used with trust store file",
                         defaultValue = "wso2carbon",
@@ -228,6 +228,10 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
                 @SystemParameter(name = "trustStoreAlgorithm",
                         description = "the encryption algorithm to be used for server authentication",
                         defaultValue = "SunX509",
+                        possibleParameters = "-"),
+                @SystemParameter(name = "receiver.url",
+                        description = "This is the client side data receiving url ",
+                        defaultValue = "grpc://0.0.0.0:9763/org.wso2.grpc.EventService/consume",
                         possibleParameters = "-")
         }
 )
