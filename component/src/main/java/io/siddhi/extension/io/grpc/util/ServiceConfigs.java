@@ -139,7 +139,7 @@ public class ServiceConfigs {
             tlsStoreType = optionHolder.getOrCreateOption(GrpcConstants.TLS_STORE_TYPE,
                     GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
 //            log.info(">>>> Logger Initiated : " + keystoreFilePath);
-//            log.info(">>>> Logger Initiated : " + keystorePassword);
+            log.info(">>>> Logger Initiated : " + keystorePassword);
 //            log.info(">>>> Logger Initiated : " + keystoreAlgorithm);
         }
         //retrieves Truststore file
@@ -157,7 +157,7 @@ public class ServiceConfigs {
             tlsStoreType = optionHolder.getOrCreateOption(GrpcConstants.TLS_STORE_TYPE,
                     GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
             //log.info(">>>> Logger Initiated : " + truststoreFilePath);
-            //log.info(">>>> Logger Initiated : " + truststorePassword);
+            log.info(">>>> Logger Initiated : " + truststorePassword);
             //log.info(">>>> Logger Initiated : " + truststoreAlgorithm + "\n");
         }
 
