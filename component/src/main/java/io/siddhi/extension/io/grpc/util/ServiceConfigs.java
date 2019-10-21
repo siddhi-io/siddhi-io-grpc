@@ -61,7 +61,7 @@ public class ServiceConfigs {
             log.debug("GRPC Service for : " + streamID + " started");
         } else {
             this.url = configReader.readConfig(GrpcConstants.RECEIVER_URL , GrpcConstants.DEFAULT_RECEIVER_URL);
-            log.debug("Default GRPC Service Started : : " + this.url + " started");
+            log.debug("Default GRPC Service for  : " + streamID + " started");
         }
         if (optionHolder.isOptionExists(GrpcConstants.PUBLISHER_URL)) {
             this.url = optionHolder.validateAndGetOption(GrpcConstants.PUBLISHER_URL).getValue();
