@@ -119,13 +119,13 @@ public class ServiceConfigs {
             keystoreAlgorithm = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_ALGORITHM).getValue();
             tlsStoreType = optionHolder.getOrCreateOption(GrpcConstants.TLS_STORE_TYPE,
                     GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
-        } else {
+        } else if (configReader.readConfig(GrpcConstants.SYS_KEYSTORE_FILE, null) != null) {
             keystoreFilePath = configReader.readConfig(GrpcConstants.SYS_KEYSTORE_FILE,
                     GrpcConstants.DEFAULT_KEYSTORE_FILE);
             keystorePassword = configReader.readConfig(GrpcConstants.SYS_KEYSTORE_PASSWORD,
                     GrpcConstants.DEFAULT_KEYSTORE_PASSWORD);
             keystoreAlgorithm = configReader.readConfig(GrpcConstants.SYS_KEYSTORE_ALGORITHM,
-                        GrpcConstants.DEFAULT_KEYSTORE_ALGORITHM);
+                    GrpcConstants.DEFAULT_KEYSTORE_ALGORITHM);
             tlsStoreType = optionHolder.getOrCreateOption(GrpcConstants.TLS_STORE_TYPE,
                     GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
         }
