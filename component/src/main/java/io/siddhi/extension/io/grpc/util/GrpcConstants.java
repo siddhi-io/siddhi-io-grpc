@@ -24,7 +24,6 @@ public class GrpcConstants {
     public static final String SEMI_COLON_STRING = ":";
     public static final String PUBLISHER_URL = "publisher.url";
     public static final String RECEIVER_URL = "receiver.url";
-    public static final String DEFAULT_RECEIVER_URL = "grpc://localhost:9806/org.wso2.grpc.EventService/consume";
     public static final String PORT_SERVICE_SEPARATOR = "/";
     public static final String SINK_ID = "sink.id";
     public static final String STREAM_ID = "stream.id";
