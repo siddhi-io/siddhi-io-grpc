@@ -51,15 +51,15 @@ public class GrpcConstants {
 //    public static final String KEYSTORE_PASSWORD = "keystore.password";
 
     //SSL feature variables
-    public static final String KEYSTORE_FILE = "keystoreFile";
-    public static final String KEYSTORE_PASSWORD = "keystorePassword";
-    public static final String KEYSTORE_ALGORITHM = "keystoreAlgorithm";
+    public static final String KEYSTORE_FILE = "keyStoreFile";
+    public static final String KEYSTORE_PASSWORD = "keyStorePassword";
+    public static final String KEYSTORE_ALGORITHM = "keyStoreAlgorithm";
     public static final String DEFAULT_KEYSTORE_FILE = "src/main/resources/security/wso2carbon.jks";
     public static final String DEFAULT_KEYSTORE_PASSWORD = "wso2carbon";
     public static final String DEFAULT_KEYSTORE_ALGORITHM = "SunX509";
-    public static final String SYS_TRUSTSTORE_FILE_PATH =  "truststoreFile";
-    public static final String SYS_TRUSTSTORE_PASSWORD = "truststorePassword";
-    public static final String SYS_TRUSTSTORE_ALGORITHM = "truststoreAlgorithm";
+    public static final String SYS_TRUSTSTORE_FILE_PATH =  "trustStoreFile";
+    public static final String SYS_TRUSTSTORE_PASSWORD = "trustStorePassword";
+    public static final String SYS_TRUSTSTORE_ALGORITHM = "trustStoreAlgorithm";
     public static final String DEFAULT_TRUSTSTORE_FILE = "src/main/resources/security/client-truststore.jks";
     public static final String DEFAULT_TRUSTSTORE_PASSWORD = "systemTruststoreFile";
     public static final String DEFAULT_TRUSTSTORE_ALGORITHM = "SunX509";
