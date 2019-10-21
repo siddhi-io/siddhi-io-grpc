@@ -18,6 +18,7 @@
 package io.siddhi.extension.io.grpc.util;
 
 import io.siddhi.core.config.SiddhiAppContext;
+import io.siddhi.core.util.config.ConfigReader;
 import io.siddhi.core.util.transport.OptionHolder;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -33,8 +34,9 @@ public class GrpcServerConfigs {
     private int threadPoolSize;
     private int threadPoolBufferSize;
 
-    public GrpcServerConfigs(OptionHolder optionHolder, SiddhiAppContext siddhiAppContext, String streamID) {
-        this.serviceConfigs = new ServiceConfigs(optionHolder, siddhiAppContext, streamID);
+    public GrpcServerConfigs(OptionHolder optionHolder, SiddhiAppContext siddhiAppContext, String streamID ,
+                             ConfigReader configReader) {
+        this.serviceConfigs = new ServiceConfigs(optionHolder, siddhiAppContext, streamID , configReader);
 
         if (optionHolder.isOptionExists(GrpcConstants.MAX_INBOUND_MESSAGE_SIZE)) {
             maxInboundMessageSize = Integer.parseInt(optionHolder.validateAndGetOption(
