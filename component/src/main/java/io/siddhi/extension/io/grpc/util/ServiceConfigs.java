@@ -128,7 +128,7 @@ public class ServiceConfigs {
                     GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
         }
         //retrieves Truststore file
-        if (optionHolder.isOptionExists(GrpcConstants.SYS_TRUSTSTORE_FILE_PATH)) {
+        if (isSslEnabled && optionHolder.isOptionExists(GrpcConstants.SYS_TRUSTSTORE_FILE_PATH)) {
             truststoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.SYS_TRUSTSTORE_FILE_PATH).getValue();
             truststorePassword = optionHolder.validateAndGetOption(GrpcConstants.SYS_TRUSTSTORE_PASSWORD).getValue();
             truststoreAlgorithm = optionHolder.validateAndGetOption(GrpcConstants.SYS_TRUSTSTORE_ALGORITHM).getValue();
