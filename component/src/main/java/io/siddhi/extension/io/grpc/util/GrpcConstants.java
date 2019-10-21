@@ -56,7 +56,7 @@ public class GrpcConstants {
     public static final String SYS_TRUSTSTORE_PASSWORD = "trustStorePassword";
     public static final String SYS_TRUSTSTORE_ALGORITHM = "trustStoreAlgorithm";
     public static final String DEFAULT_TRUSTSTORE_FILE = "src/main/resources/security/client-truststore.jks";
-    public static final String DEFAULT_TRUSTSTORE_PASSWORD = "systemTruststoreFile";
+    public static final String DEFAULT_TRUSTSTORE_PASSWORD = "wso2carbon";
     public static final String DEFAULT_TRUSTSTORE_ALGORITHM = "SunX509";
 
     public static final String TLS_STORE_TYPE = "tls.store.type";

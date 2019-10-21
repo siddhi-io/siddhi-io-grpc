@@ -59,9 +59,6 @@ public class ServiceConfigs {
         if (optionHolder.isOptionExists(GrpcConstants.RECEIVER_URL)) {
             this.url = optionHolder.validateAndGetOption(GrpcConstants.RECEIVER_URL).getValue();
             log.debug("GRPC Service for : " + streamID + " started");
-        } else {
-            this.url = configReader.readConfig(GrpcConstants.RECEIVER_URL , GrpcConstants.DEFAULT_RECEIVER_URL);
-            log.debug("Default GRPC Service for  : " + streamID + " started");
         }
         if (optionHolder.isOptionExists(GrpcConstants.PUBLISHER_URL)) {
             this.url = optionHolder.validateAndGetOption(GrpcConstants.PUBLISHER_URL).getValue();
@@ -112,7 +109,7 @@ public class ServiceConfigs {
         //Validates and enables SSL feature
         if (optionHolder.isOptionExists(GrpcConstants.ENABLE_SSL)) {
             isSslEnabled = Boolean.parseBoolean(optionHolder.validateAndGetOption(GrpcConstants.ENABLE_SSL).getValue());
-        } 
+        }
         //retrieves KeyStore File
         if (optionHolder.isOptionExists(GrpcConstants.KEYSTORE_FILE)) {
             keystoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_FILE).getValue();

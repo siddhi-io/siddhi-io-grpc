@@ -20,6 +20,7 @@ package io.siddhi.extension.io.grpc.source;
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
 import io.siddhi.annotation.Parameter;
+import io.siddhi.annotation.SystemParameter;
 import io.siddhi.annotation.util.DataType;
 import io.siddhi.core.exception.ConnectionUnavailableException;
 import io.siddhi.core.util.snapshot.state.State;
@@ -202,6 +203,32 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
                                 "resources)), when we define a stream method siddhi will identify it as a stream RPC" +
                                 " method and ready to accept stream of request from the client."
                 )
+        },
+        systemParameter = {
+                @SystemParameter(name = "keyStoreFile",
+                        description = "This is the key store file with the path ",
+                        defaultValue = "src/main/resources/security/wso2carbon.jks",
+                        possibleParameters = "valid path for a key store file"),
+                @SystemParameter(name = "keyStorePassword",
+                        description = "This is the password used with key store file",
+                        defaultValue = "wso2carbon",
+                        possibleParameters = "valid password for the key store file"),
+                @SystemParameter(name = "keyStoreAlgorithm",
+                        description = "The encryption algorithm to be used for client authentication",
+                        defaultValue = "SunX509",
+                        possibleParameters = "-"),
+                @SystemParameter(name = "trustStoreFile",
+                        description = "This is the trust store file with the path",
+                        defaultValue = "valid path for a trust store file",
+                        possibleParameters = ""),
+                @SystemParameter(name = "trustStorePassword",
+                        description = "This is the password used with trust store file",
+                        defaultValue = "wso2carbon",
+                        possibleParameters = "valid password for the trust store file"),
+                @SystemParameter(name = "trustStoreAlgorithm",
+                        description = "the encryption algorithm to be used for server authentication",
+                        defaultValue = "SunX509",
+                        possibleParameters = "-")
         }
 )
 public class GrpcSource extends AbstractGrpcSource {
