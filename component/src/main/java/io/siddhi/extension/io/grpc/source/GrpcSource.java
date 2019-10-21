@@ -206,7 +206,7 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
         },
         systemParameter = {
                 @SystemParameter(name = "keyStoreFile",
-                        description = "This is the key store file with the path ",
+                        description = "Path of the key store file",
                         defaultValue = "src/main/resources/security/wso2carbon.jks",
                         possibleParameters = "valid path for a key store file"),
                 @SystemParameter(name = "keyStorePassword",
