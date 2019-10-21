@@ -148,7 +148,7 @@ public class ServiceConfigs {
                     GrpcConstants.DEFAULT_TRUSTSTORE_ALGORITHM);
             tlsStoreType = optionHolder.getOrCreateOption(GrpcConstants.TLS_STORE_TYPE,
                     GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
-        } else if(isSslEnabled){
+        } else if (isSslEnabled) {
             truststoreFilePath = GrpcConstants.DEFAULT_TRUSTSTORE_FILE;
             truststorePassword = GrpcConstants.DEFAULT_TRUSTSTORE_PASSWORD;
             truststoreAlgorithm = GrpcConstants.DEFAULT_TRUSTSTORE_ALGORITHM;
