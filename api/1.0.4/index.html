@@ -38,7 +38,7 @@
     
     
       
-        <title>1.0.3 - Siddhi IO GRPC</title>
+        <title>1.0.4 - Siddhi IO GRPC</title>
       
     
     
@@ -114,7 +114,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#api-docs-v103" tabindex="1" class="md-skip">
+      <a href="#api-docs-v104" tabindex="1" class="md-skip">
         Skip to content
       </a>
     
@@ -140,7 +140,7 @@
             </span>
             <span class="md-header-nav__topic">
               
-                1.0.3
+                1.0.4
               
             </span>
           
@@ -294,18 +294,6 @@
           
           
 
-
-  <li class="md-nav__item">
-    <a href="../1.0.4/" title="1.0.4" class="md-nav__link">
-      1.0.4
-    </a>
-  </li>
-
-        
-          
-          
-          
-
   
 
 
@@ -317,11 +305,11 @@
     
     
       <label class="md-nav__link md-nav__link--active" for="__toc">
-        1.0.3
+        1.0.4
       </label>
     
-    <a href="./" title="1.0.3" class="md-nav__link md-nav__link--active">
-      1.0.3
+    <a href="./" title="1.0.4" class="md-nav__link md-nav__link--active">
+      1.0.4
     </a>
     
       
@@ -410,6 +398,18 @@
   
 </nav>
     
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../1.0.3/" title="1.0.3" class="md-nav__link">
+      1.0.3
+    </a>
   </li>
 
         
@@ -582,10 +582,10 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/siddhi-io/siddhi-io-grpc/edit/master/docs/api/1.0.3.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
+                  <a href="https://github.com/siddhi-io/siddhi-io-grpc/edit/master/docs/api/1.0.4.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="api-docs-v103">API Docs - v1.0.3</h1>
+                <h1 id="api-docs-v104">API Docs - v1.0.4</h1>
 <div class="admonition info">
 <p class="admonition-title">Tested Siddhi Core version: <em><a target="_blank" href="http://siddhi.io/en/v5.1/docs/query-guide/">5.1.5</a></em></p>
 <p>It could also support other Siddhi Core minor versions.</p>
@@ -1287,6 +1287,51 @@ insert into BarStream;
         <td style="vertical-align: top">No</td>
     </tr>
 </table></p>
+<p><span id="system-parameters" class="md-typeset" style="display: block; font-weight: bold;">System Parameters</span>
+<table>
+    <tr>
+        <th>Name</th>
+        <th style="min-width: 20em">Description</th>
+        <th>Default Value</th>
+        <th>Possible Parameters</th>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">keyStoreFile</td>
+        <td style="vertical-align: top;"><p style="word-wrap: break-word;margin: 0;">Path of the key store file</p></td>
+        <td style="vertical-align: top">src/main/resources/security/wso2carbon.jks</td>
+        <td style="vertical-align: top">valid path for a key store file</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">keyStorePassword</td>
+        <td style="vertical-align: top;"><p style="word-wrap: break-word;margin: 0;">This is the password used with key store file</p></td>
+        <td style="vertical-align: top">wso2carbon</td>
+        <td style="vertical-align: top">valid password for the key store file</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">keyStoreAlgorithm</td>
+        <td style="vertical-align: top;"><p style="word-wrap: break-word;margin: 0;">The encryption algorithm to be used for client authentication</p></td>
+        <td style="vertical-align: top">SunX509</td>
+        <td style="vertical-align: top">-</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">trustStoreFile</td>
+        <td style="vertical-align: top;"><p style="word-wrap: break-word;margin: 0;">This is the trust store file with the path</p></td>
+        <td style="vertical-align: top">src/main/resources/security/client-truststore.jks</td>
+        <td style="vertical-align: top">-</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">trustStorePassword</td>
+        <td style="vertical-align: top;"><p style="word-wrap: break-word;margin: 0;">This is the password used with trust store file</p></td>
+        <td style="vertical-align: top">wso2carbon</td>
+        <td style="vertical-align: top">valid password for the trust store file</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">trustStoreAlgorithm</td>
+        <td style="vertical-align: top;"><p style="word-wrap: break-word;margin: 0;">the encryption algorithm to be used for server authentication</p></td>
+        <td style="vertical-align: top">SunX509</td>
+        <td style="vertical-align: top">-</td>
+    </tr>
+</table></p>
 <p><span id="examples" class="md-typeset" style="display: block; font-weight: bold;">Examples</span>
 <span id="example-1" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">EXAMPLE 1</span></p>
 <pre><code>@source(type='grpc',
@@ -1536,6 +1581,51 @@ define stream FooStream (message String);
         <td style="vertical-align: top">No</td>
     </tr>
 </table></p>
+<p><span id="system-parameters" class="md-typeset" style="display: block; font-weight: bold;">System Parameters</span>
+<table>
+    <tr>
+        <th>Name</th>
+        <th style="min-width: 20em">Description</th>
+        <th>Default Value</th>
+        <th>Possible Parameters</th>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">keyStoreFile</td>
+        <td style="vertical-align: top;"><p style="word-wrap: break-word;margin: 0;">This is the key store file with the path </p></td>
+        <td style="vertical-align: top">src/main/resources/security/wso2carbon.jks</td>
+        <td style="vertical-align: top">valid path for a key store file</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">keyStorePassword</td>
+        <td style="vertical-align: top;"><p style="word-wrap: break-word;margin: 0;">This is the password used with key store file</p></td>
+        <td style="vertical-align: top">wso2carbon</td>
+        <td style="vertical-align: top">valid password for the key store file</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">keyStoreAlgorithm</td>
+        <td style="vertical-align: top;"><p style="word-wrap: break-word;margin: 0;">The encryption algorithm to be used for client authentication</p></td>
+        <td style="vertical-align: top">SunX509</td>
+        <td style="vertical-align: top">-</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">trustStoreFile</td>
+        <td style="vertical-align: top;"><p style="word-wrap: break-word;margin: 0;">This is the trust store file with the path</p></td>
+        <td style="vertical-align: top">src/main/resources/security/client-truststore.jks</td>
+        <td style="vertical-align: top">-</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">trustStorePassword</td>
+        <td style="vertical-align: top;"><p style="word-wrap: break-word;margin: 0;">This is the password used with trust store file</p></td>
+        <td style="vertical-align: top">wso2carbon</td>
+        <td style="vertical-align: top">valid password for the trust store file</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">trustStoreAlgorithm</td>
+        <td style="vertical-align: top;"><p style="word-wrap: break-word;margin: 0;">the encryption algorithm to be used for server authentication</p></td>
+        <td style="vertical-align: top">SunX509</td>
+        <td style="vertical-align: top">-</td>
+    </tr>
+</table></p>
 <p><span id="examples" class="md-typeset" style="display: block; font-weight: bold;">Examples</span>
 <span id="example-1" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">EXAMPLE 1</span></p>
 <pre><code>@source(type='grpc-service',
@@ -1628,7 +1718,7 @@ insert into BarStream;
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid">
         
-          <a href="../1.0.4/" title="1.0.4" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href="../latest/" title="latest" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-flex__cell md-flex__cell--shrink">
               <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
             </div>
@@ -1637,19 +1727,19 @@ insert into BarStream;
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                1.0.4
+                latest
               </span>
             </div>
           </a>
         
         
-          <a href="../1.0.2/" title="1.0.2" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
+          <a href="../1.0.3/" title="1.0.3" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
             <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
               <span class="md-flex__ellipsis">
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                1.0.2
+                1.0.3
               </span>
             </div>
             <div class="md-flex__cell md-flex__cell--shrink">
