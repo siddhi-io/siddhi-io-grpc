@@ -48,12 +48,6 @@ public abstract class AbstractGrpcSource extends Source {
     protected String siddhiAppName;
     protected Class requestClass;
 
-//    public static  String configKeyStoreFile = null;
-//    public static  String configKeyStorePassword = null;
-//    public static  String configKeyStoreAlgorithm = null;
-//    public static  String configTruststoreFile = null;
-//    public static  String configTruststorePassword = null;
-//    public static  String configTruststoreAlgorithm = null;
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
