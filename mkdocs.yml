@@ -5,7 +5,7 @@ repo_url: https://github.com/siddhi-io/siddhi-io-grpc
 copyright: Siddhi - Documentation
 theme:
   name: material
-  logo: images/siddhi-logo-w.svg
+  logo: images/siddhi-logo.svg
   favicon: images/favicon.ico
   palette:
     primary: teal
@@ -33,7 +33,10 @@ pages:
 - Information: index.md
 - API Docs:
   - latest: api/latest.md
+  - 1.0.4: api/1.0.4.md
+  - 1.0.3: api/1.0.3.md
+  - 1.0.2: api/1.0.2.md
   - 1.0.1: api/1.0.1.md
-  - 1.0.0-beta: api/1.0.0-beta.md
   - 1.0.0: api/1.0.0.md
+  - 1.0.0-beta: api/1.0.0-beta.md
 - License: license.md

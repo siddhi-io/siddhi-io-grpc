@@ -297,6 +297,7 @@ public class GrpcCallSink extends AbstractGrpcSink {
     private static final Logger logger = Logger.getLogger(GrpcCallSink.class.getName());
     protected String sinkID;
     protected AbstractStub futureStub;
+    private GrpcCallSink referenceToThisSink;
 
     private static Method getRpcMethod(ServiceConfigs serviceConfigs, String siddhiAppName, String streamID) {
 
@@ -328,6 +329,7 @@ public class GrpcCallSink extends AbstractGrpcSink {
 
     @Override
     public void initSink(OptionHolder optionHolder) {
+        referenceToThisSink = this;
         if (serviceConfigs.isDefaultService()) {
             if (serviceConfigs.getMethodName() == null) {
                 serviceConfigs.setMethodName(GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE);
@@ -348,6 +350,52 @@ public class GrpcCallSink extends AbstractGrpcSink {
                     GrpcConstants.MAX_INBOUND_METADATA_SIZE).getValue()));
         }
         this.sinkID = optionHolder.validateAndGetOption(GrpcConstants.SINK_ID).getValue();
+    }
+
+    private class ListenableFutureWrapper {
+        private Object payload;
+        private DynamicOptions dynamicOptions;
+
+        public ListenableFutureWrapper(Object payload, DynamicOptions dynamicOptions) {
+            this.payload = payload;
+            this.dynamicOptions = dynamicOptions;
+        }
+
+        private void addDefaultCallback(ListenableFuture futureResponse) {
+            Futures.addCallback(futureResponse, new FutureCallback<Event>() {
+                Map<String, String> siddhiRequestEventData = getRequestEventDataMap(dynamicOptions);
+
+                @Override
+                public void onSuccess(Event result) {
+                    GrpcSourceRegistry.getInstance().getGrpcCallResponseSource(sinkID).onResponse(result,
+                            siddhiRequestEventData);
+                }
+
+                @Override
+                public void onFailure(Throwable t) {
+                    referenceToThisSink.onError(payload, dynamicOptions, (Exception) t);
+                    logger.error(siddhiAppName + ": " + streamID + ": " + t.getMessage());
+                }
+            }, MoreExecutors.directExecutor());
+        }
+
+        private void addGenericCallback(ListenableFuture genericFutureResponse) {
+            Futures.addCallback(genericFutureResponse, new FutureCallback<Object>() {
+                Map<String, String> siddhiRequestEventData = getRequestEventDataMap(dynamicOptions);
+
+                @Override
+                public void onSuccess(Object o) {
+                    GrpcSourceRegistry.getInstance().getGrpcCallResponseSource(sinkID).onResponse(o,
+                            siddhiRequestEventData);
+                }
+
+                @Override
+                public void onFailure(Throwable t) {
+                    referenceToThisSink.onError(payload, dynamicOptions, (Exception) t);
+                    logger.error(siddhiAppName + ":" + streamID + ": " + t.getMessage());
+                }
+            }, MoreExecutors.directExecutor());
+        }
     }
 
     @Override
@@ -372,20 +420,8 @@ public class GrpcCallSink extends AbstractGrpcSink {
             }
 
             ListenableFuture<Event> futureResponse = currentFutureStub.process(eventBuilder.build());
-            Futures.addCallback(futureResponse, new FutureCallback<Event>() {
-                Map<String, String> siddhiRequestEventData = getRequestEventDataMap(dynamicOptions);
-
-                @Override
-                public void onSuccess(Event result) {
-                    GrpcSourceRegistry.getInstance().getGrpcCallResponseSource(sinkID).onResponse(result,
-                            siddhiRequestEventData);
-                }
-
-                @Override
-                public void onFailure(Throwable t) {
-                    logger.error(siddhiAppName + ": " + streamID + ": " + t.getMessage());
-                }
-            }, MoreExecutors.directExecutor());
+            ListenableFutureWrapper wrapper = new ListenableFutureWrapper(payload, dynamicOptions);
+            wrapper.addDefaultCallback(futureResponse);
         } else {
             AbstractStub currentStub = futureStub;
             Method rpcMethod = getRpcMethod(serviceConfigs, siddhiAppName, streamID);
@@ -401,20 +437,8 @@ public class GrpcCallSink extends AbstractGrpcSink {
                         "', expected one of these methods: " + getRpcMethodList(serviceConfigs, siddhiAppName,
                         streamID), e);
             }
-            Futures.addCallback(genericFutureResponse, new FutureCallback<Object>() {
-                Map<String, String> siddhiRequestEventData = getRequestEventDataMap(dynamicOptions);
-
-                @Override
-                public void onSuccess(Object o) {
-                    GrpcSourceRegistry.getInstance().getGrpcCallResponseSource(sinkID).onResponse(o,
-                            siddhiRequestEventData);
-                }
-
-                @Override
-                public void onFailure(Throwable t) {
-                    logger.error(siddhiAppName + ":" + streamID + ": " + t.getMessage());
-                }
-            }, MoreExecutors.directExecutor());
+            ListenableFutureWrapper wrapper = new ListenableFutureWrapper(payload, dynamicOptions);
+            wrapper.addGenericCallback(genericFutureResponse);
         }
     }
 
