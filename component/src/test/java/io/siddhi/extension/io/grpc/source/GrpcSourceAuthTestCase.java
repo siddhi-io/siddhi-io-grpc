@@ -46,6 +46,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.TrustManagerFactory;
 
+/**
+ * Authentication test cases for grpc-source and grpc-service-source.
+ */
 public class GrpcSourceAuthTestCase {
     private static final Logger logger = Logger.getLogger(GrpcSourceAuthTestCase.class.getName());
     private AtomicInteger eventCount = new AtomicInteger(0);

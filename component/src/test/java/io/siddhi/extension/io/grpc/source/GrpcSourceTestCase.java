@@ -47,6 +47,9 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * Test cases for grpc-source in default way.
+ */
 public class GrpcSourceTestCase {
     private static final Logger logger = Logger.getLogger(GrpcSourceTestCase.class.getName());
     private AtomicInteger eventCount = new AtomicInteger(0);

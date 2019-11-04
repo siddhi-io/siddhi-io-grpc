@@ -56,7 +56,7 @@ import javax.net.ssl.TrustManagerFactory;
 
 /**
  * {@code AbstractGrpcSink} is a super class extended by GrpcCallSink, and GrpcSink.
- * This provides most of the initialization implementations
+ * This provides most of the initialization implementations.
  */
 public abstract class AbstractGrpcSink extends Sink {
     private static final Logger logger = Logger.getLogger(AbstractGrpcSink.class.getName());
@@ -88,9 +88,9 @@ public abstract class AbstractGrpcSink extends Sink {
 
     /**
      * Returns a list of supported dynamic options (that means for each event value of the option can change) by
-     * the transport
+     * the transport.
      *
-     * @return the list of supported dynamic option keys
+     * @return the list of supported dynamic option keys.
      */
     @Override
     public String[] getSupportedDynamicOptions() {

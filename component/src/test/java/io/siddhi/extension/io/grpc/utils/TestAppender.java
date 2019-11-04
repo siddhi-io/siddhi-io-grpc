@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Test appender to receive logs
+ * Test appender to receive logs.
  */
 public class TestAppender extends AppenderSkeleton {
     private final List<LoggingEvent> log = new ArrayList<>();

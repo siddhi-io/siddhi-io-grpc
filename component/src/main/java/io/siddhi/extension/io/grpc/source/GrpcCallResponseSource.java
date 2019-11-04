@@ -152,7 +152,7 @@ public class GrpcCallResponseSource extends Source {
     }
 
     /**
-     * Called at the end to clean all the resources consumed by the {@link Source}
+     * Called at the end to clean all the resources consumed by the {@link Source}.
      */
     @Override
     public void destroy() {
@@ -160,7 +160,7 @@ public class GrpcCallResponseSource extends Source {
     }
 
     /**
-     * Called to pause event consumption
+     * Called to pause event consumption.
      */
     @Override
     public void pause() {
@@ -168,10 +168,10 @@ public class GrpcCallResponseSource extends Source {
     }
 
     /**
-     * Called to resume event consumption
+     * Called to resume event consumption.
      */
     @Override
     public void resume() {
-
+        // TODO: 11/4/19 Implement the pause and resume method
     }
 }

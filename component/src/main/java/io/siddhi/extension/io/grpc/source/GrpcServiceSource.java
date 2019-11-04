@@ -51,7 +51,7 @@ import java.util.TimerTask;
 import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
 
 /**
- * This extension handles receiving requests from grpc clients/stubs and sending back responses
+ * This extension handles receiving requests from grpc clients/stubs and sending back responses.
  */
 @Extension(name = "grpc-service", namespace = "source",
         description = "This extension implements a grpc server for receiving and responding to requests. During " +

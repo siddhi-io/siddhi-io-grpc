@@ -40,6 +40,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * Test cases for grpc-call-sink in generic way.
+ */
 public class GrpcCallSinkGenericTestCase {
     private static final Logger logger = Logger.getLogger(GrpcCallSinkGenericTestCase.class.getName());
     private int port = 6666;

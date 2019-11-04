@@ -36,6 +36,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Test cases for grpc-sink in default way.
+ */
 public class GrpcSinkTestCase {
     private static final Logger log = Logger.getLogger(GrpcSinkTestCase.class.getName());
     private TestServer server = new TestServer(5003);

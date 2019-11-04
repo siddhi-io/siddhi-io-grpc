@@ -40,6 +40,9 @@ import java.util.concurrent.TimeUnit;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.TrustManagerFactory;
 
+/**
+ * TLS server that required to authentication test cases.
+ */
 public class TestTLSServer {
     private static final Logger logger = Logger.getLogger(TestServer.class.getName());
     private Server server;

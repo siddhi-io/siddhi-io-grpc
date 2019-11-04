@@ -36,7 +36,7 @@ import java.lang.reflect.Method;
 import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
 
 /**
- * This handles receiving requests from grpc clients and populating the stream
+ * This handles receiving requests from grpc clients and populating the stream.
  */
 @Extension(name = "grpc", namespace = "source",
         description = "This extension starts a grpc server during initialization time. The server listens to " +

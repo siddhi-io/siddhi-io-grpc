@@ -122,7 +122,7 @@ public abstract class AbstractGrpcSource extends Source {
     }
 
     /**
-     * Called at the end to clean all the resources consumed by the {@link Source}
+     * Called at the end to clean all the resources consumed by the {@link Source}.
      */
     @Override
     public void destroy() {
