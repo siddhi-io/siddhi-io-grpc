@@ -20,7 +20,6 @@ public abstract class ServiceServer {
     protected ReentrantLock lock;
     protected Condition condition;
 
-
     protected abstract void setServerPropertiesToBuilder(String siddhiAppName, String streamID);
     protected abstract void addServicesAndBuildServer(String siddhiAppName, String streamID);
     protected abstract void connectServer(Logger logger, Source.ConnectionCallback connectionCallback,
