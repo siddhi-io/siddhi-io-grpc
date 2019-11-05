@@ -61,6 +61,7 @@ public class GrpcSourceAuthTestCase {
 
         String stream2 = "@source(type='grpc', " +
                 "receiver.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
+                "enable.ssl = 'true', " +
                 "keystore.file = 'src/test/resources/security/wso2carbon.jks'," +
                 "keystore.password = 'wso2carbon', " +
                 "keystore.algorithm = 'SunX509', " +
@@ -137,6 +138,7 @@ public class GrpcSourceAuthTestCase {
 
         String stream2 = "@source(type='grpc', " +
                 "receiver.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
+                "enable.ssl = 'true', " +
                 "keystore.file = 'src/test/resources/security/wso2carbon.jks'," +
                 "keystore.password = 'wso2carbon', " +
                 "keystore.algorithm = 'SunX509', " +
@@ -218,6 +220,7 @@ public class GrpcSourceAuthTestCase {
 
         String stream1 = "@source(type='grpc-service', " +
                 "receiver.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/process', source.id='1', " +
+                "enable.ssl = 'true', " +
                 "keystore.file = 'src/test/resources/security/wso2carbon.jks'," +
                 "keystore.password = 'wso2carbon', " +
                 "keystore.algorithm = 'SunX509', " +
@@ -290,6 +293,7 @@ public class GrpcSourceAuthTestCase {
 
         String stream1 = "@source(type='grpc-service', " +
                 "receiver.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/process', source.id='1', " +
+                "enable.ssl = 'true', " +
                 "keystore.file = 'src/test/resources/security/wso2carbon.jks'," +
                 "keystore.password = 'wso2carbon', " +
                 "keystore.algorithm = 'SunX509', " +

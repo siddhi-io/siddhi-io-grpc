@@ -41,14 +41,13 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
 public abstract class AbstractGrpcSource extends Source {
     protected SiddhiAppContext siddhiAppContext;
     protected SourceEventListener sourceEventListener;
-    private String[] requestedTransportPropertyNames;
     protected String streamID;
-    private ServiceDeploymentInfo serviceDeploymentInfo;
     protected GrpcServerConfigs grpcServerConfigs;
     protected String siddhiAppName;
     protected Class requestClass;
     protected ServiceServer serviceServer;
-
+    private String[] requestedTransportPropertyNames;
+    private ServiceDeploymentInfo serviceDeploymentInfo;
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
@@ -58,6 +57,7 @@ public abstract class AbstractGrpcSource extends Source {
     /**
      * The initialization method for {@link Source}, will be called before other methods. It used to validate
      * all configurations and to get initial values.
+     *
      * @param sourceEventListener After receiving events, the source should trigger onEvent() of this listener.
      *                            Listener will then pass on the events to the appropriate mappers for processing .
      * @param optionHolder        Option holder containing static configuration related to the {@link Source}
@@ -74,7 +74,7 @@ public abstract class AbstractGrpcSource extends Source {
         this.sourceEventListener = sourceEventListener;
 
         this.requestedTransportPropertyNames = requestedTransportPropertyNames.clone();
-        this.grpcServerConfigs = new GrpcServerConfigs(optionHolder, siddhiAppContext, streamID , configReader);
+        this.grpcServerConfigs = new GrpcServerConfigs(optionHolder, siddhiAppContext, streamID, configReader, true);
         if (!grpcServerConfigs.getServiceConfigs().isDefaultService()) {
             requestClass = getRequestClass();
         }
