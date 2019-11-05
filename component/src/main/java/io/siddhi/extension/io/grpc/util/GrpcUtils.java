@@ -25,11 +25,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Class to hold the static util methods needed.
  */
 public class GrpcUtils {
+    private static final Pattern varPattern = Pattern.compile("\\$\\{([^}]*)}");
+
     public static String[] extractHeaders(Map<String, String> headersMap, Map<String, String> metaDataMap,
                                           String[] requestedTransportPropertyNames) {
         if (requestedTransportPropertyNames == null) {
@@ -56,7 +60,7 @@ public class GrpcUtils {
     }
 
     /**
-     * @return methods that are available in the stub as list of String
+     * @return methods that are available in the stub as list of String.
      */
     public static List<String> getRpcMethodList(ServiceConfigs serviceConfigs, String siddhiAppName,
                                                 String streamID) {
@@ -80,4 +84,27 @@ public class GrpcUtils {
         return rpcMethodNameList;
     }
 
+    /**
+     * Replace the env variable with the real value.
+     */
+    public static String substituteVariables(String value) {
+        Matcher matcher = varPattern.matcher(value);
+        boolean found = matcher.find();
+        if (!found) {
+            return value;
+        }
+        StringBuffer sb = new StringBuffer();
+        do {
+            String sysPropKey = matcher.group(1);
+            String sysPropValue = System.getProperty(sysPropKey);
+            if (sysPropValue == null || sysPropValue.length() == 0) {
+                throw new RuntimeException("System property " + sysPropKey + " is not specified");
+            }
+            // Due to reported bug under CARBON-14746
+            sysPropValue = sysPropValue.replace("\\", "\\\\");
+            matcher.appendReplacement(sb, sysPropValue);
+        } while (matcher.find());
+        matcher.appendTail(sb);
+        return sb.toString();
+    }
 }

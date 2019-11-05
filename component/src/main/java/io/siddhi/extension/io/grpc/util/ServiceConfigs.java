@@ -36,6 +36,7 @@ import java.util.Objects;
  * class to hold grpc service configs.
  */
 public class ServiceConfigs {
+    private static final Logger log = LoggerFactory.getLogger(ServiceConfigs.class.getName());
     private String url;
     private String serviceName;
     private int port;
@@ -52,14 +53,13 @@ public class ServiceConfigs {
     private String keystoreAlgorithm;
     private String tlsStoreType;
     private boolean isSslEnabled;
-    private static final Logger log = LoggerFactory.getLogger(ServiceConfigs.class.getName());
 
     public ServiceConfigs(OptionHolder optionHolder, SiddhiAppContext siddhiAppContext,
                           String streamID, ConfigReader configReader) {
         if (optionHolder.isOptionExists(GrpcConstants.RECEIVER_URL)) {
             this.url = optionHolder.validateAndGetOption(GrpcConstants.RECEIVER_URL).getValue();
             log.debug("GRPC Service for : " + streamID + " started" + this.url);
-        }  else if (optionHolder.isOptionExists(GrpcConstants.PUBLISHER_URL)) {
+        } else if (optionHolder.isOptionExists(GrpcConstants.PUBLISHER_URL)) {
             this.url = optionHolder.validateAndGetOption(GrpcConstants.PUBLISHER_URL).getValue();
         } else {
             throw new SiddhiAppValidationException(siddhiAppContext.getName() + ": " + streamID + ": either " +
@@ -139,7 +139,7 @@ public class ServiceConfigs {
             truststoreAlgorithm = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_ALGORITHM).getValue();
             tlsStoreType = optionHolder.getOrCreateOption(GrpcConstants.TLS_STORE_TYPE,
                     GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
-        } else if (configReader.readConfig(GrpcConstants.SYS_TRUSTSTORE_FILE_PATH ,  null) != null) {
+        } else if (configReader.readConfig(GrpcConstants.SYS_TRUSTSTORE_FILE_PATH, null) != null) {
             truststoreFilePath = configReader.readConfig(GrpcConstants.SYS_TRUSTSTORE_FILE_PATH,
                     GrpcConstants.DEFAULT_TRUSTSTORE_FILE);
             truststorePassword = configReader.readConfig(GrpcConstants.SYS_TRUSTSTORE_PASSWORD,
@@ -174,6 +174,10 @@ public class ServiceConfigs {
         return methodName;
     }
 
+    public void setMethodName(String methodName) {
+        this.methodName = methodName;
+    }
+
     public String getHostPort() {
         return hostPort;
     }
@@ -190,12 +194,11 @@ public class ServiceConfigs {
         return url;
     }
 
-    public void setMethodName(String methodName) {
-        this.methodName = methodName;
-    }
-
     public String getTruststoreFilePath() {
-        return truststoreFilePath;
+        if (truststoreFilePath != null) {
+            return GrpcUtils.substituteVariables(truststoreFilePath);
+        }
+        return null;
     }
 
     public String getTruststorePassword() {
@@ -203,7 +206,10 @@ public class ServiceConfigs {
     }
 
     public String getKeystoreFilePath() {
-        return keystoreFilePath;
+        if (keystoreFilePath != null) {
+            return GrpcUtils.substituteVariables(keystoreFilePath);
+        }
+        return null;
     }
 
     public String getKeystorePassword() {

@@ -48,13 +48,13 @@ public class GrpcConstants {
     public static final String SYS_KEYSTORE_FILE = "keyStoreFile";
     public static final String SYS_KEYSTORE_PASSWORD = "keyStorePassword";
     public static final String SYS_KEYSTORE_ALGORITHM = "keyStoreAlgorithm";
-    public static final String DEFAULT_KEYSTORE_FILE = "src/main/resources/security/wso2carbon.jks";
+    public static final String DEFAULT_KEYSTORE_FILE = "${carbon.home}/resources/security/wso2carbon.jks";
     public static final String DEFAULT_KEYSTORE_PASSWORD = "wso2carbon";
     public static final String DEFAULT_KEYSTORE_ALGORITHM = "SunX509";
     public static final String SYS_TRUSTSTORE_FILE_PATH =  "trustStoreFile";
     public static final String SYS_TRUSTSTORE_PASSWORD = "trustStorePassword";
     public static final String SYS_TRUSTSTORE_ALGORITHM = "trustStoreAlgorithm";
-    public static final String DEFAULT_TRUSTSTORE_FILE = "src/main/resources/security/client-truststore.jks";
+    public static final String DEFAULT_TRUSTSTORE_FILE = "${carbon.home}/resources/security/client-truststore.jks";
     public static final String DEFAULT_TRUSTSTORE_PASSWORD = "wso2carbon";
     public static final String DEFAULT_TRUSTSTORE_ALGORITHM = "SunX509";
 
