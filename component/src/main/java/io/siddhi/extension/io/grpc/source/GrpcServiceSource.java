@@ -51,7 +51,7 @@ import java.util.TimerTask;
 import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
 
 /**
- * This extension handles receiving requests from grpc clients/stubs and sending back responses
+ * This extension handles receiving requests from grpc clients/stubs and sending back responses.
  */
 @Extension(name = "grpc-service", namespace = "source",
         description = "This extension implements a grpc server for receiving and responding to requests. During " +
@@ -276,7 +276,6 @@ public class GrpcServiceSource extends AbstractGrpcSource {
     private String sourceId;
     private long serviceTimeout;
     private Timer timer;
-    private GenericServiceServer genericServiceServer;
 
     public void scheduleServiceTimeout(String messageId) {
         timer.schedule(new GrpcServiceSource.ServiceSourceTimeoutChecker(messageId,
@@ -295,7 +294,7 @@ public class GrpcServiceSource extends AbstractGrpcSource {
         } else {
             GenericService.setServiceName(grpcServerConfigs.getServiceConfigs().getServiceName());
             GenericService.setNonEmptyResponseMethodName(grpcServerConfigs.getServiceConfigs().getMethodName());
-            genericServiceServer = new GenericServiceServer(grpcServerConfigs, this, requestClass,
+            serviceServer = new GenericServiceServer(grpcServerConfigs, this, requestClass,
                     siddhiAppName, streamID);
         }
     }
@@ -305,11 +304,12 @@ public class GrpcServiceSource extends AbstractGrpcSource {
         if (grpcServerConfigs.getServiceConfigs().isDefaultService()) {
             if (GrpcServerManager.getInstance().getServer(grpcServerConfigs.getServiceConfigs().getPort())
                     .getState() == 0) {
-                GrpcServerManager.getInstance().getServer(grpcServerConfigs.getServiceConfigs().getPort()).
-                        connectServer(logger, connectionCallback, siddhiAppContext, streamID);
+                serviceServer = GrpcServerManager.getInstance().getServer(
+                        grpcServerConfigs.getServiceConfigs().getPort());
+                serviceServer.connectServer(logger, connectionCallback, siddhiAppContext.getName(), streamID);
             }
         } else {
-            genericServiceServer.connectServer(logger, connectionCallback, siddhiAppName, streamID);
+            serviceServer.connectServer(logger, connectionCallback, siddhiAppName, streamID);
         }
     }
 
@@ -322,7 +322,7 @@ public class GrpcServiceSource extends AbstractGrpcSource {
             GrpcServerManager.getInstance().unregisterSource(grpcServerConfigs.getServiceConfigs().getPort(), streamID,
                     GrpcConstants.DEFAULT_METHOD_NAME_WITH_RESPONSE, logger, siddhiAppContext);
         } else {
-            genericServiceServer.disconnectServer(logger, siddhiAppName, streamID);
+            serviceServer.disconnectServer(logger, siddhiAppName, streamID);
         }
     }
 
@@ -340,7 +340,7 @@ public class GrpcServiceSource extends AbstractGrpcSource {
             StreamObserver<Any> genericStreamObserver = genericStreamObserverMap.remove(messageId);
             if (genericStreamObserver != null) {
                 try {
-                    Method toByteString = AbstractMessageLite.class.getDeclaredMethod("toByteString");
+                    Method toByteString = AbstractMessageLite.class.getDeclaredMethod(GrpcConstants.TO_BYTE_STRING);
                     ByteString responseByteString = (ByteString) toByteString.invoke(responsePayload);
                     Any response = Any.parseFrom(responseByteString);
                     genericStreamObserver.onNext(response);
@@ -373,6 +373,16 @@ public class GrpcServiceSource extends AbstractGrpcSource {
     @Override
     public void logError(String message) {
         logger.error(siddhiAppContext.getName() + ": " + streamID + ": " + message);
+    }
+
+    @Override
+    public void pause() {
+        serviceServer.pause(logger, grpcServerConfigs.getServiceConfigs().getUrl());
+    }
+
+    @Override
+    public void resume() {
+        serviceServer.resume(logger, grpcServerConfigs.getServiceConfigs().getUrl());
     }
 
     class ServiceSourceTimeoutChecker extends TimerTask {

@@ -57,6 +57,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.TrustManagerFactory;
 
@@ -65,7 +66,7 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
 /**
  * grpc server for generic service, create separated servers for each sources.
  */
-public class GenericServiceServer {
+public class GenericServiceServer extends ServiceServer {
     private static final Logger logger = Logger.getLogger(GenericServiceServer.class.getName());
     public static ThreadLocal<Map<String, String>> metaDataMap = new ThreadLocal<>();
     private Server server;
@@ -82,6 +83,8 @@ public class GenericServiceServer {
         this.grpcServerConfigs = grpcServerConfigs;
         this.relevantSource = relevantSource;
         this.requestClass = requestClass;
+        super.lock = new ReentrantLock();
+        super.condition = lock.newCondition();
         this.executorService = new ThreadPoolExecutor(grpcServerConfigs.getThreadPoolSize(),
                 grpcServerConfigs.getThreadPoolSize(), 0L, TimeUnit.MILLISECONDS,
                 new LinkedBlockingQueue<>(grpcServerConfigs.getThreadPoolBufferSize()));
@@ -89,7 +92,7 @@ public class GenericServiceServer {
         addServicesAndBuildServer(siddhiAppName, streamID);
     }
 
-    private void setServerPropertiesToBuilder(String siddhiAppName, String streamID) {
+    protected void setServerPropertiesToBuilder(String siddhiAppName, String streamID) {
         serverBuilder = NettyServerBuilder.forPort(grpcServerConfigs.getServiceConfigs().getPort());
         if (grpcServerConfigs.getServiceConfigs().getKeystoreFilePath() != null) {
             try {
@@ -117,14 +120,15 @@ public class GenericServiceServer {
         if (grpcServerConfigs.getMaxInboundMetadataSize() != -1) {
             serverBuilder.maxInboundMetadataSize(grpcServerConfigs.getMaxInboundMetadataSize());
         }
-
     }
 
-    private void addServicesAndBuildServer(String siddhiAppName, String streamID) {
+    protected void addServicesAndBuildServer(String siddhiAppName, String streamID) {
         this.server = serverBuilder.addService(ServerInterceptors.intercept(
                 new GenericService.AnyServiceImplBase() {
+
                     @Override
                     public void handleEmptyResponse(Any request, StreamObserver<Empty> responseObserver) {
+                        handlePause(logger);
                         try {
                             Object requestMessageObject = requestClass.getDeclaredMethod(GrpcConstants.
                                     PARSE_FROM_METHOD_NAME, ByteString.class).invoke(requestClass, request.
@@ -147,6 +151,7 @@ public class GenericServiceServer {
 
                     @Override
                     public StreamObserver<Any> clientStream(StreamObserver<Empty> responseObserver) {
+                        handlePause(logger);
                         return new StreamObserver<Any>() {
                             @Override
                             public void onNext(Any value) {
@@ -187,6 +192,7 @@ public class GenericServiceServer {
 
                     @Override
                     public void handleNonEmptyResponse(Any request, StreamObserver<Any> responseObserver) {
+                        handlePause(logger);
                         Object requestObject;
                         try {
                             Method parseFrom = requestClass.getDeclaredMethod("parseFrom", ByteString.class);
@@ -266,8 +272,8 @@ public class GenericServiceServer {
         }
     }
 
-    private SslContextBuilder getSslContextBuilder(String filePath, String password, String algorithm, String storeType,
-                                                   String siddhiAppName, String streamID)
+    public SslContextBuilder getSslContextBuilder(String filePath, String password, String algorithm, String storeType,
+                                                  String siddhiAppName, String streamID)
             throws KeyStoreException, NoSuchAlgorithmException, CertificateException,
             UnrecoverableKeyException {
         char[] passphrase = password.toCharArray();
@@ -285,9 +291,9 @@ public class GenericServiceServer {
         return sslContextBuilder;
     }
 
-    private SslContextBuilder addTrustStore(String filePath, String password, String algorithm,
-                                            SslContextBuilder sslContextBuilder, String storeType,
-                                            String siddhiAppName, String streamID)
+    protected SslContextBuilder addTrustStore(String filePath, String password, String algorithm,
+                                              SslContextBuilder sslContextBuilder, String storeType,
+                                              String siddhiAppName, String streamID)
             throws NoSuchAlgorithmException, KeyStoreException, CertificateException {
         char[] passphrase = password.toCharArray();
         KeyStore keyStore = KeyStore.getInstance(storeType);

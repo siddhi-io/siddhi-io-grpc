@@ -32,7 +32,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Server interceptor to receive headers
+ * Server interceptor to receive headers.
  */
 public class SourceServerInterceptor implements ServerInterceptor {
     private static final Logger logger = Logger.getLogger(SourceServerInterceptor.class.getName());

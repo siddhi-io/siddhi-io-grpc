@@ -36,7 +36,7 @@ import java.lang.reflect.Method;
 import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
 
 /**
- * This handles receiving requests from grpc clients and populating the stream
+ * This handles receiving requests from grpc clients and populating the stream.
  */
 @Extension(name = "grpc", namespace = "source",
         description = "This extension starts a grpc server during initialization time. The server listens to " +
@@ -233,7 +233,6 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
 )
 public class GrpcSource extends AbstractGrpcSource {
     private static final Logger logger = Logger.getLogger(GrpcSource.class.getName());
-    private GenericServiceServer genericServiceServer;
 
     @Override
     public void initSource(OptionHolder optionHolder, String[] requestedTransportPropertyNames) {
@@ -247,7 +246,7 @@ public class GrpcSource extends AbstractGrpcSource {
             } else {
                 GenericService.setEmptyResponseMethodName(grpcServerConfigs.getServiceConfigs().getMethodName());
             }
-            genericServiceServer = new GenericServiceServer(grpcServerConfigs, this, requestClass,
+            serviceServer = new GenericServiceServer(grpcServerConfigs, this, requestClass,
                     siddhiAppName, streamID);
         }
     }
@@ -262,11 +261,12 @@ public class GrpcSource extends AbstractGrpcSource {
         if (grpcServerConfigs.getServiceConfigs().isDefaultService()) {
             if (GrpcServerManager.getInstance().getServer(grpcServerConfigs.getServiceConfigs().getPort())
                     .getState() == 0) {
-                GrpcServerManager.getInstance().getServer(grpcServerConfigs.getServiceConfigs().getPort())
-                        .connectServer(logger, connectionCallback, siddhiAppContext, streamID);
+                serviceServer = GrpcServerManager.getInstance().getServer(
+                        grpcServerConfigs.getServiceConfigs().getPort()); //get the eventServiceServer object
+                serviceServer.connectServer(logger, connectionCallback, siddhiAppName, streamID);
             }
         } else {
-            genericServiceServer.connectServer(logger, connectionCallback, siddhiAppName, streamID);
+            serviceServer.connectServer(logger, connectionCallback, siddhiAppName, streamID);
         }
     }
 
@@ -279,7 +279,7 @@ public class GrpcSource extends AbstractGrpcSource {
             GrpcServerManager.getInstance().unregisterSource(grpcServerConfigs.getServiceConfigs().getPort(), streamID,
                     GrpcConstants.DEFAULT_METHOD_NAME_WITHOUT_RESPONSE, logger, siddhiAppContext);
         } else {
-            genericServiceServer.disconnectServer(logger, siddhiAppName, streamID);
+            serviceServer.disconnectServer(logger, siddhiAppName, streamID);
         }
     }
 
@@ -307,9 +307,16 @@ public class GrpcSource extends AbstractGrpcSource {
                     "provided in the url, provided service name: '" + serviceConfigs
                     .getFullyQualifiedServiceName() + "'", e);
         }
-        if (rpcMethod.getParameterCount() == 1) {
-            return true;
-        }
-        return false;
+        return rpcMethod.getParameterCount() == 1;
+    }
+
+    @Override
+    public void pause() {
+        serviceServer.pause(logger, grpcServerConfigs.getServiceConfigs().getUrl());
+    }
+
+    @Override
+    public void resume() {
+        serviceServer.resume(logger, grpcServerConfigs.getServiceConfigs().getUrl());
     }
 }

@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Class to hold the static util methods needed
+ * Class to hold the static util methods needed.
  */
 public class GrpcUtils {
     public static String[] extractHeaders(Map<String, String> headersMap, Map<String, String> metaDataMap,

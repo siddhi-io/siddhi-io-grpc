@@ -33,9 +33,12 @@ import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
 import io.siddhi.extension.io.grpc.util.GrpcSourceRegistry;
+import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
 
 import java.util.Map;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * {@code GrpcSource} Handle receiving of responses for gRPC calls. Does not have connection logics as sink will add a
@@ -72,6 +75,10 @@ public class GrpcCallResponseSource extends Source {
     private String sinkID;
     private SourceEventListener sourceEventListener;
     private String[] requestedTransportPropertyNames;
+    private boolean paused;
+    private ReentrantLock lock;
+    private Condition condition;
+    private static final Logger logger = Logger.getLogger(GrpcCallResponseSource.class.getName());
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
@@ -95,14 +102,18 @@ public class GrpcCallResponseSource extends Source {
         this.requestedTransportPropertyNames = requestedTransportPropertyNames.clone();
         sinkID = optionHolder.validateAndGetOption(GrpcConstants.SINK_ID).getValue();
         GrpcSourceRegistry.getInstance().putGrpcCallResponseSource(sinkID, this);
+        lock = new ReentrantLock();
+        condition = lock.newCondition();
         return null;
     }
 
     public void onResponse(Event response, Map<String, String> siddhiRequestEventData) {
+        handlePause();
         sourceEventListener.onEvent(response.getPayload(), getTransportProperties(response.getHeadersMap(),
                 siddhiRequestEventData));
     }
     public void onResponse(Object response, Map<String, String> siddhiRequestEventData) {
+        handlePause();
         sourceEventListener.onEvent(response, getTransportProperties(siddhiRequestEventData));
     }
 
@@ -152,7 +163,7 @@ public class GrpcCallResponseSource extends Source {
     }
 
     /**
-     * Called at the end to clean all the resources consumed by the {@link Source}
+     * Called at the end to clean all the resources consumed by the {@link Source}.
      */
     @Override
     public void destroy() {
@@ -160,18 +171,49 @@ public class GrpcCallResponseSource extends Source {
     }
 
     /**
-     * Called to pause event consumption
+     * Called to pause event consumption.
      */
     @Override
     public void pause() {
-
+        lock.lock();
+        try {
+            paused = true;
+            logger.info("Response has pause for grpc-call-response source with sink.id: " + sinkID);
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**
-     * Called to resume event consumption
+     * Called to resume event consumption.
      */
     @Override
     public void resume() {
-
+        lock.lock();
+        try {
+            paused = false;
+            logger.info("Response has resume for grpc-call-response source with sink.id: " + sinkID);
+            condition.signalAll();
+        } finally {
+            lock.unlock();
+        }
     }
+
+
+    private void handlePause() {
+        if (paused) {
+            lock.lock();
+            try {
+                while (paused) {
+                    condition.await();
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                logger.error("Thread interrupted while pausing ", e);
+            } finally {
+                lock.unlock();
+            }
+        }
+    }
+
 }

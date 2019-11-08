@@ -421,7 +421,7 @@ public class GrpcSink extends AbstractGrpcSink {
     }
 
     /**
-     * to create Stub object in generic way
+     * Create Stub object in using reflection.
      */
     private AbstractStub createStub(ServiceConfigs serviceConfigs) {
         try {
@@ -442,7 +442,7 @@ public class GrpcSink extends AbstractGrpcSink {
     }
 
     /**
-     * to get the rpc method from the service
+     * Get the rpc method from the service.
      */
     private static Method getRpcMethod(ServiceConfigs serviceConfigs, String siddhiAppName, String streamID) {
 

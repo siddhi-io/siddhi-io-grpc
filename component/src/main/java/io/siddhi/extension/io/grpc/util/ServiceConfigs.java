@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * class to hold grpc service configs
+ * class to hold grpc service configs.
  */
 public class ServiceConfigs {
     private String url;

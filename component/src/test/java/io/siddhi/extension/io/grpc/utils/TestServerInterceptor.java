@@ -33,7 +33,7 @@ import java.util.Set;
 import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
 
 /**
- * Server interceptor to receive headers in Test Server
+ * Server interceptor to receive headers in Test Server.
  */
 public class TestServerInterceptor implements ServerInterceptor {
   private static final Logger logger = Logger.getLogger(TestServer.class.getName());

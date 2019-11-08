@@ -17,6 +17,9 @@ import org.apache.log4j.Logger;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Grpc generic server which is required to run the sink test cases.
+ */
 public class GenericTestServer {
     private static final Logger logger = Logger.getLogger(GenericTestServer.class.getName());
     private TestServerInterceptor testInterceptor = new TestServerInterceptor();

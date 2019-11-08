@@ -38,6 +38,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * Test cases for grpc-call-sink in default way.
+ */
 public class GrpcCallSinkTestCase {
     private static final Logger logger = Logger.getLogger(GrpcSinkTestCase.class.getName());
     private TestServer server = new TestServer(8889);

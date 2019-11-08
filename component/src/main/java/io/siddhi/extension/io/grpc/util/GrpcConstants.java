@@ -18,7 +18,7 @@
 package io.siddhi.extension.io.grpc.util;
 
 /**
- * Class to hold the constants used by gRPC sources and sinks
+ * Class to hold the constants used by gRPC sources and sinks.
  */
 public class GrpcConstants {
     public static final String SEMI_COLON_STRING = ":";
@@ -120,6 +120,7 @@ public class GrpcConstants {
     public static final String PARSE_FROM_METHOD_NAME = "parseFrom";
     public static final String METHOD_NAME = "Method";
     public static final String GETTER = "get";
+    public static final String TO_BYTE_STRING = "toByteString";
 
     public static final int REQUEST_CLASS_POSITION = 0;
     public static final int RESPONSE_CLASS_POSITION = 1;

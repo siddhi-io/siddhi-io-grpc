@@ -47,6 +47,9 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * Test cases for grpc-source in default way.
+ */
 public class GrpcSourceTestCase {
     private static final Logger logger = Logger.getLogger(GrpcSourceTestCase.class.getName());
     private AtomicInteger eventCount = new AtomicInteger(0);
@@ -118,6 +121,8 @@ public class GrpcSourceTestCase {
         requestObserver.onCompleted();
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
+        channel.shutdown();
+        channel.awaitTermination(1, TimeUnit.SECONDS);
     }
 
     @Test
@@ -187,6 +192,8 @@ public class GrpcSourceTestCase {
         requestObserver.onCompleted();
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
+        channel.shutdown();
+        channel.awaitTermination(1, TimeUnit.SECONDS);
     }
 
     @Test
@@ -297,6 +304,8 @@ public class GrpcSourceTestCase {
         requestObserver.onCompleted();
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
+        channel.shutdown();
+        channel.awaitTermination(1, TimeUnit.SECONDS);
     }
 
     @Test
@@ -366,6 +375,8 @@ public class GrpcSourceTestCase {
         requestObserver.onCompleted();
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
+        channel.shutdown();
+        channel.awaitTermination(1, TimeUnit.SECONDS);
     }
 
     @Test
@@ -435,6 +446,8 @@ public class GrpcSourceTestCase {
 //        Assert.assertTrue(logMessages.contains("Dropping request. Requested transport property 'age' not
 //        present in " +
 //                "received event"));
+        channel.shutdown();
+        channel.awaitTermination(1, TimeUnit.SECONDS);
     }
 
     @Test
@@ -502,6 +515,8 @@ public class GrpcSourceTestCase {
         requestObserver.onCompleted();
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
+        channel.shutdown();
+        channel.awaitTermination(1, TimeUnit.SECONDS);
     }
 
     @Test
@@ -567,6 +582,8 @@ public class GrpcSourceTestCase {
 //        Assert.assertTrue(logMessages.contains("Dropping request. Requested transport property 'name' not
 //        present in " +
 //                "received event"));
+        channel.shutdown();
+        channel.awaitTermination(1, TimeUnit.SECONDS);
     }
 
     @Test
@@ -643,7 +660,7 @@ public class GrpcSourceTestCase {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
         channel.shutdown();
-        channel.awaitTermination(30, TimeUnit.SECONDS);
+        channel.awaitTermination(1, TimeUnit.SECONDS);
     }
 
     @Test(dependsOnMethods = {"genericTestCase01"})
@@ -816,10 +833,8 @@ public class GrpcSourceTestCase {
         siddhiAppRuntime.start();
         Thread.sleep(100);
         blockingStub.testMap(request);
-
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
-
         channel.shutdown();
         channel.awaitTermination(1, TimeUnit.SECONDS);
     }
@@ -899,7 +914,5 @@ public class GrpcSourceTestCase {
         Assert.assertTrue(stringResponses.contains("Test 8"));
         channel.shutdown();
         channel.awaitTermination(1, TimeUnit.SECONDS);
-
     }
-
 }

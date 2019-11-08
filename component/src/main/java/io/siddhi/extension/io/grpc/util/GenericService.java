@@ -239,7 +239,7 @@ public class GenericService {
     }
 
     /**
-     * Generic ImplBase class of the GenericServiceClass
+     * Generic ImplBase class of the GenericServiceClass.
      */
     public abstract static class AnyServiceImplBase implements io.grpc.BindableService {
         public void handleEmptyResponse(Any request, io.grpc.stub.StreamObserver<Empty> responseObserver) {

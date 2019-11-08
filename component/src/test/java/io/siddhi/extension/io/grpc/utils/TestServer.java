@@ -30,6 +30,9 @@ import org.wso2.grpc.EventServiceGrpc;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Grpc server which is required to run the sink test cases.
+ */
 public class TestServer {
     private static final Logger logger = Logger.getLogger(TestServer.class.getName());
     private Server server;

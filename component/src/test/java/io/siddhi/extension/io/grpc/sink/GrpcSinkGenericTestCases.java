@@ -36,6 +36,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Test cases for grpc-sink in generic way.
+ */
 public class GrpcSinkGenericTestCases {
     private static final Logger log = Logger.getLogger(GrpcSinkTestCase.class.getName());
     private int port = 6667;

@@ -24,7 +24,7 @@ import java.util.Map;
 import static io.siddhi.extension.io.grpc.util.GrpcUtils.extractHeaders;
 
 /**
- * Worker thread to handover requests received in server
+ * Worker thread to handover requests received in server.
  */
 public class GrpcWorkerThread implements Runnable {
     private AbstractGrpcSource relevantSource;

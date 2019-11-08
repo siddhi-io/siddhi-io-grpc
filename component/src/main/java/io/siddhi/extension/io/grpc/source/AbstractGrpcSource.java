@@ -47,6 +47,7 @@ public abstract class AbstractGrpcSource extends Source {
     protected GrpcServerConfigs grpcServerConfigs;
     protected String siddhiAppName;
     protected Class requestClass;
+    protected ServiceServer serviceServer;
 
 
     @Override
@@ -121,28 +122,13 @@ public abstract class AbstractGrpcSource extends Source {
     }
 
     /**
-     * Called at the end to clean all the resources consumed by the {@link Source}
+     * Called at the end to clean all the resources consumed by the {@link Source}.
      */
     @Override
     public void destroy() {
 
     }
 
-    /**
-     * Called to pause event consumption
-     */
-    @Override
-    public void pause() {
-
-    }
-
-    /**
-     * Called to resume event consumption
-     */
-    @Override
-    public void resume() {
-
-    }
 
     public String[] getRequestedTransportPropertyNames() {
         return requestedTransportPropertyNames.clone();

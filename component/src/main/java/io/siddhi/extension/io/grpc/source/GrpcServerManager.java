@@ -27,7 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * class to manage sources subscribing and unsubscribing to grpc servers on different ports
+ * Class to manage sources subscribing and unsubscribing to grpc servers on different ports.
  */
 public class GrpcServerManager {
     private static GrpcServerManager instance = new GrpcServerManager();
@@ -62,7 +62,7 @@ public class GrpcServerManager {
                                  SiddhiAppContext siddhiAppContext) {
         grpcPortServerMap.get(port).unsubscribe(streamID, methodName, siddhiAppContext);
         if (grpcPortServerMap.get(port).getNumSubscribers() == 0) {
-            grpcPortServerMap.get(port).disconnectServer(logger, siddhiAppContext, streamID);
+            grpcPortServerMap.get(port).disconnectServer(logger, siddhiAppContext.getName(), streamID);
             grpcPortServerMap.remove(port);
         }
     }

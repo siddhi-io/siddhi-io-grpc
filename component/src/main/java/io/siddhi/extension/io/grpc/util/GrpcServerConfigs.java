@@ -24,7 +24,7 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 /**
- * Configurations of grpc server
+ * Configurations of grpc server.
  */
 public class GrpcServerConfigs {
     private ServiceConfigs serviceConfigs;

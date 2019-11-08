@@ -34,6 +34,9 @@ import java.security.KeyStoreException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Test cases for grpc-sink authentications.
+ */
 public class GrpcSinkAuthTestCase {
     private static final Logger log = Logger.getLogger(GrpcSinkTestCase.class.getName());
     public static final String CARBON_HOME = "carbon.home";
