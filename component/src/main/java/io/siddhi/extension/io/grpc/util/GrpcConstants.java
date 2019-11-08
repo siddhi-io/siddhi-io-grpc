@@ -30,7 +30,6 @@ public class GrpcConstants {
     public static final String DEFAULT_METHOD_NAME_WITH_RESPONSE = "process";
     public static final String DEFAULT_METHOD_NAME_WITHOUT_RESPONSE = "consume";
     public static final String EMPTY_STRING = "";
-    public static final String SPACE_STRING = " ";
     public static final String COMMA_STRING = ",";
     public static final String INVERTED_COMMA_STRING = "'";
     public static final String GRPC_PROTOCOL_NAME = "grpc";
@@ -38,7 +37,6 @@ public class GrpcConstants {
     public static final String DEFAULT_SERVICE_NAME = "EventService";
     public static final String DEFAULT_FULLY_QUALIFIED_SERVICE_NAME = "org.wso2.grpc.EventService";
     public static final String SINK_TYPE_OPTION = "type";
-    public static final String GRPC_CALL_SINK_NAME = "grpc-call";
     public static final String GRPC_SERVICE_RESPONSE_SINK_NAME = "grpc-service-response";
     public static final String SOURCE_ID = "source.id";
     public static final String MESSAGE_ID = "message.id";
@@ -48,13 +46,13 @@ public class GrpcConstants {
     public static final String SYS_KEYSTORE_FILE = "keyStoreFile";
     public static final String SYS_KEYSTORE_PASSWORD = "keyStorePassword";
     public static final String SYS_KEYSTORE_ALGORITHM = "keyStoreAlgorithm";
-    public static final String DEFAULT_KEYSTORE_FILE = "src/main/resources/security/wso2carbon.jks";
+    public static final String DEFAULT_KEYSTORE_FILE = "${carbon.home}/resources/security/wso2carbon.jks";
     public static final String DEFAULT_KEYSTORE_PASSWORD = "wso2carbon";
     public static final String DEFAULT_KEYSTORE_ALGORITHM = "SunX509";
     public static final String SYS_TRUSTSTORE_FILE_PATH =  "trustStoreFile";
     public static final String SYS_TRUSTSTORE_PASSWORD = "trustStorePassword";
     public static final String SYS_TRUSTSTORE_ALGORITHM = "trustStoreAlgorithm";
-    public static final String DEFAULT_TRUSTSTORE_FILE = "src/main/resources/security/client-truststore.jks";
+    public static final String DEFAULT_TRUSTSTORE_FILE = "${carbon.home}/resources/security/client-truststore.jks";
     public static final String DEFAULT_TRUSTSTORE_PASSWORD = "wso2carbon";
     public static final String DEFAULT_TRUSTSTORE_ALGORITHM = "SunX509";
 
@@ -81,35 +79,20 @@ public class GrpcConstants {
 
     //ManagedChannelBuilder Properties
     public static final String IDLE_TIMEOUT_MILLIS = "idle.timeout";
-    public static final String IDLE_TIMEOUT_DEFAULT = "1800";
     public static final String MAX_INBOUND_MESSAGE_SIZE = "max.inbound.message.size";
-    public static final String MAX_INBOUND_MESSAGE_SIZE_DEFAULT = "4194304";
     public static final String MAX_INBOUND_METADATA_SIZE = "max.inbound.metadata.size";
-    public static final String MAX_INBOUND_METADATA_SIZE_DEFAULT = "8192";
     public static final String KEEP_ALIVE_TIME_MILLIS = "keep.alive.time";
-    public static final String KEEP_ALIVE_TIME_DEFAULT = String.valueOf(Long.MAX_VALUE);
     public static final String KEEP_ALIVE_TIMEOUT_MILLIS = "keep.alive.timeout";
-    public static final String KEEP_ALIVE_TIMEOUT_DEFAULT = "20";
     public static final String KEEP_ALIVE_WITHOUT_CALLS = "keep.alive.without.calls";
-    public static final String KEEP_ALIVE_WITHOUT_CALLS_DEFAULT = "false";
     public static final String MAX_RETRY_ATTEMPTS = "max.retry.attempts";
-    public static final String MAX_RETRY_ATTEMPTS_DEFAULT = "5";
-    public static final String MAX_HEDGED_ATTEMPTS = "max.hedged.attempts";
-    public static final String MAX_HEDGED_ATTEMPTS_DEFAULT = "5";
     public static final String RETRY_BUFFER_SIZE = "retry.buffer.size";
-    public static final String RETRY_BUFFER_SIZE_DEFAULT = "16777216";
     public static final String PER_RPC_BUFFER_SIZE = "per.rpc.buffer.size";
-    public static final String PER_RPC_BUFFER_SIZE_DEFAULT = "1048576";
     public static final String ENABLE_RETRY = "enable.retry";
     public static final String ENABLE_RETRY_DEFAULT = "false";
-    public static final String CHANNEL_TERMINATION_WAITING_TIME_MILLIS = "channel.termination.waiting.time";
-    public static final String CHANNEL_TERMINATION_WAITING_TIME_MILLIS_DEFAULT = "5000";
     public static final String SERVER_SHUTDOWN_WAITING_TIME = "server.shutdown.waiting.time";
-    public static final String SERVER_SHUTDOWN_WAITING_TIME_DEFAULT = "5";
 
     public static final String SERVICE_TIMEOUT = "service.timeout";
     public static final String SERVICE_TIMEOUT_DEFAULT = "10000";
-    public static final String TIMEOUT_CHECK_INTERVAL = "timeout.check.interval";
 
     public static final String STUB = "Stub";
     public static final String FUTURE_STUB = "FutureStub";
@@ -123,7 +106,6 @@ public class GrpcConstants {
     public static final String TO_BYTE_STRING = "toByteString";
 
     public static final int REQUEST_CLASS_POSITION = 0;
-    public static final int RESPONSE_CLASS_POSITION = 1;
     public static final int EMPTY_METHOD_ID = 1;
     public static final int NON_EMPTY_METHOD_ID = 2;
     public static final int CLIENT_STREAM_METHOD_ID = 3;
