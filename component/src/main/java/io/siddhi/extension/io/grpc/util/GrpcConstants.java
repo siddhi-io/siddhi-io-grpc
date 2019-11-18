@@ -72,6 +72,7 @@ public class GrpcConstants {
     public static final String THREADPOOL_BUFFER_SIZE = "threadpool.buffer.size";
     public static final String THREADPOOL_BUFFER_SIZE_DEFAULT = "100";
     public static final String ENABLE_SSL = "enable.ssl";
+    public static final String ENABLE_MUTUAL_AUTHENTICATION = "enable.mutual.authentication";
 
     public static final int PATH_SERVICE_NAME_POSITION = 0;
     public static final int PATH_METHOD_NAME_POSITION = 1;

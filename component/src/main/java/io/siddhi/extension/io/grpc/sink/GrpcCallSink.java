@@ -218,6 +218,13 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
                         type = {DataType.BOOL},
                         optional = true,
                         defaultValue = "FALSE"),
+                @Parameter(
+                        name = "enable.mutual.authentication",
+                        description = "to enable mutual authentication. If set to true and truststore.file or " +
+                                "keystore.file is not given then it will be set to default carbon jks by default",
+                        type = {DataType.BOOL},
+                        optional = true,
+                        defaultValue = "FALSE"),
         },
         examples = {
                 @Example(syntax = "" +
