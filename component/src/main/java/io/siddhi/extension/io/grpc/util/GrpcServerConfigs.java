@@ -35,8 +35,8 @@ public class GrpcServerConfigs {
     private int threadPoolBufferSize;
 
     public GrpcServerConfigs(OptionHolder optionHolder, SiddhiAppContext siddhiAppContext, String streamID ,
-                             ConfigReader configReader) {
-        this.serviceConfigs = new ServiceConfigs(optionHolder, siddhiAppContext, streamID , configReader);
+                             ConfigReader configReader, boolean isSource) {
+        this.serviceConfigs = new ServiceConfigs(optionHolder, siddhiAppContext, streamID , configReader, isSource);
 
         if (optionHolder.isOptionExists(GrpcConstants.MAX_INBOUND_MESSAGE_SIZE)) {
             maxInboundMessageSize = Integer.parseInt(optionHolder.validateAndGetOption(

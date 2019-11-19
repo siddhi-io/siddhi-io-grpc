@@ -53,9 +53,10 @@ public class ServiceConfigs {
     private String keystoreAlgorithm;
     private String tlsStoreType;
     private boolean isSslEnabled;
+    private boolean isMutualAuthEnabled;
 
     public ServiceConfigs(OptionHolder optionHolder, SiddhiAppContext siddhiAppContext,
-                          String streamID, ConfigReader configReader) {
+                          String streamID, ConfigReader configReader, boolean isSource) {
         if (optionHolder.isOptionExists(GrpcConstants.RECEIVER_URL)) {
             this.url = optionHolder.validateAndGetOption(GrpcConstants.RECEIVER_URL).getValue();
             log.debug("GRPC Service for : " + streamID + " started" + this.url);
@@ -111,8 +112,27 @@ public class ServiceConfigs {
         //Validates and enables SSL feature
         if (optionHolder.isOptionExists(GrpcConstants.ENABLE_SSL)) {
             isSslEnabled = Boolean.parseBoolean(optionHolder.validateAndGetOption(GrpcConstants.ENABLE_SSL).getValue());
+        }// validates and get enable mutual authentication feature
+        if (optionHolder.isOptionExists(GrpcConstants.ENABLE_MUTUAL_AUTHENTICATION)) {
+            isMutualAuthEnabled = Boolean.parseBoolean(optionHolder.validateAndGetOption(
+                    GrpcConstants.ENABLE_MUTUAL_AUTHENTICATION).getValue());
         }
-        //retrieves KeyStore File
+        if (isSslEnabled) {
+            if (isSource) {
+                getKeystore(optionHolder, configReader);
+                if (isMutualAuthEnabled) {  //get the truststore if mutual authentication is enabled
+                    getTruststore(optionHolder, configReader);
+                }
+            } else {
+                getTruststore(optionHolder, configReader);
+                if (isMutualAuthEnabled) {   //get the keystore if mutual authentication is enabled
+                    getKeystore(optionHolder, configReader);
+                }
+            }
+        }
+    }
+
+    private void getKeystore(OptionHolder optionHolder, ConfigReader configReader) {
         if (optionHolder.isOptionExists(GrpcConstants.KEYSTORE_FILE)) {
             keystoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_FILE).getValue();
             keystorePassword = optionHolder.validateAndGetOption(GrpcConstants.KEYSTORE_PASSWORD).getValue();
@@ -128,8 +148,16 @@ public class ServiceConfigs {
                     GrpcConstants.DEFAULT_KEYSTORE_ALGORITHM);
             tlsStoreType = optionHolder.getOrCreateOption(GrpcConstants.TLS_STORE_TYPE,
                     GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
+        } else { // gets keystore from carbon home
+            keystoreFilePath = GrpcConstants.DEFAULT_KEYSTORE_FILE;
+            keystorePassword = GrpcConstants.DEFAULT_KEYSTORE_PASSWORD;
+            keystoreAlgorithm = GrpcConstants.DEFAULT_KEYSTORE_ALGORITHM;
+            tlsStoreType = optionHolder.getOrCreateOption(GrpcConstants.TLS_STORE_TYPE,
+                    GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
         }
-        //retrieves Truststore file
+    }
+
+    private void getTruststore(OptionHolder optionHolder, ConfigReader configReader) {
         if (optionHolder.isOptionExists(GrpcConstants.TRUSTSTORE_FILE)) {
             truststoreFilePath = optionHolder.validateAndGetOption(GrpcConstants.TRUSTSTORE_FILE).getValue();
             if (optionHolder.isOptionExists(GrpcConstants.TRUSTSTORE_PASSWORD)) {
@@ -148,14 +176,13 @@ public class ServiceConfigs {
                     GrpcConstants.DEFAULT_TRUSTSTORE_ALGORITHM);
             tlsStoreType = optionHolder.getOrCreateOption(GrpcConstants.TLS_STORE_TYPE,
                     GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
-        } else if (isSslEnabled) {
+        } else { // gets truststore from carbon home
             truststoreFilePath = GrpcConstants.DEFAULT_TRUSTSTORE_FILE;
             truststorePassword = GrpcConstants.DEFAULT_TRUSTSTORE_PASSWORD;
             truststoreAlgorithm = GrpcConstants.DEFAULT_TRUSTSTORE_ALGORITHM;
             tlsStoreType = optionHolder.getOrCreateOption(GrpcConstants.TLS_STORE_TYPE,
                     GrpcConstants.DEFAULT_TLS_STORE_TYPE).getValue();
         }
-
     }
 
     public String getServiceName() {

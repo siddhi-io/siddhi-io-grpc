@@ -118,7 +118,7 @@ public abstract class AbstractGrpcSink extends Sink {
         if (optionHolder.isOptionExists(GrpcConstants.METADATA)) {
             this.metadataOption = optionHolder.validateAndGetOption(GrpcConstants.METADATA);
         }
-        this.serviceConfigs = new ServiceConfigs(optionHolder, siddhiAppContext, streamID , configReader);
+        this.serviceConfigs = new ServiceConfigs(optionHolder, siddhiAppContext, streamID , configReader, false);
 
         managedChannelBuilder = NettyChannelBuilder.forTarget(serviceConfigs.getHostPort());
 

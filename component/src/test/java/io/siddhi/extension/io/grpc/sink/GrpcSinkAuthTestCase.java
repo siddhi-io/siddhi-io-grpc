@@ -38,7 +38,7 @@ import java.util.List;
  * Test cases for grpc-sink authentications.
  */
 public class GrpcSinkAuthTestCase {
-    private static final Logger log = Logger.getLogger(GrpcSinkTestCase.class.getName());
+    private static final Logger log = Logger.getLogger(GrpcSinkAuthTestCase.class.getName());
     public static final String CARBON_HOME = "carbon.home";
 
     public GrpcSinkAuthTestCase() throws KeyStoreException {
@@ -89,12 +89,40 @@ public class GrpcSinkAuthTestCase {
         String inStreamDefinition = ""
                 + "@sink(type='grpc', publisher.url = 'grpc://localhost:5657/org.wso2.grpc.EventService/consume'," +
                 "enable.ssl = 'true', " +
+                "mutual.auth.enabled = 'true', " +
                 "truststore.file = 'src/test/resources/security/wso2carbon.jks'," +
                 "truststore.password = 'wso2carbon', " +
                 "truststore.algorithm = 'SunX509', " +
                 "keystore.file = 'src/test/resources/security/wso2carbon.jks', " +
                 "keystore.password = 'wso2carbon', " +
                 "keystore.algorithm = 'SunX509', " +
+                "@map(type='json', @payload('{{message}}'))) " +
+                "define stream FooStream (message String);";
+
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
+        InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
+
+        server.start();
+        try {
+            siddhiAppRuntime.start();
+            fooStream.send(new Object[]{"Request 1"});
+            Thread.sleep(1000);
+            siddhiAppRuntime.shutdown();
+        } finally {
+            server.stop();
+        }
+    }
+
+    @Test
+    public void testForDefaultMutualAuthentication() throws Exception {
+        TestTLSServer server = new TestTLSServer(5657, true);
+        setCarbonHome();
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String inStreamDefinition = ""
+                + "@sink(type='grpc', publisher.url = 'grpc://localhost:5657/org.wso2.grpc.EventService/consume'," +
+                "enable.ssl = 'true', " +
+                "mutual.auth.enabled = 'true', " +
                 "@map(type='json', @payload('{{message}}'))) " +
                 "define stream FooStream (message String);";
 
@@ -208,12 +236,48 @@ public class GrpcSinkAuthTestCase {
                 + "@sink(type='grpc-call', " +
                 "publisher.url = 'grpc://localhost:5670/org.wso2.grpc.EventService/process'," +
                 "enable.ssl = 'true', " +
+                "mutual.auth.enabled = 'true', " +
                 "truststore.file = 'src/test/resources/security/wso2carbon.jks'," +
                 "truststore.password = 'wso2carbon', " +
                 "truststore.algorithm = 'SunX509', " +
                 "keystore.file = 'src/test/resources/security/wso2carbon.jks', " +
                 "keystore.password = 'wso2carbon', " +
                 "keystore.algorithm = 'SunX509', " +
+                "sink.id = '1', " +
+                "@map(type='json', @payload('{{message}}'))) " +
+                "define stream FooStream (message String);";
+        String stream2 = "@source(type='grpc-call-response', sink.id= '1', @map(type='json')) " +
+                "define stream BarStream (message String);";
+        String query = "@info(name = 'query') "
+                + "from BarStream "
+                + "select *  "
+                + "insert into outputStream;";
+
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition + stream2 + query);
+        InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
+
+        server.start();
+        try {
+            siddhiAppRuntime.start();
+            fooStream.send(new Object[]{"Request 1"});
+            Thread.sleep(1000);
+            siddhiAppRuntime.shutdown();
+        } finally {
+            server.stop();
+        }
+    }
+
+    @Test
+    public void testCallSinkForDefaultMutualAuthentication() throws Exception {
+        TestTLSServer server = new TestTLSServer(5670, true);
+        setCarbonHome();
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String inStreamDefinition = ""
+                + "@sink(type='grpc-call', " +
+                "publisher.url = 'grpc://localhost:5670/org.wso2.grpc.EventService/process'," +
+                "enable.ssl = 'true', " +
+                "mutual.auth.enabled = 'true', " +
                 "sink.id = '1', " +
                 "@map(type='json', @payload('{{message}}'))) " +
                 "define stream FooStream (message String);";
