@@ -149,7 +149,7 @@ public class GrpcSourceAuthTestCase {
         String stream2 = "@source(type='grpc', " +
                 "receiver.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
                 "enable.ssl = 'true', " +
-                "enable.mutual.authentication = 'true', " +
+                "mutual.auth.enabled = 'true', " +
                 "keystore.file = 'src/test/resources/security/wso2carbon.jks'," +
                 "keystore.password = 'wso2carbon', " +
                 "keystore.algorithm = 'SunX509', " +
@@ -233,7 +233,7 @@ public class GrpcSourceAuthTestCase {
         String stream2 = "@source(type='grpc', " +
                 "receiver.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/consume', " +
                 "enable.ssl = 'true', " +
-                "enable.mutual.authentication = 'true', " +
+                "mutual.auth.enabled = 'true', " +
                 "@map(type='json')) " +
                 "define stream BarStream (message String);";
         String query = "@info(name = 'query') "
@@ -468,7 +468,7 @@ public class GrpcSourceAuthTestCase {
         String stream1 = "@source(type='grpc-service', " +
                 "receiver.url = 'grpc://localhost:8888/org.wso2.grpc.EventService/process', source.id='1', " +
                 "enable.ssl = 'true', " +
-                "enable.mutual.authentication = 'true', " +
+                "mutual.auth.enabled = 'true', " +
                 "@map(type='json', @attributes(messageId='trp:message.id', message='message'))) " +
                 "define stream FooStream (messageId String, message String);";
 
