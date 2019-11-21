@@ -243,9 +243,10 @@ public class GrpcSinkGenericTestCases {
         InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
 
         siddhiAppRuntime.start();
-        for (int i = 1; i <= 50; i++) {
+        for (int i = 1; i <= 20; i++) {
             fooStream.send(new Object[]{"Test " + i, i, i * 1000L, true, 10.456f * i, 34.5668 * i});
         }
+        Thread.sleep(1000); //wait till data sends to the server
         siddhiAppRuntime.shutdown();
         Thread.sleep(1000);
 
@@ -283,9 +284,9 @@ public class GrpcSinkGenericTestCases {
         for (int i = 1; i <= 20; i++) {
             map.put("Key " + i, "Value " + i);
             fooStream.send(new Object[]{"Test " + i, i, map});
-            Thread.sleep(10);
             map.clear();
         }
+        Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
         Thread.sleep(1000);
         final List<LoggingEvent> log = appender.getLog();
