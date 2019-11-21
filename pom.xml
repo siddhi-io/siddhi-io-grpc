@@ -26,7 +26,7 @@
     <packaging>pom</packaging>
     <groupId>io.siddhi.extension.io.grpc</groupId>
     <artifactId>siddhi-io-grpc-parent</artifactId>
-    <version>1.0.6-SNAPSHOT</version>
+    <version>1.0.6</version>
     <name>Siddhi I/O grpc</name>
 
     <modules>
@@ -213,6 +213,6 @@
         <url>https://github.com/siddhi-io/siddhi-io-grpc.git</url>
         <developerConnection>scm:git:https://github.com/siddhi-io/siddhi-io-grpc.git</developerConnection>
         <connection>scm:git:https://github.com/siddhi-io/siddhi-io-grpc.git</connection>
-        <tag>HEAD</tag>
+        <tag>v1.0.6</tag>
     </scm>
 </project>
