@@ -114,7 +114,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#api-docs-v105" tabindex="1" class="md-skip">
+      <a href="#api-docs-v106" tabindex="1" class="md-skip">
         Skip to content
       </a>
     
@@ -395,6 +395,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../1.0.6/" title="1.0.6" class="md-nav__link">
+      1.0.6
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
     <a href="../1.0.5/" title="1.0.5" class="md-nav__link">
       1.0.5
     </a>
@@ -455,8 +467,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../1.0.0-beta/" title="1.0.0-beta" class="md-nav__link">
-      1.0.0-beta
+    <a href="../1.0.0/" title="1.0.0" class="md-nav__link">
+      1.0.0
     </a>
   </li>
 
@@ -467,8 +479,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../1.0.0/" title="1.0.0" class="md-nav__link">
-      1.0.0
+    <a href="../1.0.0-beta/" title="1.0.0-beta" class="md-nav__link">
+      1.0.0-beta
     </a>
   </li>
 
@@ -597,7 +609,7 @@
                   <a href="https://github.com/siddhi-io/siddhi-io-grpc/edit/master/docs/api/latest.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="api-docs-v105">API Docs - v1.0.5</h1>
+                <h1 id="api-docs-v106">API Docs - v1.0.6</h1>
 <div class="admonition info">
 <p class="admonition-title">Tested Siddhi Core version: <em><a target="_blank" href="http://siddhi.io/en/v5.1/docs/query-guide/">5.1.5</a></em></p>
 <p>It could also support other Siddhi Core minor versions.</p>
@@ -608,7 +620,7 @@
 <p style="word-wrap: break-word;margin: 0;">This extension publishes event data encoded into GRPC Classes as defined in the user input jar. This extension has a default gRPC service classes added. The default service is called "EventService". Please find the protobuf definition <a href="https://github.com/siddhi-io/siddhi-io-grpc/tree/master/component/src/main/resources/EventService.proto">here</a>. If we want to use our custom gRPC services, we have to  pack auto-generated gRPC service classes and  protobuf classes into a jar file and add it into the project classpath (or to the <code>jars</code> folder in the <code>siddhi-tooling</code> folder if we use it with <code>siddhi-tooling</code>). Please find the custom protobuf definition that uses in examples <a href="https://github.com/siddhi-io/siddhi-io-grpc/tree/master/component/src/main/resources/sample.proto">here</a>. This grpc sink is used for scenarios where we send a request and don't expect a response back. I.e getting a google.protobuf.Empty response back.</p>
 <p></p>
 <span id="syntax" class="md-typeset" style="display: block; font-weight: bold;">Syntax</span></p>
-<pre><code>@sink(type=&quot;grpc&quot;, publisher.url=&quot;&lt;STRING&gt;&quot;, headers=&quot;&lt;STRING&gt;&quot;, idle.timeout=&quot;&lt;LONG&gt;&quot;, keep.alive.time=&quot;&lt;LONG&gt;&quot;, keep.alive.timeout=&quot;&lt;LONG&gt;&quot;, keep.alive.without.calls=&quot;&lt;BOOL&gt;&quot;, enable.retry=&quot;&lt;BOOL&gt;&quot;, max.retry.attempts=&quot;&lt;INT&gt;&quot;, retry.buffer.size=&quot;&lt;LONG&gt;&quot;, per.rpc.buffer.size=&quot;&lt;LONG&gt;&quot;, channel.termination.waiting.time=&quot;&lt;LONG&gt;&quot;, truststore.file=&quot;&lt;STRING&gt;&quot;, truststore.password=&quot;&lt;STRING&gt;&quot;, truststore.algorithm=&quot;&lt;STRING&gt;&quot;, tls.store.type=&quot;&lt;STRING&gt;&quot;, keystore.file=&quot;&lt;STRING&gt;&quot;, keystore.password=&quot;&lt;STRING&gt;&quot;, keystore.algorithm=&quot;&lt;STRING&gt;&quot;, enable.ssl=&quot;&lt;BOOL&gt;&quot;, @map(...)))
+<pre><code>@sink(type=&quot;grpc&quot;, publisher.url=&quot;&lt;STRING&gt;&quot;, headers=&quot;&lt;STRING&gt;&quot;, idle.timeout=&quot;&lt;LONG&gt;&quot;, keep.alive.time=&quot;&lt;LONG&gt;&quot;, keep.alive.timeout=&quot;&lt;LONG&gt;&quot;, keep.alive.without.calls=&quot;&lt;BOOL&gt;&quot;, enable.retry=&quot;&lt;BOOL&gt;&quot;, max.retry.attempts=&quot;&lt;INT&gt;&quot;, retry.buffer.size=&quot;&lt;LONG&gt;&quot;, per.rpc.buffer.size=&quot;&lt;LONG&gt;&quot;, channel.termination.waiting.time=&quot;&lt;LONG&gt;&quot;, truststore.file=&quot;&lt;STRING&gt;&quot;, truststore.password=&quot;&lt;STRING&gt;&quot;, truststore.algorithm=&quot;&lt;STRING&gt;&quot;, tls.store.type=&quot;&lt;STRING&gt;&quot;, keystore.file=&quot;&lt;STRING&gt;&quot;, keystore.password=&quot;&lt;STRING&gt;&quot;, keystore.algorithm=&quot;&lt;STRING&gt;&quot;, enable.ssl=&quot;&lt;BOOL&gt;&quot;, mutual.auth.enabled=&quot;&lt;BOOL&gt;&quot;, @map(...)))
 </code></pre>
 
 <p><span id="query-parameters" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">QUERY PARAMETERS</span>
@@ -773,6 +785,14 @@
         <td style="vertical-align: top">Yes</td>
         <td style="vertical-align: top">No</td>
     </tr>
+    <tr>
+        <td style="vertical-align: top">mutual.auth.enabled</td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">to enable mutual authentication. If set to true and truststore.file or keystore.file is not given then it will be set to default carbon jks by default</p></td>
+        <td style="vertical-align: top">FALSE</td>
+        <td style="vertical-align: top">BOOL</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
 </table></p>
 <p><span id="examples" class="md-typeset" style="display: block; font-weight: bold;">Examples</span>
 <span id="example-1" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">EXAMPLE 1</span></p>
@@ -861,7 +881,7 @@ define stream FooStream (stringValue string, intValue int,longValue long,boolean
 <p style="word-wrap: break-word;margin: 0;">This extension publishes event data encoded into GRPC Classes as defined in the user input jar. This extension has a default gRPC service classes jar added. The default service is called "EventService". Please find the protobuf definition <a href="https://github.com/siddhi-io/siddhi-io-grpc/tree/master/component/src/main/resources/EventService.proto">here</a>. If we want to use our custom gRPC services, we have to  pack auto-generated gRPC service classes and  protobuf classes into a jar file and add it into the project classpath (or to the <code>jars</code> folder in the <code>siddhi-tooling</code> folder if we use it with <code>siddhi-tooling</code>). Please find the custom protobuf definition that uses in examples <a href="https://github.com/siddhi-io/siddhi-io-grpc/tree/master/component/src/main/resources/sample.proto">here</a>. This grpc-call sink is used for scenarios where we send a request out and expect a response back. In default mode this will use EventService process method. grpc-call-response source is used to receive the responses. A unique sink.id is used to correlate between the sink and its corresponding source.</p>
 <p></p>
 <span id="syntax" class="md-typeset" style="display: block; font-weight: bold;">Syntax</span></p>
-<pre><code>@sink(type=&quot;grpc-call&quot;, publisher.url=&quot;&lt;STRING&gt;&quot;, sink.id=&quot;&lt;INT&gt;&quot;, headers=&quot;&lt;STRING&gt;&quot;, idle.timeout=&quot;&lt;LONG&gt;&quot;, keep.alive.time=&quot;&lt;LONG&gt;&quot;, keep.alive.timeout=&quot;&lt;LONG&gt;&quot;, keep.alive.without.calls=&quot;&lt;BOOL&gt;&quot;, enable.retry=&quot;&lt;BOOL&gt;&quot;, max.retry.attempts=&quot;&lt;INT&gt;&quot;, retry.buffer.size=&quot;&lt;LONG&gt;&quot;, per.rpc.buffer.size=&quot;&lt;LONG&gt;&quot;, channel.termination.waiting.time=&quot;&lt;LONG&gt;&quot;, max.inbound.message.size=&quot;&lt;LONG&gt;&quot;, max.inbound.metadata.size=&quot;&lt;LONG&gt;&quot;, truststore.file=&quot;&lt;STRING&gt;&quot;, truststore.password=&quot;&lt;STRING&gt;&quot;, truststore.algorithm=&quot;&lt;STRING&gt;&quot;, tls.store.type=&quot;&lt;STRING&gt;&quot;, keystore.file=&quot;&lt;STRING&gt;&quot;, keystore.password=&quot;&lt;STRING&gt;&quot;, keystore.algorithm=&quot;&lt;STRING&gt;&quot;, enable.ssl=&quot;&lt;BOOL&gt;&quot;, @map(...)))
+<pre><code>@sink(type=&quot;grpc-call&quot;, publisher.url=&quot;&lt;STRING&gt;&quot;, sink.id=&quot;&lt;INT&gt;&quot;, headers=&quot;&lt;STRING&gt;&quot;, idle.timeout=&quot;&lt;LONG&gt;&quot;, keep.alive.time=&quot;&lt;LONG&gt;&quot;, keep.alive.timeout=&quot;&lt;LONG&gt;&quot;, keep.alive.without.calls=&quot;&lt;BOOL&gt;&quot;, enable.retry=&quot;&lt;BOOL&gt;&quot;, max.retry.attempts=&quot;&lt;INT&gt;&quot;, retry.buffer.size=&quot;&lt;LONG&gt;&quot;, per.rpc.buffer.size=&quot;&lt;LONG&gt;&quot;, channel.termination.waiting.time=&quot;&lt;LONG&gt;&quot;, max.inbound.message.size=&quot;&lt;LONG&gt;&quot;, max.inbound.metadata.size=&quot;&lt;LONG&gt;&quot;, truststore.file=&quot;&lt;STRING&gt;&quot;, truststore.password=&quot;&lt;STRING&gt;&quot;, truststore.algorithm=&quot;&lt;STRING&gt;&quot;, tls.store.type=&quot;&lt;STRING&gt;&quot;, keystore.file=&quot;&lt;STRING&gt;&quot;, keystore.password=&quot;&lt;STRING&gt;&quot;, keystore.algorithm=&quot;&lt;STRING&gt;&quot;, enable.ssl=&quot;&lt;BOOL&gt;&quot;, mutual.auth.enabled=&quot;&lt;BOOL&gt;&quot;, @map(...)))
 </code></pre>
 
 <p><span id="query-parameters" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">QUERY PARAMETERS</span>
@@ -1050,6 +1070,14 @@ define stream FooStream (stringValue string, intValue int,longValue long,boolean
         <td style="vertical-align: top">Yes</td>
         <td style="vertical-align: top">No</td>
     </tr>
+    <tr>
+        <td style="vertical-align: top">mutual.auth.enabled</td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">to enable mutual authentication. If set to true and truststore.file or keystore.file is not given then it will be set to default carbon jks by default</p></td>
+        <td style="vertical-align: top">FALSE</td>
+        <td style="vertical-align: top">BOOL</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
 </table></p>
 <p><span id="examples" class="md-typeset" style="display: block; font-weight: bold;">Examples</span>
 <span id="example-1" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">EXAMPLE 1</span></p>
@@ -1173,7 +1201,7 @@ insert into BarStream;
 <p style="word-wrap: break-word;margin: 0;">This extension starts a grpc server during initialization time. The server listens to requests from grpc stubs. This source has a default mode of operation and custom user defined grpc service mode. By default this uses EventService. Please find the proto definition <a href="https://github.com/siddhi-io/siddhi-io-grpc/tree/master/component/src/main/resources/EventService.proto">here</a>. In the default mode this source will use EventService consume method. If we want to use our custom gRPC services, we have to  pack auto-generated gRPC service classes and  protobuf classes into a jar file and add it into the project classpath (or to the <code>jars</code> folder in the <code>siddhi-tooling</code> folder if we use it with <code>siddhi-tooling</code>). Please find the custom protobuf definition that uses in examples <a href="https://github.com/siddhi-io/siddhi-io-grpc/tree/master/component/src/main/resources/sample.proto">here</a>. This method will receive requests and injects them into stream through a mapper.</p>
 <p></p>
 <span id="syntax" class="md-typeset" style="display: block; font-weight: bold;">Syntax</span></p>
-<pre><code>@source(type=&quot;grpc&quot;, receiver.url=&quot;&lt;STRING&gt;&quot;, max.inbound.message.size=&quot;&lt;INT&gt;&quot;, max.inbound.metadata.size=&quot;&lt;INT&gt;&quot;, server.shutdown.waiting.time=&quot;&lt;LONG&gt;&quot;, truststore.file=&quot;&lt;STRING&gt;&quot;, truststore.password=&quot;&lt;STRING&gt;&quot;, truststore.algorithm=&quot;&lt;STRING&gt;&quot;, tls.store.type=&quot;&lt;STRING&gt;&quot;, keystore.file=&quot;&lt;STRING&gt;&quot;, keystore.password=&quot;&lt;STRING&gt;&quot;, keystore.algorithm=&quot;&lt;STRING&gt;&quot;, enable.ssl=&quot;&lt;BOOL&gt;&quot;, threadpool.size=&quot;&lt;INT&gt;&quot;, threadpool.buffer.size=&quot;&lt;INT&gt;&quot;, @map(...)))
+<pre><code>@source(type=&quot;grpc&quot;, receiver.url=&quot;&lt;STRING&gt;&quot;, max.inbound.message.size=&quot;&lt;INT&gt;&quot;, max.inbound.metadata.size=&quot;&lt;INT&gt;&quot;, server.shutdown.waiting.time=&quot;&lt;LONG&gt;&quot;, truststore.file=&quot;&lt;STRING&gt;&quot;, truststore.password=&quot;&lt;STRING&gt;&quot;, truststore.algorithm=&quot;&lt;STRING&gt;&quot;, tls.store.type=&quot;&lt;STRING&gt;&quot;, keystore.file=&quot;&lt;STRING&gt;&quot;, keystore.password=&quot;&lt;STRING&gt;&quot;, keystore.algorithm=&quot;&lt;STRING&gt;&quot;, enable.ssl=&quot;&lt;BOOL&gt;&quot;, mutual.auth.enabled=&quot;&lt;BOOL&gt;&quot;, threadpool.size=&quot;&lt;INT&gt;&quot;, threadpool.buffer.size=&quot;&lt;INT&gt;&quot;, @map(...)))
 </code></pre>
 
 <p><span id="query-parameters" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">QUERY PARAMETERS</span>
@@ -1276,7 +1304,15 @@ insert into BarStream;
     </tr>
     <tr>
         <td style="vertical-align: top">enable.ssl</td>
-        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">to enable ssl. If set to true and truststore.file is not given then it will be set to default carbon jks by default</p></td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">to enable ssl. If set to true and keystore.file is not given then it will be set to default carbon jks by default</p></td>
+        <td style="vertical-align: top">FALSE</td>
+        <td style="vertical-align: top">BOOL</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">mutual.auth.enabled</td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">to enable mutual authentication. If set to true and keystore.file or truststore.file is not given then it will be set to default carbon jks by default</p></td>
         <td style="vertical-align: top">FALSE</td>
         <td style="vertical-align: top">BOOL</td>
         <td style="vertical-align: top">Yes</td>
@@ -1459,7 +1495,7 @@ define stream FooStream (message String);
 <p style="word-wrap: break-word;margin: 0;">This extension implements a grpc server for receiving and responding to requests. During initialization time a grpc server is started on the user specified port exposing the required service as given in the url. This source also has a default mode and a user defined grpc service mode. By default this uses EventService. Please find the proto definition <a href="https://github.com/siddhi-io/siddhi-io-grpc/tree/master/component/src/main/resources/EventService.proto">here</a> In the default mode this will use the EventService process method. If we want to use our custom gRPC services, we have to  pack auto-generated gRPC service classes and  protobuf classes into a jar file and add it into the project classpath (or to the <code>jars</code> folder in the <code>siddhi-tooling</code> folder if we use it with <code>siddhi-tooling</code>). Please find the custom protobuf definition that uses in examples <a href="https://github.com/siddhi-io/siddhi-io-grpc/tree/master/component/src/main/resources/sample.proto">here</a>. This accepts grpc message class Event as defined in the EventService proto. This uses GrpcServiceResponse sink to send reponses back in the same Event message format.</p>
 <p></p>
 <span id="syntax" class="md-typeset" style="display: block; font-weight: bold;">Syntax</span></p>
-<pre><code>@source(type=&quot;grpc-service&quot;, receiver.url=&quot;&lt;STRING&gt;&quot;, max.inbound.message.size=&quot;&lt;INT&gt;&quot;, max.inbound.metadata.size=&quot;&lt;INT&gt;&quot;, service.timeout=&quot;&lt;INT&gt;&quot;, server.shutdown.waiting.time=&quot;&lt;LONG&gt;&quot;, truststore.file=&quot;&lt;STRING&gt;&quot;, truststore.password=&quot;&lt;STRING&gt;&quot;, truststore.algorithm=&quot;&lt;STRING&gt;&quot;, tls.store.type=&quot;&lt;STRING&gt;&quot;, keystore.file=&quot;&lt;STRING&gt;&quot;, keystore.password=&quot;&lt;STRING&gt;&quot;, keystore.algorithm=&quot;&lt;STRING&gt;&quot;, enable.ssl=&quot;&lt;BOOL&gt;&quot;, threadpool.size=&quot;&lt;INT&gt;&quot;, threadpool.buffer.size=&quot;&lt;INT&gt;&quot;, @map(...)))
+<pre><code>@source(type=&quot;grpc-service&quot;, receiver.url=&quot;&lt;STRING&gt;&quot;, max.inbound.message.size=&quot;&lt;INT&gt;&quot;, max.inbound.metadata.size=&quot;&lt;INT&gt;&quot;, service.timeout=&quot;&lt;INT&gt;&quot;, server.shutdown.waiting.time=&quot;&lt;LONG&gt;&quot;, truststore.file=&quot;&lt;STRING&gt;&quot;, truststore.password=&quot;&lt;STRING&gt;&quot;, truststore.algorithm=&quot;&lt;STRING&gt;&quot;, tls.store.type=&quot;&lt;STRING&gt;&quot;, keystore.file=&quot;&lt;STRING&gt;&quot;, keystore.password=&quot;&lt;STRING&gt;&quot;, keystore.algorithm=&quot;&lt;STRING&gt;&quot;, enable.ssl=&quot;&lt;BOOL&gt;&quot;, mutual.auth.enabled=&quot;&lt;BOOL&gt;&quot;, threadpool.size=&quot;&lt;INT&gt;&quot;, threadpool.buffer.size=&quot;&lt;INT&gt;&quot;, @map(...)))
 </code></pre>
 
 <p><span id="query-parameters" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">QUERY PARAMETERS</span>
@@ -1570,7 +1606,15 @@ define stream FooStream (message String);
     </tr>
     <tr>
         <td style="vertical-align: top">enable.ssl</td>
-        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">to enable ssl. If set to true and truststore.file is not given then it will be set to default carbon jks by default</p></td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">to enable ssl. If set to true and keystore.file is not given then it will be set to default carbon jks by default</p></td>
+        <td style="vertical-align: top">FALSE</td>
+        <td style="vertical-align: top">BOOL</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">mutual.auth.enabled</td>
+        <td style="vertical-align: top; word-wrap: break-word"><p style="word-wrap: break-word;margin: 0;">to enable mutual authentication. If set to true and truststore.file or keystore.file is not given then it will be set to default carbon jks by default</p></td>
         <td style="vertical-align: top">FALSE</td>
         <td style="vertical-align: top">BOOL</td>
         <td style="vertical-align: top">Yes</td>
@@ -1745,13 +1789,13 @@ insert into BarStream;
           </a>
         
         
-          <a href="../1.0.5/" title="1.0.5" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
+          <a href="../1.0.6/" title="1.0.6" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
             <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
               <span class="md-flex__ellipsis">
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                1.0.5
+                1.0.6
               </span>
             </div>
             <div class="md-flex__cell md-flex__cell--shrink">
