@@ -265,7 +265,6 @@ public class GenericService {
                             asyncUnaryCall(
                                     new MethodHandlers<
                                             Any, Empty>(this, GrpcConstants.EMPTY_METHOD_ID)))
-                    // integers
                     .addMethod(
                             getHandleNonEmptyResponse(),
                             asyncUnaryCall(
