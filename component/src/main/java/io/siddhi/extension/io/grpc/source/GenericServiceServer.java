@@ -15,7 +15,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package io.siddhi.extension.io.grpc.source;
 
 import com.google.protobuf.Any;
