@@ -415,10 +415,12 @@ public class GrpcSink extends AbstractGrpcSink {
             if (requestObserver != null) {
                 requestObserver.onCompleted();
             }
-            if (channelTerminationWaitingTimeInMillis > 0L) {
-                channel.shutdown().awaitTermination(channelTerminationWaitingTimeInMillis, TimeUnit.MILLISECONDS);
-            } else {
-                channel.shutdown();
+            if (channel != null) {
+                if (channelTerminationWaitingTimeInMillis > 0L) {
+                    channel.shutdown().awaitTermination(channelTerminationWaitingTimeInMillis, TimeUnit.MILLISECONDS);
+                } else {
+                    channel.shutdown();
+                }
             }
             channel = null;
         } catch (InterruptedException e) {
