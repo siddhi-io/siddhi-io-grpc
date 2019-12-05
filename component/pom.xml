@@ -164,9 +164,9 @@
                         <Export-Package>
                             io.siddhi.extension.io.grpc.*,
                             io.grpc.*,
+                            !com.google.protobuf,
                             com.google.*,
-                            org.wso2.grpc.*,
-                            com.google.protobuf.*
+                            org.wso2.grpc.*
                         </Export-Package>
                         <Private-Package>
                             io.opencensus.*,
@@ -174,7 +174,7 @@
                         </Private-Package>
                         <Import-Package>
                             com.google.guava.*;version="${guava.version.range}",
-                            *;resolution:=optional
+                            com.google.protobuf.*;resolution:=optional
                         </Import-Package>
                         <DynamicImport-Package>*</DynamicImport-Package>
                         <Include-Resource>

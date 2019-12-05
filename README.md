@@ -32,7 +32,9 @@ Latest API Docs is <a target="_blank" href="https://siddhi-io.github.io/siddhi-i
 
 ## Dependencies 
 
-There are no other dependencies needed for this extension. 
+Add necessary Protobuf client dependency to run this properly. 
+
+* protobuf-java-3.9.1.jar (Add to <SIDDHI_HOME>/bundles)
 
 ## Installation
 
