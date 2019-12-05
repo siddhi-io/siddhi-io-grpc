@@ -211,8 +211,8 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
                                 "Siddhi as we are selecting everything from FooStream and inserting into BarStream."
                 ),
                 @Example(syntax = "" +
-                        "@source(type='grpc-service', source.id='1' " +
-                        "       receiver.url='grpc://locanhost:8888/org.wso2.grpc.EventService/consume', " +
+                        "@source(type='grpc-service', source.id='1' \n" +
+                        "       receiver.url='grpc://locanhost:8888/org.wso2.grpc.EventService/consume', \n" +
                         "       @map(type='json', @attributes(name='trp:name', age='trp:age', message='message'))) " +
                         "define stream BarStream (message String, name String, age int);",
                         description = "Here we are getting headers sent with the request as transport properties and " +
@@ -251,7 +251,7 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
         systemParameter = {
                 @SystemParameter(name = "keyStoreFile",
                         description = "This is the key store file with the path ",
-                        defaultValue = "src/main/resources/security/wso2carbon.jks",
+                        defaultValue = "${carbon.home}/resources/security/wso2carbon.jks",
                         possibleParameters = "valid path for a key store file"),
                 @SystemParameter(name = "keyStorePassword",
                         description = "This is the password used with key store file",
@@ -263,7 +263,7 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
                         possibleParameters = "-"),
                 @SystemParameter(name = "trustStoreFile",
                         description = "This is the trust store file with the path",
-                        defaultValue = "src/main/resources/security/client-truststore.jks",
+                        defaultValue = "${carbon.home}/resources/security/client-truststore.jks",
                         possibleParameters = "-"),
                 @SystemParameter(name = "trustStorePassword",
                         description = "This is the password used with trust store file",
