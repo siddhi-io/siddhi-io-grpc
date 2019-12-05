@@ -163,14 +163,12 @@
                         <Bundle-Name>${project.artifactId}</Bundle-Name>
                         <Export-Package>
                             io.siddhi.extension.io.grpc.*,
-                            io.grpc.*,
-                            com.google.*,
-                            org.wso2.grpc.*,
-                            com.google.protobuf.*
+                            io.grpc.*
                         </Export-Package>
                         <Private-Package>
                             io.opencensus.*,
                             io.perfmark.*,
+                            org.wso2.grpc.*, <!-- auto-gen classes -->
                         </Private-Package>
                         <Import-Package>
                             com.google.guava.*;version="${guava.version.range}",

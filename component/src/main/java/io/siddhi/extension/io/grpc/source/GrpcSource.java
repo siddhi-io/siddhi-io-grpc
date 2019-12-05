@@ -214,7 +214,7 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
         systemParameter = {
                 @SystemParameter(name = "keyStoreFile",
                         description = "Path of the key store file",
-                        defaultValue = "src/main/resources/security/wso2carbon.jks",
+                        defaultValue = "${carbon.home}/resources/security/wso2carbon.jks",
                         possibleParameters = "valid path for a key store file"),
                 @SystemParameter(name = "keyStorePassword",
                         description = "This is the password used with key store file",
@@ -226,7 +226,7 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
                         possibleParameters = "-"),
                 @SystemParameter(name = "trustStoreFile",
                         description = "This is the trust store file with the path",
-                        defaultValue = "src/main/resources/security/client-truststore.jks",
+                        defaultValue = "${carbon.home}/resources/security/client-truststore.jks",
                         possibleParameters = "-"),
                 @SystemParameter(name = "trustStorePassword",
                         description = "This is the password used with trust store file",
