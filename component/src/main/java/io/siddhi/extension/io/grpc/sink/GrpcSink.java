@@ -48,16 +48,14 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
  */
 @Extension(name = "grpc", namespace = "sink",
         description = "" +
-                "This extension publishes event data encoded into GRPC Classes as defined in the user input " +
+                "gRPC sink publishes event data encoded into GRPC Classes as defined in the user input " +
                 "jar. This extension has a default gRPC service classes added. The default service is called " +
-                "\"EventService\". Please find the protobuf definition [here](https://github.com/siddhi-io/" +
-                "siddhi-io-grpc/tree/master/component/src/main/resources/EventService.proto). If we want to use our " +
-                "custom gRPC services, we have to  pack auto-generated gRPC service classes and  protobuf classes " +
-                "into a jar file and add it into the project classpath (or to the `jars` folder in the `siddhi-" +
-                "tooling` folder if we use it with `siddhi-tooling`). Please find the custom protobuf definition that" +
-                " uses in examples [here](https://github.com/siddhi-io/siddhi-io-grpc/tree/master/component/src/main/" +
-                "resources/sample.proto). This grpc sink is used for scenarios where we send a request and don't " +
-                "expect a response back. I.e getting a google.protobuf.Empty response back.",
+                "`EventService`. This grpc sink is used for scenarios where we send a request and don't " +
+                "expect a response back(getting a `google.protobuf.Empty` response back). Please find the default " +
+                "protobuf definition [here](https://github.com/siddhi-io/siddhi-io-grpc/tree/master/component/src/" +
+                "main/resources/EventService.proto). Please find the custom protobuf definition that uses in " +
+                "examples [here](https://github.com/siddhi-io/siddhi-io-grpc/tree/master/component/src/main/resources" +
+                "/sample.proto). ",
 
         parameters = {
                 @Parameter(
