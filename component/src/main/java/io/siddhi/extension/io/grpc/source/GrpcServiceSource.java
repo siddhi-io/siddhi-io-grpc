@@ -191,6 +191,7 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
                 @Example(syntax = "" +
                         "@sink(type='grpc-service-response',\n" +
                         "      source.id='1',\n" +
+                        "      message.id='{{messageId}}',\n" +
                         "      @map(type='json'))\n" +
                         "define stream BarStream (messageId String, message String);\n" +
                         "\n" +
