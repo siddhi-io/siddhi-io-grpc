@@ -57,16 +57,13 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
         description = "This extension implements a grpc server for receiving and responding to requests. During " +
                 "initialization time a grpc server is started on the user specified port exposing the required " +
                 "service as given in the url. This source also has a default mode and a user defined grpc service " +
-                "mode. By default this uses EventService. Please find the proto definition [here](https://github.com/" +
-                "siddhi-io/siddhi-io-grpc/tree/master/component/src/main/resources/EventService.proto) In the default" +
-                " mode this will use the EventService process method. If we want to use our " +
-                "custom gRPC services, we have to  pack auto-generated gRPC service classes and  protobuf classes " +
-                "into a jar file and add it into the project classpath (or to the `jars` folder in the `siddhi-" +
-                "tooling` folder if we use it with `siddhi-tooling`). Please find the custom protobuf definition that" +
-                " uses in examples [here](https://github.com/siddhi-io/siddhi-io-grpc/tree/master/component/src/main/" +
-                "resources/sample.proto). This accepts grpc message class Event as " +
-                "defined in the EventService proto. This uses GrpcServiceResponse sink to send reponses back in the " +
-                "same Event message format.",
+                "mode. By default this uses `EventService`. Please find the proto definition [here](https://github." +
+                "com/siddhi-io/siddhi-io-grpc/tree/master/component/src/main/resources/EventService.proto) In the " +
+                "default mode this will use the EventService `process` method. Please find the custom protobuf " +
+                "definition that uses in examples [here](https://github.com/siddhi-io/siddhi-io-grpc/tree/master/" +
+                "component/src/main/resources/sample.proto). This accepts grpc message class Event as defined in the" +
+                " EventService proto. This uses `grpc-service-response` sink to send reponses back in the same Event" +
+                " message format.",
         parameters = {
                 @Parameter(
                         name = "receiver.url",
@@ -194,6 +191,7 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
                 @Example(syntax = "" +
                         "@sink(type='grpc-service-response',\n" +
                         "      source.id='1',\n" +
+                        "      message.id='{{messageId}}',\n" +
                         "      @map(type='json'))\n" +
                         "define stream BarStream (messageId String, message String);\n" +
                         "\n" +
