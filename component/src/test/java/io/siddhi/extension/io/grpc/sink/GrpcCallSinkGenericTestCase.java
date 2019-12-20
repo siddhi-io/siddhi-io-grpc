@@ -130,6 +130,73 @@ public class GrpcCallSinkGenericTestCase {
     }
 
     @Test
+    public void testCase02() throws Exception {
+        logger.info("Test case to call process sending 1 requests");
+        logger.setLevel(Level.DEBUG);
+        SiddhiManager siddhiManager = new SiddhiManager();
+        final TestAppender appender = new TestAppender();
+        final Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(Level.DEBUG);
+        rootLogger.addAppender(appender);
+
+        String inStreamDefinition = ""
+                + "@sink(type='grpc-call', " +
+                "publisher.url = 'grpc://localhost:" + port + "/" + packageName + ".MyService/process', " +
+                "sink.id= '1', @map(type='protobuf')) "
+                + "define stream FooStream (stringValue string, intValue int,longValue long,booleanValue bool," +
+                "floatValue float,doubleValue double);";
+
+        String stream2 = "@source(type='grpc-call-response', " +
+                "sink.id= '1', @map(type='protobuf')) " +
+                "define stream BarStream (stringValue string, intValue int,longValue long,booleanValue bool," +
+                "floatValue float,doubleValue double);";
+        String query = "@info(name = 'query') "
+                + "from BarStream "
+                + "select *  "
+                + "insert into outputStream;";
+
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition + stream2 +
+                query);
+        siddhiAppRuntime.addCallback("query", new QueryCallback() {
+            @Override
+            public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
+                EventPrinter.print(timeStamp, inEvents, removeEvents);
+                for (int i = 0; i < inEvents.length; i++) {
+                    eventCount.incrementAndGet();
+                    switch (i) {
+                        case 0:
+                            Assert.assertEquals((String) inEvents[i].getData()[0], "Test 01");
+                            break;
+                        default:
+                            Assert.fail();
+                    }
+                }
+            }
+        });
+        InputHandler fooStream = siddhiAppRuntime.getInputHandler("FooStream");
+
+        siddhiAppRuntime.start();
+        fooStream.send(new Object[]{"Test 01", 60, 10000L, true, 522.7586f, 34.5668});
+        Thread.sleep(1000);
+        siddhiAppRuntime.shutdown();
+
+        final List<LoggingEvent> log = appender.getLog();
+        List<String> logMessages = new ArrayList<>();
+        for (LoggingEvent logEvent : log) {
+            String message = String.valueOf(logEvent.getMessage());
+            logMessages.add(message);
+        }
+        Assert.assertTrue(logMessages.contains("Server hits with request :\n" +
+                "stringValue: \"Test 01\"\n" +
+                "intValue: 60\n" +
+                "longValue: 10000\n" +
+                "booleanValue: true\n" +
+                "floatValue: 522.7586\n" +
+                "doubleValue: 34.5668\n"));
+
+    }
+
+    @Test
     public void testWithMappingAttributes() throws Exception {
         logger.info("Test case to call process sending 1 requests with mapping");
         logger.setLevel(Level.DEBUG);

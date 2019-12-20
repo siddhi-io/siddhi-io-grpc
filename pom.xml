@@ -205,7 +205,7 @@
         <carbon.transport.version>4.4.15</carbon.transport.version>
         <siddhi.map.json.version>5.0.2</siddhi.map.json.version>
         <siddhi.map.xml.version>5.0.2</siddhi.map.xml.version>
-        <siddhi.map.protobuf.version>1.0.3</siddhi.map.protobuf.version>
+        <siddhi.map.protobuf.version>1.0.6</siddhi.map.protobuf.version>
         <jacoco.plugin.version>0.7.9</jacoco.plugin.version>
     </properties>
 
