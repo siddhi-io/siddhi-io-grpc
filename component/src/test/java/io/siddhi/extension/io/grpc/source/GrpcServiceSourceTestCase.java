@@ -66,7 +66,7 @@ public class GrpcServiceSourceTestCase {
                 "@map(type='json', @attributes(messageId='trp:message.id', message='message'))) " +
                 "define stream FooStream (messageId String, message String);";
 
-        String stream2 = "@sink(type='grpc-service-response',  source.id='1', " +
+        String stream2 = "@sink(type='grpc-service-response', source.id='1', " +
                 "message.id='{{messageId}}', " +
                 "@map(type='json')) " +
                 "define stream BarStream (messageId String, message String);";
@@ -565,6 +565,78 @@ public class GrpcServiceSourceTestCase {
 
         String stream2 = "@sink(type='grpc-service-response', " +
                 "publisher.url='grpc://localhost:7001/" + packageName + ".MyService/process', source.id='1', " +
+                "message.id='{{messageId}}', " +
+                "@map(type='protobuf'," +
+                "@payload(stringValue='a',intValue='b',longValue='c',booleanValue='d',floatValue = 'e', doubleValue =" +
+                " 'f'))) " +
+                "define stream BarStream (a string,messageId string, b int,c long,d bool,e float,f double,name " +
+                "string, age int);";
+        String query = "@info(name = 'query') "
+                + "from FooStream "
+                + "select * "
+                + "insert into BarStream;";
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(stream1 + stream2 + query);
+        siddhiAppRuntime.addCallback("query", new QueryCallback() {
+            @Override
+            public void receive(long timeStamp, io.siddhi.core.event.Event[] inEvents,
+                                io.siddhi.core.event.Event[] removeEvents) {
+                EventPrinter.print(timeStamp, inEvents, removeEvents);
+                for (int i = 0; i < inEvents.length; i++) {
+                    eventCount.incrementAndGet();
+                    switch (i) {
+                        case 0:
+                            Assert.assertEquals((String) inEvents[i].getData()[0], "Benjamin Watson");
+                            break;
+                        default:
+                            Assert.fail();
+                    }
+                }
+            }
+        });
+        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:7001").usePlaintext().build();
+        Thread client = new Thread(() -> {
+            Request request = Request.newBuilder()
+                    .setStringValue("Benjamin Watson")
+                    .setIntValue(100)
+                    .setBooleanValue(true)
+                    .setDoubleValue(168.4567)
+                    .setFloatValue(45.345f)
+                    .setLongValue(1000000L)
+                    .build();
+
+            MyServiceGrpc.MyServiceBlockingStub blockingStub = MyServiceGrpc.newBlockingStub(channel);
+            Metadata metadata = new Metadata();
+            metadata.put(Metadata.Key.of("Name", Metadata.ASCII_STRING_MARSHALLER), "John");
+            metadata.put(Metadata.Key.of("Age", Metadata.ASCII_STRING_MARSHALLER), "23");
+            blockingStub = MetadataUtils.attachHeaders(blockingStub, metadata);
+            Response response = blockingStub.process(request);
+            Assert.assertNotNull(response);
+
+        });
+        siddhiAppRuntime.start();
+        client.start();
+        Thread.sleep(1000);
+        siddhiAppRuntime.shutdown();
+        channel.shutdown();
+        channel.awaitTermination(30, TimeUnit.SECONDS);
+
+    }
+
+    @Test
+    public void genericTestCase1_TestMetadata() throws Exception {
+        logger.info("Test case to call process");
+        logger.setLevel(Level.DEBUG);
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String stream1 = "@source(type='grpc-service', " +
+                "receiver.url='grpc://localhost:7001/" + packageName + ".MyService/process', source.id='1', " +
+                "@map(type='protobuf' , " +
+                "@attributes(messageId='trp:message.id', a = 'stringValue', b = 'intValue', c = 'longValue',d = " +
+                "'booleanValue', e = 'floatValue', f ='doubleValue',name='trp:name',age='trp:age'))) " +
+                "define stream FooStream (a string,messageId string, b int,c long,d bool,e float,f double,name " +
+                "string, age int);";
+
+        String stream2 = "@sink(type='grpc-service-response', source.id='1', " +
                 "message.id='{{messageId}}', " +
                 "@map(type='protobuf'," +
                 "@payload(stringValue='a',intValue='b',longValue='c',booleanValue='d',floatValue = 'e', doubleValue =" +
