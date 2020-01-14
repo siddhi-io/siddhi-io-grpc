@@ -163,10 +163,10 @@
                         <Bundle-Name>${project.artifactId}</Bundle-Name>
                         <Export-Package>
                             io.siddhi.extension.io.grpc.*,
-                            io.grpc.*
+                            io.grpc.*,
+                            io.opencensus.*, <!--use in siddhi persistence on gcs-->
                         </Export-Package>
                         <Private-Package>
-                            io.opencensus.*,
                             io.perfmark.*,
                             org.wso2.grpc.*, <!-- auto-gen classes -->
                         </Private-Package>
