@@ -11,8 +11,9 @@ import io.siddhi.extension.io.grpc.proto.RequestWithMap;
 import io.siddhi.extension.io.grpc.proto.Response;
 import io.siddhi.extension.io.grpc.proto.ResponseWithMap;
 import io.siddhi.extension.io.grpc.proto.StreamServiceGrpc;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
@@ -21,7 +22,7 @@ import java.util.concurrent.TimeUnit;
  * Grpc generic server which is required to run the sink test cases.
  */
 public class GenericTestServer {
-    private static final Logger logger = Logger.getLogger(GenericTestServer.class.getName());
+    private static final Logger logger = LogManager.getLogger(GenericTestServer.class);
     private TestServerInterceptor testInterceptor = new TestServerInterceptor();
     private Server server;
     private int port;

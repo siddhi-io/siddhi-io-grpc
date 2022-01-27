@@ -36,7 +36,8 @@ import io.siddhi.extension.io.grpc.util.GrpcConstants;
 import io.siddhi.extension.io.grpc.util.GrpcSourceRegistry;
 import io.siddhi.query.api.definition.StreamDefinition;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * {@code GrpcServiceResponseSink} Handle sending responses for requests received via grpc-service source.
@@ -75,7 +76,7 @@ import org.apache.log4j.Logger;
         }
 )
 public class GrpcServiceResponseSink extends Sink {
-    private static final Logger logger = Logger.getLogger(GrpcServiceResponseSink.class.getName());
+    private static final Logger log = LogManager.getLogger(GrpcServiceResponseSink.class);
     protected GrpcSourceRegistry grpcSourceRegistry = GrpcSourceRegistry.getInstance();
     private String sourceId;
     private Option messageIdOption;

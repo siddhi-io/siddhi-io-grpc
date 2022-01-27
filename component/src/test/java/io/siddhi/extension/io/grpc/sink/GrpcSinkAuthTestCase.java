@@ -22,23 +22,20 @@ import io.siddhi.core.SiddhiManager;
 import io.siddhi.core.stream.input.InputHandler;
 import io.siddhi.extension.io.grpc.utils.TestAppender;
 import io.siddhi.extension.io.grpc.utils.TestTLSServer;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.spi.LoggingEvent;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.Logger;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyStoreException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Test cases for grpc-sink authentications.
  */
 public class GrpcSinkAuthTestCase {
-    private static final Logger log = Logger.getLogger(GrpcSinkAuthTestCase.class.getName());
     public static final String CARBON_HOME = "carbon.home";
 
     public GrpcSinkAuthTestCase() throws KeyStoreException {
@@ -181,10 +178,11 @@ public class GrpcSinkAuthTestCase {
     @Test
     public void testCallSinkForServerAuthenticationFailure() throws Exception {
         TestTLSServer server = new TestTLSServer(5659, false);
-        final TestAppender appender = new TestAppender();
-        final Logger rootLogger = Logger.getRootLogger();
-        rootLogger.setLevel(Level.DEBUG);
-        rootLogger.addAppender(appender);
+        TestAppender appender = new TestAppender("TestAppender", null);
+        final Logger logger = (Logger) LogManager.getRootLogger();
+        logger.setLevel(Level.ALL);
+        logger.addAppender(appender);
+        appender.start();
         setCarbonHome();
         SiddhiManager siddhiManager = new SiddhiManager();
 
@@ -214,16 +212,9 @@ public class GrpcSinkAuthTestCase {
         } finally {
             server.stop();
         }
-        final List<LoggingEvent> log = appender.getLog();
-        List<String> logMessages = new ArrayList<>();
-        for (LoggingEvent logEvent : log) {
-            String message = String.valueOf(logEvent.getMessage());
-            if (message.contains("FooStream: ")) {
-                message = message.split("FooStream: ")[1];
-            }
-            logMessages.add(message);
-        }
-        Assert.assertTrue(logMessages.contains("UNAVAILABLE: Network closed for unknown reason"));
+        Assert.assertTrue(((TestAppender) logger.getAppenders().
+                get("TestAppender")).getMessages().contains("UNAVAILABLE: Network closed for unknown reason"));
+        logger.removeAppender(appender);
     }
 
     @Test

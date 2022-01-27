@@ -31,10 +31,9 @@ import io.siddhi.extension.io.grpc.proto.MyServiceGrpc;
 import io.siddhi.extension.io.grpc.proto.Request;
 import io.siddhi.extension.io.grpc.proto.RequestWithMap;
 import io.siddhi.extension.io.grpc.proto.StreamServiceGrpc;
-import io.siddhi.extension.io.grpc.utils.TestAppender;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.spi.LoggingEvent;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.Logger;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.wso2.grpc.Event;
@@ -51,7 +50,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Test cases for grpc-source in default way.
  */
 public class GrpcSourceTestCase {
-    private static final Logger logger = Logger.getLogger(GrpcSourceTestCase.class.getName());
+    private static final Logger logger = (Logger) LogManager.getLogger(GrpcSourceTestCase.class);
     private AtomicInteger eventCount = new AtomicInteger(0);
     private String port = "8181";
     private String packageName = "io.siddhi.extension.io.grpc.proto";
@@ -59,7 +58,6 @@ public class GrpcSourceTestCase {
     @Test
     public void basicSourceTest() throws Exception {
         logger.info("Test case to call process");
-        logger.setLevel(Level.DEBUG);
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String stream2 = "@source(type='grpc', receiver.url = 'grpc://localhost:" + port +
@@ -128,7 +126,6 @@ public class GrpcSourceTestCase {
     @Test
     public void testWithMetaData() throws Exception {
         logger.info("Test case to call process");
-        logger.setLevel(Level.DEBUG);
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String stream2 = "@source(type='grpc', receiver.url = 'grpc://localhost:" + port +
@@ -199,7 +196,6 @@ public class GrpcSourceTestCase {
     @Test
     public void testWithMetaDataConcurrancy() throws Exception {
         logger.info("Test case to call process");
-        logger.setLevel(Level.DEBUG);
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String stream2 = "@source(type='grpc', receiver.url = 'grpc://localhost:" + port +
@@ -311,7 +307,6 @@ public class GrpcSourceTestCase {
     @Test
     public void testToCheckForAllReqTrpInStreamDef() throws Exception {
         logger.info("Test case to call process");
-        logger.setLevel(Level.DEBUG);
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String stream2 = "@source(type='grpc', receiver.url = 'grpc://localhost:" + port +
@@ -382,10 +377,6 @@ public class GrpcSourceTestCase {
     @Test
     public void testWithIncompleteMetadata() throws Exception {
         logger.info("Test case to call process");
-        final TestAppender appender = new TestAppender();
-        final Logger rootLogger = Logger.getRootLogger();
-        rootLogger.setLevel(Level.DEBUG);
-        rootLogger.addAppender(appender);
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String stream2 = "@source(type='grpc', receiver.url = 'grpc://localhost:" + port +
@@ -434,15 +425,6 @@ public class GrpcSourceTestCase {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
-        final List<LoggingEvent> log = appender.getLog();
-        List<String> logMessages = new ArrayList<>();
-        for (LoggingEvent logEvent : log) {
-            String message = String.valueOf(logEvent.getMessage());
-            if (message.contains("BarStream: ")) {
-                message = message.split("BarStream: ")[1];
-            }
-            logMessages.add(message);
-        }
 //        Assert.assertTrue(logMessages.contains("Dropping request. Requested transport property 'age' not
 //        present in " +
 //                "received event"));
@@ -522,10 +504,6 @@ public class GrpcSourceTestCase {
     @Test
     public void testWithIncompleteHeaders() throws Exception {
         logger.info("Test case to call process");
-        final TestAppender appender = new TestAppender();
-        final Logger rootLogger = Logger.getRootLogger();
-        rootLogger.setLevel(Level.DEBUG);
-        rootLogger.addAppender(appender);
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String stream2 = "@source(type='grpc', receiver.url = 'grpc://localhost:" + port +
@@ -570,15 +548,6 @@ public class GrpcSourceTestCase {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
-        final List<LoggingEvent> log = appender.getLog();
-        List<String> logMessages = new ArrayList<>();
-        for (LoggingEvent logEvent : log) {
-            String message = String.valueOf(logEvent.getMessage());
-            if (message.contains("BarStream: ")) {
-                message = message.split("BarStream: ")[1];
-            }
-            logMessages.add(message);
-        }
 //        Assert.assertTrue(logMessages.contains("Dropping request. Requested transport property 'name' not
 //        present in " +
 //                "received event"));

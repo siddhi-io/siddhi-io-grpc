@@ -25,7 +25,8 @@ import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
 import io.siddhi.extension.io.grpc.source.GenericServiceServer;
 import io.siddhi.extension.io.grpc.source.GrpcEventServiceServer;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -35,7 +36,7 @@ import java.util.Set;
  * Server interceptor to receive headers.
  */
 public class SourceServerInterceptor implements ServerInterceptor {
-    private static final Logger logger = Logger.getLogger(SourceServerInterceptor.class.getName());
+    private static final Logger logger = LogManager.getLogger(SourceServerInterceptor.class);
     private boolean isDefaultService;
 
     public SourceServerInterceptor(boolean isDefaultService) {

@@ -25,7 +25,8 @@ import io.grpc.netty.shaded.io.netty.handler.ssl.ClientAuth;
 import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
 import io.grpc.netty.shaded.io.netty.handler.ssl.SslContextBuilder;
 import io.grpc.stub.StreamObserver;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
 
@@ -44,7 +45,7 @@ import javax.net.ssl.TrustManagerFactory;
  * TLS server that required to authentication test cases.
  */
 public class TestTLSServer {
-    private static final Logger logger = Logger.getLogger(TestServer.class.getName());
+    private static final Logger logger = LogManager.getLogger(TestTLSServer.class);
     private Server server;
     private TestServerInterceptor testInterceptor = new TestServerInterceptor();
     private int port;

@@ -29,7 +29,8 @@ import io.siddhi.extension.io.grpc.util.GenericService;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
 import io.siddhi.extension.io.grpc.util.ServiceConfigs;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.lang.reflect.Method;
 
@@ -234,7 +235,7 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
         }
 )
 public class GrpcSource extends AbstractGrpcSource {
-    private static final Logger logger = Logger.getLogger(GrpcSource.class.getName());
+    private static final Logger logger = LogManager.getLogger(GrpcSource.class);
 
     @Override
     public void initSource(OptionHolder optionHolder, String[] requestedTransportPropertyNames) {

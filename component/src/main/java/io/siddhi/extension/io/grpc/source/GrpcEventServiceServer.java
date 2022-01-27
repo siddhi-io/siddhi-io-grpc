@@ -36,7 +36,8 @@ import io.siddhi.extension.io.grpc.util.GrpcConstants;
 import io.siddhi.extension.io.grpc.util.GrpcServerConfigs;
 import io.siddhi.extension.io.grpc.util.SourceServerInterceptor;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
 
@@ -63,7 +64,7 @@ import javax.net.ssl.TrustManagerFactory;
  * grpc server for default service. Sources can subscribe to this server with respective stream id
  */
 public class GrpcEventServiceServer extends ServiceServer {
-    private static final Logger logger = Logger.getLogger(GrpcEventServiceServer.class.getName());
+    private static final Logger logger = LogManager.getLogger(GrpcEventServiceServer.class);
     public static ThreadLocal<Map<String, String>> metaDataMap = new ThreadLocal<>();
     protected Server server;
     private NettyServerBuilder serverBuilder;

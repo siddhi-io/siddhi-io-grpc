@@ -37,7 +37,8 @@ import io.siddhi.extension.io.grpc.util.GrpcConstants;
 import io.siddhi.extension.io.grpc.util.GrpcServerConfigs;
 import io.siddhi.extension.io.grpc.util.SourceServerInterceptor;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -66,7 +67,7 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
  * grpc server for generic service, create separated servers for each sources.
  */
 public class GenericServiceServer extends ServiceServer {
-    private static final Logger logger = Logger.getLogger(GenericServiceServer.class.getName());
+    private static final Logger logger = LogManager.getLogger(GenericServiceServer.class);
     public static ThreadLocal<Map<String, String>> metaDataMap = new ThreadLocal<>();
     private Server server;
     private NettyServerBuilder serverBuilder;
