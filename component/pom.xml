@@ -163,7 +163,6 @@
                         <Bundle-Name>${project.artifactId}</Bundle-Name>
                         <Export-Package>
                             io.siddhi.extension.io.grpc.*,
-                            io.grpc.*,
                             io.opencensus.*, <!--use in siddhi persistence on gcs-->
                         </Export-Package>
                         <Private-Package>
