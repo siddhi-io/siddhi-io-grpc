@@ -24,7 +24,8 @@ import io.grpc.ServerCall;
 import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
 import io.siddhi.extension.io.grpc.source.GrpcEventServiceServer;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -36,7 +37,7 @@ import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
  * Server interceptor to receive headers in Test Server.
  */
 public class TestServerInterceptor implements ServerInterceptor {
-  private static final Logger logger = Logger.getLogger(TestServer.class.getName());
+  private static final Logger logger = LogManager.getLogger(TestServerInterceptor.class);
 
   @Override
   public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> serverCall,

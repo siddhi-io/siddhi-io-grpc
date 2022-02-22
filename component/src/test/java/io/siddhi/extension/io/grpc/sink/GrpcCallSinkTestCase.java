@@ -25,24 +25,22 @@ import io.siddhi.core.stream.input.InputHandler;
 import io.siddhi.core.util.EventPrinter;
 import io.siddhi.extension.io.grpc.utils.TestAppender;
 import io.siddhi.extension.io.grpc.utils.TestServer;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.spi.LoggingEvent;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.Logger;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Test cases for grpc-call-sink in default way.
  */
 public class GrpcCallSinkTestCase {
-    private static final Logger logger = Logger.getLogger(GrpcSinkTestCase.class.getName());
+    private static final Logger logger = (Logger) LogManager.getLogger(GrpcCallSinkTestCase.class);
     private TestServer server = new TestServer(8889);
     private AtomicInteger eventCount = new AtomicInteger(0);
 
@@ -59,12 +57,13 @@ public class GrpcCallSinkTestCase {
     @Test
     public void test1() throws Exception {
         logger.info("Test case to call process sending a request");
-        final TestAppender appender = new TestAppender();
-        final Logger rootLogger = Logger.getRootLogger();
-        rootLogger.setLevel(Level.DEBUG);
-        rootLogger.addAppender(appender);
-        SiddhiManager siddhiManager = new SiddhiManager();
+        TestAppender appender = new TestAppender("TestAppender", null);
+        final Logger logger = (Logger) LogManager.getRootLogger();
+        logger.setLevel(Level.DEBUG);
+        logger.addAppender(appender);
+        appender.start();
 
+        SiddhiManager siddhiManager = new SiddhiManager();
         String inStreamDefinition = ""
                 + "@sink(type='grpc-call', " +
                 "publisher.url = 'grpc://localhost:8889/org.wso2.grpc.EventService/process/mySeq', " +
@@ -103,23 +102,20 @@ public class GrpcCallSinkTestCase {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
-        final List<LoggingEvent> log = appender.getLog();
-        List<String> logMessages = new ArrayList<>();
-        for (LoggingEvent logEvent : log) {
-            String message = String.valueOf(logEvent.getMessage());
-            logMessages.add(message);
-        }
-        Assert.assertTrue(logMessages.contains("Server process hit with payload = [{\"event\":{\"message\":\"" +
-                "Request 1\"}}] and Headers = {{sequence=mySeq}}"));
+        Assert.assertTrue(((TestAppender) logger.getAppenders().
+                get("TestAppender")).getMessages().contains("Server process hit with payload = " +
+                "[{\"event\":{\"message\":\"Request 1\"}}] and Headers = {{sequence=mySeq}}"));
+        logger.removeAppender(appender);
     }
 
     @Test//(dependsOnMethods = "test1")
     public void testWithHeaders() throws Exception {
         logger.info("Test case to call process sending 2 requests");
-        final TestAppender appender = new TestAppender();
-        final Logger rootLogger = Logger.getRootLogger();
-        rootLogger.setLevel(Level.DEBUG);
-        rootLogger.addAppender(appender);
+        TestAppender appender = new TestAppender("TestAppender", null);
+        final Logger logger = (Logger) LogManager.getRootLogger();
+        logger.setLevel(Level.ALL);
+        logger.addAppender(appender);
+        appender.start();
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inStreamDefinition = ""
@@ -162,25 +158,23 @@ public class GrpcCallSinkTestCase {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
-        final List<LoggingEvent> log = appender.getLog();
-        List<String> logMessages = new ArrayList<>();
-        for (LoggingEvent logEvent : log) {
-            String message = String.valueOf(logEvent.getMessage());
-            logMessages.add(message);
-        }
-        Assert.assertTrue(logMessages.contains("Server process hit with payload = [Request 1] and Headers = " +
-                "{{Name=John, Age=23, Content-Type=text, sequence=mySeq}}"));
-        Assert.assertTrue(logMessages.contains("Server process hit with payload = [Request 2] and Headers = " +
-                "{{Name=Nash, Age=54, Content-Type=json, sequence=mySeq}}"));
+        Assert.assertTrue(((TestAppender) logger.getAppenders().
+                get("TestAppender")).getMessages().contains("Server process hit with payload = " +
+                "[Request 1] and Headers = {{Name=John, Age=23, Content-Type=text, sequence=mySeq}}"));
+        Assert.assertTrue(((TestAppender) logger.getAppenders().
+                get("TestAppender")).getMessages().contains("Server process hit with payload = [Request 2] " +
+                "and Headers = {{Name=Nash, Age=54, Content-Type=json, sequence=mySeq}}"));
+        logger.removeAppender(appender);
     }
 
     @Test
     public void testWithoutRelevantSource() throws Exception {
         logger.info("Test case to call process sending 2 requests");
-        final TestAppender appender = new TestAppender();
-        final Logger rootLogger = Logger.getRootLogger();
-        rootLogger.setLevel(Level.DEBUG);
-        rootLogger.addAppender(appender);
+        TestAppender appender = new TestAppender("TestAppender", null);
+        final Logger logger = (Logger) LogManager.getRootLogger();
+        logger.setLevel(Level.ALL);
+        logger.addAppender(appender);
+        appender.start();
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inStreamDefinition = ""
@@ -195,29 +189,22 @@ public class GrpcCallSinkTestCase {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
-        final List<LoggingEvent> log = appender.getLog();
-        List<String> logMessages = new ArrayList<>();
-        for (LoggingEvent logEvent : log) {
-            String message = String.valueOf(logEvent.getMessage());
-            if (message.contains("FooStream: ")) {
-                message = message.split("FooStream: ")[1];
-            }
-            logMessages.add(message);
-        }
-        Assert.assertTrue(logMessages.contains("For grpc-call sink to work a grpc-call-response source should be " +
-                "available with the same sink.id. In this case sink.id is 1. Please provide a grpc-call-response " +
-                "source with the sink.id 1"));
+        Assert.assertTrue(((TestAppender) logger.getAppenders().
+                get("TestAppender")).getMessages().contains("For grpc-call sink to work a grpc-call-response source " +
+                "should be available with the same sink.id. In this case sink.id is 1. " +
+                "Please provide a grpc-call-response source with the sink.id 1"));
+        logger.removeAppender(appender);
     }
 
     @Test
     public void testWithMetaData() throws Exception {
         logger.info("Test case to call consume with headers");
-        final TestAppender appender = new TestAppender();
-        final Logger rootLogger = Logger.getRootLogger();
-        rootLogger.setLevel(Level.DEBUG);
-        rootLogger.addAppender(appender);
+        TestAppender appender = new TestAppender("TestAppender", null);
+        final Logger logger = (Logger) LogManager.getRootLogger();
+        logger.setLevel(Level.ALL);
+        logger.addAppender(appender);
+        appender.start();
         SiddhiManager siddhiManager = new SiddhiManager();
-//        server.start();
 
         String inStreamDefinition = ""
                 + "@sink(type='grpc-call', " +
@@ -243,16 +230,17 @@ public class GrpcCallSinkTestCase {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
-        final List<LoggingEvent> log = appender.getLog();
-        List<String> logMessages = new ArrayList<>();
-        for (LoggingEvent logEvent : log) {
-            String message = String.valueOf(logEvent.getMessage());
-            logMessages.add(message);
-        }
-        Assert.assertTrue(logMessages.contains("Server process hit with payload = [Request 1] and Headers = {{}}"));
-        Assert.assertTrue(logMessages.contains("Server process hit with payload = [Request 2] and Headers = {{}}"));
-        Assert.assertTrue(logMessages.contains("Metadata received: name: John"));
-        Assert.assertTrue(logMessages.contains("Metadata received: name: Nash"));
+        Assert.assertTrue(((TestAppender) logger.getAppenders().
+                get("TestAppender")).getMessages().contains("Server process hit with payload = [Request 1] and " +
+                "Headers = {{}}"));
+        Assert.assertTrue(((TestAppender) logger.getAppenders().
+                get("TestAppender")).getMessages().contains("Server process hit with payload = [Request 2] and " +
+                "Headers = {{}}"));
+        Assert.assertTrue(((TestAppender) logger.getAppenders().
+                get("TestAppender")).getMessages().contains("Metadata received: name: John"));
+        Assert.assertTrue(((TestAppender) logger.getAppenders().
+                get("TestAppender")).getMessages().contains("Metadata received: name: Nash"));
+        logger.removeAppender(appender);
     }
 
     @Test

@@ -31,17 +31,15 @@ import io.siddhi.extension.io.grpc.proto.RequestWithMap;
 import io.siddhi.extension.io.grpc.proto.Response;
 import io.siddhi.extension.io.grpc.proto.ResponseWithMap;
 import io.siddhi.extension.io.grpc.utils.TestAppender;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.spi.LoggingEvent;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.Logger;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -50,7 +48,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Test cases for grpc-service source in default way.
  */
 public class GrpcServiceSourceTestCase {
-    private static final Logger logger = Logger.getLogger(GrpcServiceSourceTestCase.class.getName());
+    private static final Logger logger = (Logger) LogManager.getLogger(GrpcServiceSourceTestCase.class);
     private AtomicInteger eventCount = new AtomicInteger(0);
     private String port = "8282";
     private String packageName = "io.siddhi.extension.io.grpc.proto";
@@ -250,10 +248,11 @@ public class GrpcServiceSourceTestCase {
     @Test
     public void testWithIncompleteMetaData() throws Exception {
         logger.info("Test case to call process");
-        final TestAppender appender = new TestAppender();
-        final Logger rootLogger = Logger.getRootLogger();
-        rootLogger.setLevel(Level.DEBUG);
-        rootLogger.addAppender(appender);
+        TestAppender appender = new TestAppender("TestAppender", null);
+        final Logger logger = (Logger) LogManager.getRootLogger();
+        logger.setLevel(Level.ALL);
+        logger.addAppender(appender);
+        appender.start();
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String stream1 = "@source(type='grpc-service', " +
@@ -299,17 +298,10 @@ public class GrpcServiceSourceTestCase {
         channel.shutdown();
         channel.awaitTermination(30, TimeUnit.SECONDS);
 
-        final List<LoggingEvent> log = appender.getLog();
-        List<String> logMessages = new ArrayList<>();
-        for (LoggingEvent logEvent : log) {
-            String message = String.valueOf(logEvent.getMessage());
-            if (message.contains("FooStream: ")) {
-                message = message.split("FooStream: ")[1];
-            }
-            logMessages.add(message);
-        }
-        Assert.assertTrue(logMessages.contains("Dropping request. Requested transport property 'name' not present in " +
-                "received event"));
+        Assert.assertTrue(((TestAppender) logger.getAppenders().
+                get("TestAppender")).getMessages().contains("Dropping request. Requested transport property" +
+                " 'name' not present in " + "received event"));
+        logger.removeAppender(appender);
     }
 
     @Test
@@ -423,10 +415,11 @@ public class GrpcServiceSourceTestCase {
     @Test
     public void testWithIncompleteHeaders() throws Exception {
         logger.info("Test case to call process");
-        final TestAppender appender = new TestAppender();
-        final Logger rootLogger = Logger.getRootLogger();
-        rootLogger.setLevel(Level.DEBUG);
-        rootLogger.addAppender(appender);
+        TestAppender appender = new TestAppender("TestAppender", null);
+        final Logger logger = (Logger) LogManager.getRootLogger();
+        logger.setLevel(Level.ALL);
+        logger.addAppender(appender);
+        appender.start();
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String stream1 = "@source(type='grpc-service', " +
@@ -470,17 +463,10 @@ public class GrpcServiceSourceTestCase {
         channel.shutdown();
         channel.awaitTermination(30, TimeUnit.SECONDS);
 
-        final List<LoggingEvent> log = appender.getLog();
-        List<String> logMessages = new ArrayList<>();
-        for (LoggingEvent logEvent : log) {
-            String message = String.valueOf(logEvent.getMessage());
-            if (message.contains("FooStream: ")) {
-                message = message.split("FooStream: ")[1];
-            }
-            logMessages.add(message);
-        }
-        Assert.assertTrue(logMessages.contains("Dropping request. Requested transport property 'age' not present in " +
-                "received event"));
+        Assert.assertTrue(((TestAppender) logger.getAppenders().
+                get("TestAppender")).getMessages().contains("Dropping request. Requested transport property " +
+                "'age' not present in received event"));
+        logger.removeAppender(appender);
     }
 
     @Test

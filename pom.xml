@@ -71,8 +71,8 @@
                 <version>${grpc.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.apache.log4j.wso2</groupId>
-                <artifactId>log4j</artifactId>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-core</artifactId>
                 <version>${log4j.version}</version>
                 <exclusions>
                     <exclusion>
@@ -98,12 +98,24 @@
                 <artifactId>siddhi-map-xml</artifactId>
                 <version>${siddhi.map.xml.version}</version>
                 <scope>test</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>log4j</groupId>
+                        <artifactId>log4j</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>io.siddhi.extension.map.json</groupId>
                 <artifactId>siddhi-map-json</artifactId>
                 <version>${siddhi.map.json.version}</version>
                 <scope>test</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>log4j</groupId>
+                        <artifactId>log4j</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.testng</groupId>
@@ -115,12 +127,24 @@
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-lang3</artifactId>
                 <version>${commons.lang3.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>log4j</groupId>
+                        <artifactId>log4j</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>io.siddhi.extension.map.protobuf</groupId>
                 <artifactId>siddhi-map-protobuf</artifactId>
                 <version>${siddhi.map.protobuf.version}</version>
                 <scope>test</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>log4j</groupId>
+                        <artifactId>log4j</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -199,13 +223,13 @@
         <testng.version>6.11</testng.version>
         <grpc.version>1.22.1</grpc.version>
         <mavan.findbugsplugin.exclude.file>findbugs-exclude.xml</mavan.findbugsplugin.exclude.file>
-        <siddhi.version>5.1.13</siddhi.version>
+        <siddhi.version>5.1.21</siddhi.version>
         <siddhi.version.range>[5.0.0,6.0.0)</siddhi.version.range>
-        <log4j.version>1.2.17.wso2v1</log4j.version>
+        <log4j.version>2.17.1</log4j.version>
         <carbon.transport.version>4.4.15</carbon.transport.version>
-        <siddhi.map.json.version>5.0.7</siddhi.map.json.version>
-        <siddhi.map.xml.version>5.0.4</siddhi.map.xml.version>
-        <siddhi.map.protobuf.version>1.0.5</siddhi.map.protobuf.version>
+        <siddhi.map.json.version>5.2.2</siddhi.map.json.version>
+        <siddhi.map.xml.version>5.2.2</siddhi.map.xml.version>
+        <siddhi.map.protobuf.version>1.1.1</siddhi.map.protobuf.version>
         <jacoco.plugin.version>0.7.9</jacoco.plugin.version>
     </properties>
 

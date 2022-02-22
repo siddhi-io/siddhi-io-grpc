@@ -20,7 +20,7 @@ package io.siddhi.extension.io.grpc.source;
 import io.siddhi.core.config.SiddhiAppContext;
 import io.siddhi.extension.io.grpc.util.GrpcServerConfigs;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import java.util.Collections;
 import java.util.HashMap;

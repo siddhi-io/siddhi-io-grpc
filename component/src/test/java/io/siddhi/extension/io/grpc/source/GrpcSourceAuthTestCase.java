@@ -27,8 +27,8 @@ import io.siddhi.core.SiddhiManager;
 import io.siddhi.core.query.output.callback.QueryCallback;
 import io.siddhi.core.util.EventPrinter;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.wso2.grpc.Event;
@@ -44,7 +44,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.concurrent.atomic.AtomicInteger;
-
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.TrustManagerFactory;
 
@@ -52,7 +51,7 @@ import javax.net.ssl.TrustManagerFactory;
  * Authentication test cases for grpc-source and grpc-service-source.
  */
 public class GrpcSourceAuthTestCase {
-    private static final Logger logger = Logger.getLogger(GrpcSourceAuthTestCase.class.getName());
+    private static final Logger logger = LogManager.getLogger(GrpcSourceAuthTestCase.class);
     private AtomicInteger eventCount = new AtomicInteger(0);
     public static final String CARBON_HOME = "carbon.home";
 
@@ -66,7 +65,6 @@ public class GrpcSourceAuthTestCase {
     @Test
     public void testGrpcSourceWithServerAuth() throws Exception {
         logger.info("Test case to call process");
-        logger.setLevel(Level.DEBUG);
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String stream2 = "@source(type='grpc', " +
@@ -143,7 +141,6 @@ public class GrpcSourceAuthTestCase {
     @Test
     public void testGrpcSourceWithMutualAuth() throws Exception {
         logger.info("Test case to call process");
-        logger.setLevel(Level.DEBUG);
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String stream2 = "@source(type='grpc', " +
@@ -226,7 +223,6 @@ public class GrpcSourceAuthTestCase {
     @Test
     public void testGrpcSourceWithDefaultMutualAuth() throws Exception {
         logger.info("Test case to call process");
-        logger.setLevel(Level.DEBUG);
         setCarbonHome();
         SiddhiManager siddhiManager = new SiddhiManager();
 
@@ -305,7 +301,6 @@ public class GrpcSourceAuthTestCase {
     @Test
     public void testGrpcServiceSourceWithServerAuth() throws Exception {
         logger.info("Test case to call process");
-        logger.setLevel(Level.DEBUG);
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String stream1 = "@source(type='grpc-service', " +
@@ -378,7 +373,6 @@ public class GrpcSourceAuthTestCase {
     @Test
     public void testGrpcServiceSourceWithMutualAuth() throws Exception {
         logger.info("Test case to call process");
-        logger.setLevel(Level.DEBUG);
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String stream1 = "@source(type='grpc-service', " +
@@ -461,7 +455,6 @@ public class GrpcSourceAuthTestCase {
     @Test
     public void testGrpcServiceSourceWithDefaultMutualAuth() throws Exception {
         logger.info("Test case to call process");
-        logger.setLevel(Level.DEBUG);
         setCarbonHome();
         SiddhiManager siddhiManager = new SiddhiManager();
 

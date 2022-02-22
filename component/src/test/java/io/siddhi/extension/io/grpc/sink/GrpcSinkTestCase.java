@@ -24,23 +24,21 @@ import io.siddhi.core.util.persistence.InMemoryPersistenceStore;
 import io.siddhi.extension.io.grpc.utils.TestAppender;
 import io.siddhi.extension.io.grpc.utils.TestServer;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.spi.LoggingEvent;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.Logger;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Test cases for grpc-sink in default way.
  */
 public class GrpcSinkTestCase {
-    private static final Logger log = Logger.getLogger(GrpcSinkTestCase.class.getName());
+    private static final Logger log = (Logger) LogManager.getLogger(GrpcSinkTestCase.class);
     private TestServer server = new TestServer(5003);
 
     @BeforeTest
@@ -56,10 +54,11 @@ public class GrpcSinkTestCase {
     @Test
     public void testCaseToCallConsumeWithSimpleRequest() throws Exception {
         log.info("Test case to call consume");
-        final TestAppender appender = new TestAppender();
-        final Logger rootLogger = Logger.getRootLogger();
-        rootLogger.setLevel(Level.DEBUG);
-        rootLogger.addAppender(appender);
+        TestAppender appender = new TestAppender("TestAppender", null);
+        final Logger logger = (Logger) LogManager.getRootLogger();
+        logger.setLevel(Level.ALL);
+        logger.addAppender(appender);
+        appender.start();
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inStreamDefinition = ""
@@ -75,22 +74,20 @@ public class GrpcSinkTestCase {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
-        final List<LoggingEvent> log = appender.getLog();
-        List<String> logMessages = new ArrayList<>();
-        for (LoggingEvent logEvent : log) {
-            String message = String.valueOf(logEvent.getMessage());
-            logMessages.add(message);
-        }
-        Assert.assertTrue(logMessages.contains("Server consume hit with payload = [Request 1] and Headers = {{}}"));
+        Assert.assertTrue(((TestAppender) logger.getAppenders().
+                get("TestAppender")).getMessages().contains("Server consume hit with payload = " +
+                "[Request 1] and Headers = {{}}"));
+        logger.removeAppender(appender);
     }
 
     @Test
     public void testCaseToCallConsumeWithTwoRequests() throws Exception {
         log.info("Test case to call consume with 2 requests");
-        final TestAppender appender = new TestAppender();
-        final Logger rootLogger = Logger.getRootLogger();
-        rootLogger.setLevel(Level.DEBUG);
-        rootLogger.addAppender(appender);
+        TestAppender appender = new TestAppender("TestAppender", null);
+        final Logger logger = (Logger) LogManager.getRootLogger();
+        logger.setLevel(Level.ALL);
+        logger.addAppender(appender);
+        appender.start();
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inStreamDefinition = ""
@@ -107,23 +104,23 @@ public class GrpcSinkTestCase {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
-        final List<LoggingEvent> log = appender.getLog();
-        List<String> logMessages = new ArrayList<>();
-        for (LoggingEvent logEvent : log) {
-            String message = String.valueOf(logEvent.getMessage());
-            logMessages.add(message);
-        }
-        Assert.assertTrue(logMessages.contains("Server consume hit with payload = [Request 1] and Headers = {{}}"));
-        Assert.assertTrue(logMessages.contains("Server consume hit with payload = [Request 2] and Headers = {{}}"));
+        Assert.assertTrue(((TestAppender) logger.getAppenders().
+                get("TestAppender")).getMessages().contains("Server consume hit with payload = " +
+                "[Request 1] and Headers = {{}}"));
+        Assert.assertTrue(((TestAppender) logger.getAppenders().
+                get("TestAppender")).getMessages().contains("Server consume hit with payload = " +
+                "[Request 2] and Headers = {{}}"));
+        logger.removeAppender(appender);
     }
 
     @Test
     public void testWithHeader() throws Exception {
         log.info("Test case to call consume with headers");
-        final TestAppender appender = new TestAppender();
-        final Logger rootLogger = Logger.getRootLogger();
-        rootLogger.setLevel(Level.DEBUG);
-        rootLogger.addAppender(appender);
+        TestAppender appender = new TestAppender("TestAppender", null);
+        final Logger logger = (Logger) LogManager.getRootLogger();
+        logger.setLevel(Level.ALL);
+        logger.addAppender(appender);
+        appender.start();
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inStreamDefinition = ""
@@ -142,25 +139,18 @@ public class GrpcSinkTestCase {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
-        final List<LoggingEvent> log = appender.getLog();
-        List<String> logMessages = new ArrayList<>();
-        for (LoggingEvent logEvent : log) {
-            String message = String.valueOf(logEvent.getMessage());
-            logMessages.add(message);
-        }
-        Assert.assertTrue(logMessages.contains("Server consume hit with payload = [Request 1] and Headers = " +
-                "{{Name=John, Age=23, Content-Type=text}}"));
-        Assert.assertTrue(logMessages.contains("Server consume hit with payload = [Request 2] and Headers = " +
-                "{{Name=Nash, Age=54, Content-Type=json}}"));
+        Assert.assertTrue(((TestAppender) logger.getAppenders().
+                get("TestAppender")).getMessages().contains("Server consume hit with payload = [Request 1] " +
+                "and Headers = {{Name=John, Age=23, Content-Type=text}}"));
+        Assert.assertTrue(((TestAppender) logger.getAppenders().
+                get("TestAppender")).getMessages().contains("Server consume hit with payload = [Request 2] " +
+                "and Headers = {{Name=Nash, Age=54, Content-Type=json}}"));
+        logger.removeAppender(appender);
     }
 
     @Test
     public void testCaseWithWrongProtocol() throws Exception {
         log.info("Test case to call consume");
-        final TestAppender appender = new TestAppender();
-        final Logger rootLogger = Logger.getRootLogger();
-        rootLogger.setLevel(Level.DEBUG);
-        rootLogger.addAppender(appender);
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inStreamDefinition = ""
@@ -178,10 +168,6 @@ public class GrpcSinkTestCase {
     @Test
     public void testCaseWithMalformedURL1() throws Exception {
         log.info("Test case to call consume");
-        final TestAppender appender = new TestAppender();
-        final Logger rootLogger = Logger.getRootLogger();
-        rootLogger.setLevel(Level.DEBUG);
-        rootLogger.addAppender(appender);
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inStreamDefinition = ""
@@ -201,10 +187,6 @@ public class GrpcSinkTestCase {
     @Test
     public void testCaseWithMalformedURL2() throws Exception {
         log.info("Test case to call consume");
-        final TestAppender appender = new TestAppender();
-        final Logger rootLogger = Logger.getRootLogger();
-        rootLogger.setLevel(Level.DEBUG);
-        rootLogger.addAppender(appender);
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inStreamDefinition = ""
@@ -224,10 +206,6 @@ public class GrpcSinkTestCase {
     @Test
     public void testCaseWithShortURL() throws Exception {
         log.info("Test case to call consume");
-        final TestAppender appender = new TestAppender();
-        final Logger rootLogger = Logger.getRootLogger();
-        rootLogger.setLevel(Level.DEBUG);
-        rootLogger.addAppender(appender);
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inStreamDefinition = ""
@@ -241,10 +219,11 @@ public class GrpcSinkTestCase {
     @Test
     public void testCaseWithXMLMapper() throws Exception {
         log.info("Test case to call consume");
-        final TestAppender appender = new TestAppender();
-        final Logger rootLogger = Logger.getRootLogger();
-        rootLogger.setLevel(Level.DEBUG);
-        rootLogger.addAppender(appender);
+        TestAppender appender = new TestAppender("TestAppender", null);
+        final Logger logger = (Logger) LogManager.getRootLogger();
+        logger.setLevel(Level.ALL);
+        logger.addAppender(appender);
+        appender.start();
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inStreamDefinition = ""
@@ -260,22 +239,20 @@ public class GrpcSinkTestCase {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
-        final List<LoggingEvent> log = appender.getLog();
-        List<String> logMessages = new ArrayList<>();
-        for (LoggingEvent logEvent : log) {
-            String message = String.valueOf(logEvent.getMessage());
-            logMessages.add(message);
-        }
-        Assert.assertTrue(logMessages.contains("Server consume hit with payload = Request 1 and Headers = {{}}"));
+        Assert.assertTrue(((TestAppender) logger.getAppenders().
+                get("TestAppender")).getMessages().contains("Server consume hit with payload = Request 1 " +
+                "and Headers = {{}}"));
+        logger.removeAppender(appender);
     }
 
     @Test
     public void testCaseWithSequenceName() throws Exception {
         log.info("Test case to call consume");
-        final TestAppender appender = new TestAppender();
-        final Logger rootLogger = Logger.getRootLogger();
-        rootLogger.setLevel(Level.DEBUG);
-        rootLogger.addAppender(appender);
+        TestAppender appender = new TestAppender("TestAppender", null);
+        final Logger logger = (Logger) LogManager.getRootLogger();
+        logger.setLevel(Level.ALL);
+        logger.addAppender(appender);
+        appender.start();
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inStreamDefinition = ""
@@ -292,23 +269,20 @@ public class GrpcSinkTestCase {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
-        final List<LoggingEvent> log = appender.getLog();
-        List<String> logMessages = new ArrayList<>();
-        for (LoggingEvent logEvent : log) {
-            String message = String.valueOf(logEvent.getMessage());
-            logMessages.add(message);
-        }
-        Assert.assertTrue(logMessages.contains("Server consume hit with payload = Request 1 and Headers = " +
-                "{{sequence=mySeq}}"));
+        Assert.assertTrue(((TestAppender) logger.getAppenders().
+                get("TestAppender")).getMessages().contains("Server consume hit with payload = " +
+                "Request 1 and Headers = " + "{{sequence=mySeq}}"));
+        logger.removeAppender(appender);
     }
 
     @Test
     public void testWithHeaderAndSequenceName() throws Exception {
         log.info("Test case to call consume with headers");
-        final TestAppender appender = new TestAppender();
-        final Logger rootLogger = Logger.getRootLogger();
-        rootLogger.setLevel(Level.DEBUG);
-        rootLogger.addAppender(appender);
+        TestAppender appender = new TestAppender("TestAppender", null);
+        final Logger logger = (Logger) LogManager.getRootLogger();
+        logger.setLevel(Level.ALL);
+        logger.addAppender(appender);
+        appender.start();
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inStreamDefinition = ""
@@ -327,25 +301,23 @@ public class GrpcSinkTestCase {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
-        final List<LoggingEvent> log = appender.getLog();
-        List<String> logMessages = new ArrayList<>();
-        for (LoggingEvent logEvent : log) {
-            String message = String.valueOf(logEvent.getMessage());
-            logMessages.add(message);
-        }
-        Assert.assertTrue(logMessages.contains("Server consume hit with payload = [Request 1] and Headers = " +
-                "{{Name=John, Age=23, Content-Type=text, sequence=mySeq}}"));
-        Assert.assertTrue(logMessages.contains("Server consume hit with payload = [Request 2] and Headers = " +
-                "{{Name=Nash, Age=54, Content-Type=json, sequence=mySeq}}"));
+        Assert.assertTrue(((TestAppender) logger.getAppenders().
+                get("TestAppender")).getMessages().contains("Server consume hit with payload = " +
+                "[Request 1] and Headers = {{Name=John, Age=23, Content-Type=text, sequence=mySeq}}"));
+        Assert.assertTrue(((TestAppender) logger.getAppenders().
+                get("TestAppender")).getMessages().contains("Server consume hit with payload = [Request 2] " +
+                "and Headers = {{Name=Nash, Age=54, Content-Type=json, sequence=mySeq}}"));
+        logger.removeAppender(appender);
     }
 
     @Test
     public void testWithMetaData() throws Exception {
         log.info("Test case to call consume with headers");
-        final TestAppender appender = new TestAppender();
-        final Logger rootLogger = Logger.getRootLogger();
-        rootLogger.setLevel(Level.DEBUG);
-        rootLogger.addAppender(appender);
+        TestAppender appender = new TestAppender("TestAppender", null);
+        final Logger logger = (Logger) LogManager.getRootLogger();
+        logger.setLevel(Level.ALL);
+        logger.addAppender(appender);
+        appender.start();
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inStreamDefinition = ""
@@ -363,25 +335,24 @@ public class GrpcSinkTestCase {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
-        final List<LoggingEvent> log = appender.getLog();
-        List<String> logMessages = new ArrayList<>();
-        for (LoggingEvent logEvent : log) {
-            String message = String.valueOf(logEvent.getMessage());
-            logMessages.add(message);
-        }
-        Assert.assertTrue(logMessages.contains("Server consume hit with payload = " +
+        Assert.assertTrue(((TestAppender) logger.getAppenders().
+                get("TestAppender")).getMessages().contains("Server consume hit with payload = " +
                 "[{\"event\":{\"message\":\"Request 1\"}}] and Headers = {{}}"));
-        Assert.assertTrue(logMessages.contains("Metadata received: name: John"));
-        Assert.assertTrue(logMessages.contains("Metadata received: age: 23"));
+        Assert.assertTrue(((TestAppender) logger.getAppenders().
+                get("TestAppender")).getMessages().contains("Metadata received: name: John"));
+        Assert.assertTrue(((TestAppender) logger.getAppenders().
+                get("TestAppender")).getMessages().contains("Metadata received: age: 23"));
+        logger.removeAppender(appender);
     }
 
     @Test
     public void testCaseFailingWithUnavailableServer() throws Exception {
         log.info("Test case to call consume");
-        final TestAppender appender = new TestAppender();
-        final Logger rootLogger = Logger.getRootLogger();
-        rootLogger.setLevel(Level.DEBUG);
-        rootLogger.addAppender(appender);
+        TestAppender appender = new TestAppender("TestAppender", null);
+        final Logger logger = (Logger) LogManager.getRootLogger();
+        logger.setLevel(Level.ALL);
+        logger.addAppender(appender);
+        appender.start();
         SiddhiManager siddhiManager = new SiddhiManager();
         server.stop();
 
@@ -399,25 +370,20 @@ public class GrpcSinkTestCase {
         siddhiAppRuntime.shutdown();
         server.start();
 
-        final List<LoggingEvent> log = appender.getLog();
-        List<String> logMessages = new ArrayList<>();
-        for (LoggingEvent logEvent : log) {
-            String message = String.valueOf(logEvent.getMessage());
-            if (message.contains("FooStream: ")) {
-                message = message.split("FooStream: ")[1];
-            }
-            logMessages.add(message);
-        }
-        Assert.assertTrue(logMessages.contains("UNAVAILABLE: io exception caused by UNAVAILABLE: io exception"));
+        Assert.assertTrue(((TestAppender) logger.getAppenders().
+                get("TestAppender")).getMessages().contains("UNAVAILABLE: io exception caused by UNAVAILABLE: " +
+                "io exception"));
+        logger.removeAppender(appender);
     }
 
     @Test
     public void testCaseWithSiddhiAppShutdown() throws Exception {
         log.info("Test case to call consume with 2 requests");
-        final TestAppender appender = new TestAppender();
-        final Logger rootLogger = Logger.getRootLogger();
-        rootLogger.setLevel(Level.DEBUG);
-        rootLogger.addAppender(appender);
+        TestAppender appender = new TestAppender("TestAppender", null);
+        final Logger logger = (Logger) LogManager.getRootLogger();
+        logger.setLevel(Level.ALL);
+        logger.addAppender(appender);
+        appender.start();
         SiddhiManager siddhiManager = new SiddhiManager();
         siddhiManager.setPersistenceStore(new InMemoryPersistenceStore());
 
@@ -446,13 +412,12 @@ public class GrpcSinkTestCase {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
-        final List<LoggingEvent> log = appender.getLog();
-        List<String> logMessages = new ArrayList<>();
-        for (LoggingEvent logEvent : log) {
-            String message = String.valueOf(logEvent.getMessage());
-            logMessages.add(message);
-        }
-        Assert.assertTrue(logMessages.contains("Server consume hit with payload = [Request 1] and Headers = {{}}"));
-        Assert.assertTrue(logMessages.contains("Server consume hit with payload = [Request 2] and Headers = {{}}"));
+        Assert.assertTrue(((TestAppender) logger.getAppenders().
+                get("TestAppender")).getMessages().contains("Server consume hit with payload = [Request 1] " +
+                "and Headers = {{}}"));
+        Assert.assertTrue(((TestAppender) logger.getAppenders().
+                get("TestAppender")).getMessages().contains("Server consume hit with payload = [Request 2] " +
+                "and Headers = {{}}"));
+        logger.removeAppender(appender);
     }
 }

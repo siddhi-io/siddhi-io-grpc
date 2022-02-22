@@ -22,25 +22,23 @@ import io.siddhi.core.SiddhiManager;
 import io.siddhi.core.stream.input.InputHandler;
 import io.siddhi.extension.io.grpc.utils.GenericTestServer;
 import io.siddhi.extension.io.grpc.utils.TestAppender;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.spi.LoggingEvent;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.Logger;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
  * Test cases for grpc-sink in generic way.
  */
 public class GrpcSinkGenericTestCases {
-    private static final Logger log = Logger.getLogger(GrpcSinkTestCase.class.getName());
+    private static final Logger log = (Logger) LogManager.getLogger(GrpcSinkGenericTestCases.class);
     private int port = 6667;
     private GenericTestServer server = new GenericTestServer(port);
     private String packageName = "io.siddhi.extension.io.grpc.proto";
@@ -58,11 +56,11 @@ public class GrpcSinkGenericTestCases {
     @Test
     public void testCase01() throws Exception {
         log.info("Test case to call send");
-        log.setLevel(Level.DEBUG);
-        final TestAppender appender = new TestAppender();
-        final Logger rootLogger = Logger.getRootLogger();
-        rootLogger.setLevel(Level.DEBUG);
-        rootLogger.addAppender(appender);
+        TestAppender appender = new TestAppender("TestAppender", null);
+        final Logger logger = (Logger) LogManager.getRootLogger();
+        logger.setLevel(Level.ALL);
+        logger.addAppender(appender);
+        appender.start();
         SiddhiManager siddhiManager = new SiddhiManager();
 
         String inStreamDefinition = ""
@@ -79,30 +77,26 @@ public class GrpcSinkGenericTestCases {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
-        final List<LoggingEvent> log = appender.getLog();
-        List<String> logMessages = new ArrayList<>();
-        for (LoggingEvent logEvent : log) {
-            String message = String.valueOf(logEvent.getMessage());
-            logMessages.add(message);
-        }
-        Assert.assertTrue(logMessages.contains("Server hits with request :\n" +
+        Assert.assertTrue(((TestAppender) logger.getAppenders().
+                get("TestAppender")).getMessages().contains("Server hits with request :\n" +
                 "stringValue: \"Test 01\"\n" +
                 "intValue: 60\n" +
                 "longValue: 10000\n" +
                 "booleanValue: true\n" +
                 "floatValue: 522.7586\n" +
                 "doubleValue: 34.5668\n"));
+        logger.removeAppender(appender);
     }
 
     @Test
     public void testWithMappingAttributes() throws Exception {
         log.info("Test case to call send");
-        log.setLevel(Level.DEBUG);
         SiddhiManager siddhiManager = new SiddhiManager();
-        final TestAppender appender = new TestAppender();
-        final Logger rootLogger = Logger.getRootLogger();
-        rootLogger.setLevel(Level.DEBUG);
-        rootLogger.addAppender(appender);
+        TestAppender appender = new TestAppender("TestAppender", null);
+        final Logger logger = (Logger) LogManager.getRootLogger();
+        logger.setLevel(Level.ALL);
+        logger.addAppender(appender);
+        appender.start();
 
         String inStreamDefinition = ""
                 + "@sink(type='grpc', " +
@@ -121,29 +115,25 @@ public class GrpcSinkGenericTestCases {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
-        final List<LoggingEvent> log = appender.getLog();
-        List<String> logMessages = new ArrayList<>();
-        for (LoggingEvent logEvent : log) {
-            String message = String.valueOf(logEvent.getMessage());
-            logMessages.add(message);
-        }
-        Assert.assertTrue(logMessages.contains("Server hits with request :\n" +
+        Assert.assertTrue(((TestAppender) logger.getAppenders().
+                get("TestAppender")).getMessages().contains("Server hits with request :\n" +
                 "stringValue: \"Test 02\"\n" +
                 "intValue: 60\n" +
                 "longValue: 10000\n" +
                 "floatValue: 768.987\n" +
                 "doubleValue: 34.5668\n"));
+        logger.removeAppender(appender);
     }
 
     @Test
     public void testWithMapObject() throws Exception {
         log.info("Test case to call send");
-        log.setLevel(Level.DEBUG);
         SiddhiManager siddhiManager = new SiddhiManager();
-        final TestAppender appender = new TestAppender();
-        final Logger rootLogger = Logger.getRootLogger();
-        rootLogger.setLevel(Level.DEBUG);
-        rootLogger.addAppender(appender);
+        TestAppender appender = new TestAppender("TestAppender", null);
+        final Logger logger = (Logger) LogManager.getRootLogger();
+        logger.setLevel(Level.ALL);
+        logger.addAppender(appender);
+        appender.start();
 
         String inStreamDefinition = ""
                 + "@sink(type='grpc', " +
@@ -162,13 +152,8 @@ public class GrpcSinkGenericTestCases {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
-        final List<LoggingEvent> log = appender.getLog();
-        List<String> logMessages = new ArrayList<>();
-        for (LoggingEvent logEvent : log) {
-            String message = String.valueOf(logEvent.getMessage());
-            logMessages.add(message);
-        }
-        Assert.assertTrue(logMessages.contains("Server hits with request :\n" +
+        Assert.assertTrue(((TestAppender) logger.getAppenders().
+                get("TestAppender")).getMessages().contains("Server hits with request :\n" +
                 "stringValue: \"Test 01\"\n" +
                 "intValue: 60\n" +
                 "map {\n" +
@@ -179,18 +164,19 @@ public class GrpcSinkGenericTestCases {
                 "  key: \"Key 02\"\n" +
                 "  value: \"Value 02\"\n" +
                 "}\n"));
+        logger.removeAppender(appender);
 
     }
 
     @Test
     public void testWithMetadata() throws Exception {
         log.info("Test case to call send");
-        log.setLevel(Level.DEBUG);
         SiddhiManager siddhiManager = new SiddhiManager();
-        final TestAppender appender = new TestAppender();
-        final Logger rootLogger = Logger.getRootLogger();
-        rootLogger.setLevel(Level.DEBUG);
-        rootLogger.addAppender(appender);
+        TestAppender appender = new TestAppender("TestAppender", null);
+        final Logger logger = (Logger) LogManager.getRootLogger();
+        logger.setLevel(Level.ALL);
+        logger.addAppender(appender);
+        appender.start();
 
         String inStreamDefinition = ""
                 + "@sink(type='grpc', " +
@@ -210,14 +196,11 @@ public class GrpcSinkGenericTestCases {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
-        final List<LoggingEvent> log = appender.getLog();
-        List<String> logMessages = new ArrayList<>();
-        for (LoggingEvent logEvent : log) {
-            String message = String.valueOf(logEvent.getMessage());
-            logMessages.add(message);
-        }
-        Assert.assertTrue(logMessages.contains("Metadata received: name: John"));
-        Assert.assertTrue(logMessages.contains("Metadata received: age: 23"));
+        Assert.assertTrue(((TestAppender) logger.getAppenders().
+                get("TestAppender")).getMessages().contains("Metadata received: name: John"));
+        Assert.assertTrue(((TestAppender) logger.getAppenders().
+                get("TestAppender")).getMessages().contains("Metadata received: age: 23"));
+        logger.removeAppender(appender);
 
     }
 
@@ -225,12 +208,12 @@ public class GrpcSinkGenericTestCases {
     @Test
     public void testCase_SendAsStream() throws Exception {
         log.info("Test case to call send");
-        log.setLevel(Level.DEBUG);
         SiddhiManager siddhiManager = new SiddhiManager();
-        final TestAppender appender = new TestAppender();
-        final Logger rootLogger = Logger.getRootLogger();
-        rootLogger.setLevel(Level.DEBUG);
-        rootLogger.addAppender(appender);
+        TestAppender appender = new TestAppender("TestAppender", null);
+        final Logger logger = (Logger) LogManager.getRootLogger();
+        logger.setLevel(Level.ALL);
+        logger.addAppender(appender);
+        appender.start();
 
         String inStreamDefinition = ""
                 + "@sink(type='grpc', publisher.url = 'grpc://localhost:" + port + "/" + packageName +
@@ -250,24 +233,20 @@ public class GrpcSinkGenericTestCases {
         siddhiAppRuntime.shutdown();
         Thread.sleep(1000);
 
-        final List<LoggingEvent> log = appender.getLog();
-        List<String> logMessages = new ArrayList<>();
-        for (LoggingEvent logEvent : log) {
-            String message = String.valueOf(logEvent.getMessage());
-            logMessages.add(message);
-        }
-        Assert.assertTrue(logMessages.contains("Done Streaming"));
+        Assert.assertTrue(((TestAppender) logger.getAppenders().
+                get("TestAppender")).getMessages().contains("Done Streaming"));
+        logger.removeAppender(appender);
     }
 
     @Test
     public void testCase0_SendAsStream_SendMap() throws Exception {
         log.info("Test case to call send");
-        log.setLevel(Level.DEBUG);
         SiddhiManager siddhiManager = new SiddhiManager();
-        final TestAppender appender = new TestAppender();
-        final Logger rootLogger = Logger.getRootLogger();
-        rootLogger.setLevel(Level.DEBUG);
-        rootLogger.addAppender(appender);
+        TestAppender appender = new TestAppender("TestAppender", null);
+        final Logger logger = (Logger) LogManager.getRootLogger();
+        logger.setLevel(Level.ALL);
+        logger.addAppender(appender);
+        appender.start();
 
         String inStreamDefinition = ""
                 + "@sink(type='grpc', publisher.url = 'grpc://localhost:" + port + "/" + packageName +
@@ -289,13 +268,9 @@ public class GrpcSinkGenericTestCases {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
         Thread.sleep(1000);
-        final List<LoggingEvent> log = appender.getLog();
-        List<String> logMessages = new ArrayList<>();
-        for (LoggingEvent logEvent : log) {
-            String message = String.valueOf(logEvent.getMessage());
-            logMessages.add(message);
-        }
-        Assert.assertTrue(logMessages.contains("Done Streaming"));
+        Assert.assertTrue(((TestAppender) logger.getAppenders().
+                get("TestAppender")).getMessages().contains("Done Streaming"));
+        logger.removeAppender(appender);
 
     }
 

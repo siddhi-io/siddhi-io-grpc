@@ -19,7 +19,7 @@ package io.siddhi.extension.io.grpc.source;
 
 import io.grpc.netty.shaded.io.netty.handler.ssl.SslContextBuilder;
 import io.siddhi.core.stream.input.source.Source;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -40,7 +40,7 @@ public abstract class ServiceServer {
     protected abstract void setServerPropertiesToBuilder(String siddhiAppName, String streamID);
     protected abstract void addServicesAndBuildServer(String siddhiAppName, String streamID);
     protected abstract void connectServer(Logger logger, Source.ConnectionCallback connectionCallback,
-                              String siddhiAppName, String streamID);
+                                          String siddhiAppName, String streamID);
     protected abstract void disconnectServer(Logger logger, String siddhiAppName, String streamID);
 
     protected abstract SslContextBuilder getSslContextBuilder(String filePath, String password, String algorithm,

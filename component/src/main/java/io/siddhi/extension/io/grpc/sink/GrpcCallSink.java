@@ -37,7 +37,8 @@ import io.siddhi.extension.io.grpc.util.GrpcSourceRegistry;
 import io.siddhi.extension.io.grpc.util.ServiceConfigs;
 import io.siddhi.query.api.definition.Attribute;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
 
@@ -298,7 +299,7 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
         }
 )
 public class GrpcCallSink extends AbstractGrpcSink {
-    private static final Logger logger = Logger.getLogger(GrpcCallSink.class.getName());
+    private static final Logger logger = LogManager.getLogger(GrpcCallSink.class);
     protected String sinkID;
     protected AbstractStub futureStub;
     private GrpcCallSink referenceToThisSink;

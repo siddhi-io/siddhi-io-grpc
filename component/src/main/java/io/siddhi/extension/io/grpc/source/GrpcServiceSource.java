@@ -37,7 +37,8 @@ import io.siddhi.extension.io.grpc.util.GenericService;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
 import io.siddhi.extension.io.grpc.util.GrpcSourceRegistry;
 import io.siddhi.query.api.exception.SiddhiAppValidationException;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.wso2.grpc.Event;
 
 import java.lang.reflect.InvocationTargetException;
@@ -274,7 +275,7 @@ import static io.siddhi.extension.io.grpc.util.GrpcUtils.getRpcMethodList;
         }
 )
 public class GrpcServiceSource extends AbstractGrpcSource {
-    private static final Logger logger = Logger.getLogger(GrpcServiceSource.class.getName());
+    private static final Logger logger = LogManager.getLogger(GrpcServiceSource.class);
     protected Server server;
     private Map<String, StreamObserver<Event>> streamObserverMap = Collections.synchronizedMap(new HashMap<>());
     private Map<String, StreamObserver<Any>> genericStreamObserverMap = Collections.synchronizedMap(new HashMap<>());

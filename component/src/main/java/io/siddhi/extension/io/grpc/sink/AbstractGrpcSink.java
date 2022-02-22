@@ -37,7 +37,6 @@ import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
 import io.siddhi.extension.io.grpc.util.ServiceConfigs;
 import io.siddhi.query.api.definition.StreamDefinition;
-import org.apache.log4j.Logger;
 import org.wso2.grpc.Event;
 
 import java.io.FileInputStream;
@@ -59,9 +58,8 @@ import javax.net.ssl.TrustManagerFactory;
  * This provides most of the initialization implementations.
  */
 public abstract class AbstractGrpcSink extends Sink {
-    private static final Logger logger = Logger.getLogger(AbstractGrpcSink.class.getName());
     protected String siddhiAppName;
-    protected ManagedChannel channel;
+    protected ManagedChannel channel = null;
     protected String streamID;
     protected Option headersOption;
     protected Option metadataOption;

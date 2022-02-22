@@ -33,7 +33,8 @@ import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.core.util.transport.OptionHolder;
 import io.siddhi.extension.io.grpc.util.GrpcConstants;
 import io.siddhi.extension.io.grpc.util.GrpcSourceRegistry;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.wso2.grpc.Event;
 
 import java.util.Map;
@@ -78,7 +79,7 @@ public class GrpcCallResponseSource extends Source {
     private boolean paused;
     private ReentrantLock lock;
     private Condition condition;
-    private static final Logger logger = Logger.getLogger(GrpcCallResponseSource.class.getName());
+    private static final Logger logger = LogManager.getLogger(GrpcCallResponseSource.class);
 
     @Override
     protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {

@@ -23,7 +23,8 @@ import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.ServerInterceptors;
 import io.grpc.stub.StreamObserver;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.wso2.grpc.Event;
 import org.wso2.grpc.EventServiceGrpc;
 
@@ -34,7 +35,7 @@ import java.util.concurrent.TimeUnit;
  * Grpc server which is required to run the sink test cases.
  */
 public class TestServer {
-    private static final Logger logger = Logger.getLogger(TestServer.class.getName());
+    private static final Logger logger = LogManager.getLogger(TestServer.class);
     private Server server;
     private TestServerInterceptor testInterceptor = new TestServerInterceptor();
     private int port;
