@@ -55,6 +55,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
@@ -85,9 +86,22 @@ public class GenericServiceServer extends ServiceServer {
         this.requestClass = requestClass;
         super.lock = new ReentrantLock();
         super.condition = lock.newCondition();
-        this.executorService = new ThreadPoolExecutor(grpcServerConfigs.getThreadPoolSize(),
+        ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(grpcServerConfigs.getThreadPoolSize(),
                 grpcServerConfigs.getThreadPoolSize(), 0L, TimeUnit.MILLISECONDS,
                 new LinkedBlockingQueue<>(grpcServerConfigs.getThreadPoolBufferSize()));
+
+        threadPoolExecutor.setRejectedExecutionHandler(new RejectedExecutionHandler() {
+            @Override
+            public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
+                try {
+                    executor.getQueue().put(r);
+                } catch (InterruptedException e) {
+                    throw new SiddhiAppRuntimeException(siddhiAppName + ": " + streamID + ": " + e.getMessage(), e);
+                }
+            }
+        });
+        this.executorService = threadPoolExecutor;
+
         setServerPropertiesToBuilder(siddhiAppName, streamID);
         addServicesAndBuildServer(siddhiAppName, streamID);
     }
