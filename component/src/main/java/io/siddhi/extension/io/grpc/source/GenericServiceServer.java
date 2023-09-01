@@ -93,12 +93,10 @@ public class GenericServiceServer extends ServiceServer {
         threadPoolExecutor.setRejectedExecutionHandler(new RejectedExecutionHandler() {
             @Override
             public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
-                logger.info(">>>>>>>>> [30_MAY_PREQA] Handling rejectedExecution. ExecutorService queue size is: " +
-                        ((ThreadPoolExecutor) executorService).getQueue().size());
                 try {
                     executor.getQueue().put(r);
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    throw new SiddhiAppRuntimeException(siddhiAppName + ": " + streamID + ": " + e.getMessage(), e);
                 }
             }
         });
@@ -171,9 +169,6 @@ public class GenericServiceServer extends ServiceServer {
                         return new StreamObserver<Any>() {
                             @Override
                             public void onNext(Any value) {
-                                logger.info(">>>>>>>>> [30_MAY_PREQA] onNext(). ExecutorService queue size is: " +
-                                        ((ThreadPoolExecutor) executorService).getQueue().size());
-
                                 try {
                                     Object requestMessageObject = requestClass.getDeclaredMethod(GrpcConstants.
                                             PARSE_FROM_METHOD_NAME, ByteString.class).invoke(requestClass, value.
