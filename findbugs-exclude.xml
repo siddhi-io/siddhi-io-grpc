@@ -58,4 +58,8 @@
         <Class name="io.siddhi.extension.io.grpc.sink.GrpcCallSink$ListenableFutureWrapper$1"/>
         <Bug pattern="NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE"/>
     </Match>
+    <Match>
+        <Class name="io.siddhi.extension.io.grpc.source.GenericServiceServer$1"/>
+        <Bug pattern="SIC_INNER_SHOULD_BE_STATIC_ANON"/>
+    </Match>
 </FindBugsFilter>
