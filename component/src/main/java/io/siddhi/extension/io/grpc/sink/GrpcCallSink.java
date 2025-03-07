@@ -379,7 +379,7 @@ public class GrpcCallSink extends AbstractGrpcSink {
                 @Override
                 public void onFailure(Throwable t) {
                     referenceToThisSink.onError(payload, dynamicOptions, (Exception) t);
-                    logger.error(siddhiAppName + ": " + streamID + ": " + t.getMessage());
+                    logger.error("{}: {}: {}", siddhiAppName, streamID, t.getMessage());
                 }
             }, MoreExecutors.directExecutor());
         }
@@ -397,7 +397,7 @@ public class GrpcCallSink extends AbstractGrpcSink {
                 @Override
                 public void onFailure(Throwable t) {
                     referenceToThisSink.onError(payload, dynamicOptions, (Exception) t);
-                    logger.error(siddhiAppName + ":" + streamID + ": " + t.getMessage());
+                    logger.error("{}:{}: {}", siddhiAppName, streamID, t.getMessage());
                 }
             }, MoreExecutors.directExecutor());
         }
@@ -474,8 +474,8 @@ public class GrpcCallSink extends AbstractGrpcSink {
             this.futureStub = createFutureStub(serviceConfigs, siddhiAppName, streamID);
         }
         if (!channel.isShutdown()) {
-            logger.info(siddhiAppName + ": gRPC service on " + streamID + " has successfully connected to "
-                    + serviceConfigs.getUrl());
+            logger.info("{}: gRPC service on {} has successfully connected to {}", siddhiAppName, streamID,
+                    serviceConfigs.getUrl());
         } else {
             throw new ConnectionUnavailableException(siddhiAppName + ": gRPC service on" + streamID + " could not " +
                     "connect to " + serviceConfigs.getUrl());
@@ -503,8 +503,7 @@ public class GrpcCallSink extends AbstractGrpcSink {
             }
             channel = null;
         } catch (InterruptedException e) {
-            logger.error(siddhiAppName + ":" + streamID + ": Error in shutting " + "down the channel. " +
-                    e.getMessage(), e);
+            logger.error("{}:{}: Error in shutting down the channel. {}", siddhiAppName, streamID, e.getMessage(), e);
         }
     }
 

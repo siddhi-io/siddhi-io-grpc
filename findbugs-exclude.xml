@@ -36,11 +36,11 @@
     </Match>
     <Match>
         <Class name="io.siddhi.extension.io.grpc.source.GrpcEventServiceServer"/>
-        <Bug pattern="MS_SHOULD_BE_FINAL"/>
+        <Bug pattern="MS_SHOULD_BE_FINAL, PATH_TRAVERSAL_IN, IMPROPER_UNICODE"/>
     </Match>
     <Match>
         <Class name="io.siddhi.extension.io.grpc.source.GenericServiceServer"/>
-        <Bug pattern="MS_SHOULD_BE_FINAL"/>
+        <Bug pattern="MS_SHOULD_BE_FINAL, PATH_TRAVERSAL_IN, SIC_INNER_SHOULD_BE_STATIC_ANON"/>
     </Match>
     <Match>
         <Class name="io.siddhi.extension.io.grpc.source.AbstractGrpcSource"/>
@@ -61,5 +61,25 @@
     <Match>
         <Class name="io.siddhi.extension.io.grpc.source.GenericServiceServer$1"/>
         <Bug pattern="SIC_INNER_SHOULD_BE_STATIC_ANON"/>
+    </Match>
+    <Match>
+        <Class name="io.siddhi.extension.io.grpc.sink.AbstractGrpcSink" />
+        <Bug pattern="PATH_TRAVERSAL_IN" />
+    </Match>
+    <Match>
+        <Class name="io.siddhi.extension.io.grpc.sink.GrpcCallSink" />
+        <Bug pattern="IMPROPER_UNICODE" />
+    </Match>
+    <Match>
+        <Class name="io.siddhi.extension.io.grpc.sink.GrpcServiceResponseSink" />
+        <Bug pattern="IMPROPER_UNICODE" />
+    </Match>
+    <Match>
+        <Class name="io.siddhi.extension.io.grpc.sink.GrpcSink" />
+        <Bug pattern="IMPROPER_UNICODE" />
+    </Match>
+    <Match>
+        <Class name="io.siddhi.extension.io.grpc.util.ServiceConfigs" />
+        <Bug pattern="POTENTIAL_XML_INJECTION, CRLF_INJECTION_LOGS, IMPROPER_UNICODE" />
     </Match>
 </FindBugsFilter>

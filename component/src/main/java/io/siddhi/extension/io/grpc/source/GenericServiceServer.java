@@ -158,7 +158,7 @@ public class GenericServiceServer extends ServiceServer {
                                     getRpcMethodList(grpcServerConfigs.getServiceConfigs(), siddhiAppName, streamID),
                                     e);
                         } catch (SiddhiAppRuntimeException e) {
-                            logger.error(siddhiAppName + ": " + streamID + ": Dropping request. " + e.getMessage());
+                            logger.error("{}: {}: Dropping request. {}", siddhiAppName, streamID, e.getMessage());
                             responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
                         }
                     }
@@ -185,7 +185,7 @@ public class GenericServiceServer extends ServiceServer {
                                                     streamID),
                                             e);
                                 } catch (SiddhiAppRuntimeException e) {
-                                    logger.error(siddhiAppName + ": " + streamID + ": Dropping request. " +
+                                    logger.error("{}: {}: Dropping request. {}", siddhiAppName, streamID,
                                             e.getMessage());
                                     responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
                                 }
@@ -227,7 +227,7 @@ public class GenericServiceServer extends ServiceServer {
                             ((GrpcServiceSource) relevantSource).putStreamObserver(messageId, responseObserver);
                             ((GrpcServiceSource) relevantSource).scheduleServiceTimeout(messageId);
                         } catch (SiddhiAppRuntimeException e) {
-                            logger.error(siddhiAppName + ": " + streamID + ": Dropping request. " + e.getMessage());
+                            logger.error("{}: {}: Dropping request. {}", siddhiAppName, streamID, e.getMessage());
                             responseObserver.onError(new io.grpc.StatusRuntimeException(Status.DATA_LOSS));
                         } finally {
                             metaDataMap.remove();
@@ -242,7 +242,7 @@ public class GenericServiceServer extends ServiceServer {
         try {
             server.start();
             if (logger.isDebugEnabled()) {
-                logger.debug(siddhiAppName + ": " + streamID + ": gRPC Server started");
+                logger.debug("{}: {}: gRPC Server started", siddhiAppName, streamID);
             }
         } catch (IOException e) {
             if (e.getCause() instanceof BindException) {
@@ -261,7 +261,7 @@ public class GenericServiceServer extends ServiceServer {
         try {
             if (server == null) {
                 if (logger.isDebugEnabled()) {
-                    logger.debug(siddhiAppName + ": " + streamID + ": Illegal state. Server already stopped.");
+                    logger.debug("{}:{}: Illegal state. Server already stopped.", siddhiAppName, streamID);
                 }
                 return;
             }
@@ -270,7 +270,7 @@ public class GenericServiceServer extends ServiceServer {
                 if (server.awaitTermination(grpcServerConfigs.getServerShutdownWaitingTimeInMillis(),
                         TimeUnit.MILLISECONDS)) {
                     if (logger.isDebugEnabled()) {
-                        logger.debug(siddhiAppName + ": " + streamID + ": Server stopped");
+                        logger.debug("{}:{}: Server stopped", siddhiAppName, streamID);
                     }
                     return;
                 }

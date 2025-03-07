@@ -61,7 +61,7 @@ public abstract class ServiceServer {
         lock.lock();
         try {
             paused = true;
-            logger.info("Event input has paused for " + url);
+            logger.info("Event input has paused for {}", url);
         } finally {
             lock.unlock();
         }
@@ -74,7 +74,7 @@ public abstract class ServiceServer {
         lock.lock();
         try {
             paused = false;
-            logger.info("Event input has resume for " + url);
+            logger.info("Event input has resume for {}", url);
             condition.signalAll();
         } finally {
             lock.unlock();

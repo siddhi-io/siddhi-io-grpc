@@ -290,8 +290,7 @@ public class GrpcSink extends AbstractGrpcSink {
 
                 @Override
                 public void onError(Throwable t) {
-                    logger.error(siddhiAppName + ":" + streamID + ": " + t.getMessage() + " caused by "
-                            + t.getMessage(), t);
+                    logger.error("{}:{}: {} caused by {}", siddhiAppName, streamID, t.getMessage(), t.getMessage(), t);
                 }
 
                 @Override
@@ -315,8 +314,7 @@ public class GrpcSink extends AbstractGrpcSink {
 
                 @Override
                 public void onError(Throwable t) {
-                    logger.error(siddhiAppName + ":" + streamID + ": " + t.getMessage() + " caused by "
-                            + t.getMessage(), t);
+                    logger.error("{}:{}: {} caused by {}", siddhiAppName, streamID, t.getMessage(), t.getMessage(), t);
                 }
 
                 @Override
@@ -395,8 +393,8 @@ public class GrpcSink extends AbstractGrpcSink {
                 }
             }
             if (!channel.isShutdown()) {
-                logger.info(siddhiAppName + ": gRPC service on " + streamID + " has successfully connected to "
-                        + serviceConfigs.getUrl());
+                logger.info("{}: gRPC service on {} has successfully connected to {}", siddhiAppName, streamID,
+                        serviceConfigs.getUrl());
             } else {
                 throw new ConnectionUnavailableException(siddhiAppName + ": gRPC service on" + streamID +
                         " could not connect to " + serviceConfigs.getUrl());
@@ -423,8 +421,7 @@ public class GrpcSink extends AbstractGrpcSink {
             }
             channel = null;
         } catch (InterruptedException e) {
-            logger.error(siddhiAppName + ": " + streamID + ": Error in shutting " + "down the channel. " +
-                    e.getMessage(), e);
+            logger.error("{}: {}: Error in shutting down the channel. {}", siddhiAppName, streamID, e.getMessage(), e);
         }
     }
 
