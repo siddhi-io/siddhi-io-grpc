@@ -179,7 +179,7 @@ public class GrpcCallResponseSource extends Source {
         lock.lock();
         try {
             paused = true;
-            logger.info("Response has pause for grpc-call-response source with sink.id: " + sinkID);
+            logger.info("Response has pause for grpc-call-response source with sink.id: {}", sinkID);
         } finally {
             lock.unlock();
         }
@@ -193,7 +193,7 @@ public class GrpcCallResponseSource extends Source {
         lock.lock();
         try {
             paused = false;
-            logger.info("Response has resume for grpc-call-response source with sink.id: " + sinkID);
+            logger.info("Response has resume for grpc-call-response source with sink.id: {}", sinkID);
             condition.signalAll();
         } finally {
             lock.unlock();

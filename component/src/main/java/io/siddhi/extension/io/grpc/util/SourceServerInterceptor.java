@@ -47,7 +47,7 @@ public class SourceServerInterceptor implements ServerInterceptor {
   public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> serverCall,
                                                                Metadata metadata,
                                                                ServerCallHandler<ReqT, RespT> serverCallHandler) {
-    logger.debug("Interceptor thread is: " + Thread.currentThread().getId());
+      logger.debug("Interceptor thread is: {}", Thread.currentThread().getId());
     Set<String> metadataKeys = metadata.keys();
     Map<String, String> metaDataMap = new HashMap<>();
     for (String key: metadataKeys) {

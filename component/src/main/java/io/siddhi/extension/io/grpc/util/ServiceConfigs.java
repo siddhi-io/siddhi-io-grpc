@@ -59,7 +59,7 @@ public class ServiceConfigs {
                           String streamID, ConfigReader configReader, boolean isSource) {
         if (optionHolder.isOptionExists(GrpcConstants.RECEIVER_URL)) {
             this.url = optionHolder.validateAndGetOption(GrpcConstants.RECEIVER_URL).getValue();
-            log.debug("GRPC Service for : " + streamID + " started" + this.url);
+            log.debug("GRPC Service for : {} started{}", streamID, this.url);
         } else if (optionHolder.isOptionExists(GrpcConstants.PUBLISHER_URL)) {
             this.url = optionHolder.validateAndGetOption(GrpcConstants.PUBLISHER_URL).getValue();
         } else {

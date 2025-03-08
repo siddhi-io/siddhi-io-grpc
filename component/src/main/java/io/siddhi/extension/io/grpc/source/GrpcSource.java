@@ -256,7 +256,7 @@ public class GrpcSource extends AbstractGrpcSource {
 
     @Override
     public void logError(String message) {
-        logger.error(siddhiAppContext.getName() + ": " + streamID + ": " + message);
+        logger.error("{}: {}: {}", siddhiAppContext.getName(), streamID, message);
     }
 
     @Override
