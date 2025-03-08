@@ -211,7 +211,7 @@
         <guava.version.range>[26.0-android, 27.0-android)</guava.version.range>
         <commons.lang3.version>3.9</commons.lang3.version>
         <testng.version>6.11</testng.version>
-        <grpc.version>1.44.1</grpc.version>
+        <grpc.version>1.53.0</grpc.version>
         <maven.findbugsplugin.version.exclude>findbugs-exclude.xml</maven.findbugsplugin.version.exclude>
         <siddhi.version>5.1.21</siddhi.version>
         <siddhi.version.range>[5.0.0,6.0.0)</siddhi.version.range>
