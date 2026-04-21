@@ -230,7 +230,7 @@ public class GrpcServiceSourceTestCase {
                 Metadata metadata = new Metadata();
                 metadata.put(Metadata.Key.of("Name", Metadata.ASCII_STRING_MARSHALLER), "John");
                 metadata.put(Metadata.Key.of("Age", Metadata.ASCII_STRING_MARSHALLER), "23");
-                blockingStub = MetadataUtils.attachHeaders(blockingStub, metadata);
+                blockingStub = blockingStub.withInterceptors(MetadataUtils.newAttachHeadersInterceptor(metadata));
 
                 Event response = blockingStub.process(sequenceCallRequest);
                 Assert.assertNotNull(response);
@@ -285,7 +285,7 @@ public class GrpcServiceSourceTestCase {
 
                 Metadata metadata = new Metadata();
                 metadata.put(Metadata.Key.of("Age", Metadata.ASCII_STRING_MARSHALLER), "23");
-                blockingStub = MetadataUtils.attachHeaders(blockingStub, metadata);
+                blockingStub = blockingStub.withInterceptors(MetadataUtils.newAttachHeadersInterceptor(metadata));
 
                 Event response = blockingStub.process(sequenceCallRequest);
                 Assert.assertNotNull(response);
@@ -594,7 +594,7 @@ public class GrpcServiceSourceTestCase {
             Metadata metadata = new Metadata();
             metadata.put(Metadata.Key.of("Name", Metadata.ASCII_STRING_MARSHALLER), "John");
             metadata.put(Metadata.Key.of("Age", Metadata.ASCII_STRING_MARSHALLER), "23");
-            blockingStub = MetadataUtils.attachHeaders(blockingStub, metadata);
+            blockingStub = blockingStub.withInterceptors(MetadataUtils.newAttachHeadersInterceptor(metadata));
             Response response = blockingStub.process(request);
             Assert.assertNotNull(response);
 
@@ -666,7 +666,7 @@ public class GrpcServiceSourceTestCase {
             Metadata metadata = new Metadata();
             metadata.put(Metadata.Key.of("Name", Metadata.ASCII_STRING_MARSHALLER), "John");
             metadata.put(Metadata.Key.of("Age", Metadata.ASCII_STRING_MARSHALLER), "23");
-            blockingStub = MetadataUtils.attachHeaders(blockingStub, metadata);
+            blockingStub = blockingStub.withInterceptors(MetadataUtils.newAttachHeadersInterceptor(metadata));
             Response response = blockingStub.process(request);
             Assert.assertNotNull(response);
 
