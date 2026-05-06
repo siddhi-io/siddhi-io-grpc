@@ -298,8 +298,7 @@ public class GrpcServiceSourceTestCase {
         channel.shutdown();
         channel.awaitTermination(30, TimeUnit.SECONDS);
 
-        Assert.assertTrue(((TestAppender) logger.getAppenders().
-                get("TestAppender")).getMessages().contains("Dropping request. Requested transport property" +
+        Assert.assertTrue(appender.getMessages().contains("Dropping request. Requested transport property" +
                 " 'name' not present in " + "received event"));
         logger.removeAppender(appender);
     }
@@ -463,8 +462,7 @@ public class GrpcServiceSourceTestCase {
         channel.shutdown();
         channel.awaitTermination(30, TimeUnit.SECONDS);
 
-        Assert.assertTrue(((TestAppender) logger.getAppenders().
-                get("TestAppender")).getMessages().contains("Dropping request. Requested transport property " +
+        Assert.assertTrue(appender.getMessages().contains("Dropping request. Requested transport property " +
                 "'age' not present in received event"));
         logger.removeAppender(appender);
     }

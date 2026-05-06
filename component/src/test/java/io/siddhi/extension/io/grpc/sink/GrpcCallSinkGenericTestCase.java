@@ -111,8 +111,7 @@ public class GrpcCallSinkGenericTestCase {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
-        Assert.assertTrue(((TestAppender) logger.getAppenders().
-                get("TestAppender")).getMessages().contains("Server hits with request :\n" +
+        Assert.assertTrue(appender.getMessages().contains("Server hits with request :\n" +
                 "stringValue: \"Test 01\"\n" +
                 "intValue: 60\n" +
                 "longValue: 10000\n" +
@@ -174,8 +173,7 @@ public class GrpcCallSinkGenericTestCase {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
-        Assert.assertTrue(((TestAppender) logger.getAppenders().
-                get("TestAppender")).getMessages().contains("Server hits with request :\n" +
+        Assert.assertTrue(appender.getMessages().contains("Server hits with request :\n" +
                 "stringValue: \"Test 01\"\n" +
                 "intValue: 60\n" +
                 "longValue: 10000\n" +
@@ -240,8 +238,7 @@ public class GrpcCallSinkGenericTestCase {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
-        Assert.assertTrue(((TestAppender) logger.getAppenders().
-                get("TestAppender")).getMessages().contains("Server hits with request :\n" +
+        Assert.assertTrue(appender.getMessages().contains("Server hits with request :\n" +
                 "stringValue: \"Test 01\"\n" +
                 "intValue: 60\n" +
                 "longValue: 10000\n" +
@@ -304,8 +301,7 @@ public class GrpcCallSinkGenericTestCase {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
-        Assert.assertTrue(((TestAppender) logger.getAppenders().
-                get("TestAppender")).getMessages().contains("Server hits with request :\n" +
+        Assert.assertTrue(appender.getMessages().contains("Server hits with request :\n" +
                 "stringValue: \"Test 01\"\n" +
                 "intValue: 60\n" +
                 "map {\n" +
@@ -362,10 +358,8 @@ public class GrpcCallSinkGenericTestCase {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
-        Assert.assertTrue(((TestAppender) logger.getAppenders().
-                get("TestAppender")).getMessages().contains("Metadata received: name: John"));
-        Assert.assertTrue(((TestAppender) logger.getAppenders().
-                get("TestAppender")).getMessages().contains("Metadata received: name: Nash"));
+        Assert.assertTrue(appender.getMessages().contains("Metadata received: name: John"));
+        Assert.assertTrue(appender.getMessages().contains("Metadata received: name: Nash"));
         logger.removeAppender(appender);
     }
 
@@ -408,8 +402,7 @@ public class GrpcCallSinkGenericTestCase {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
-        Assert.assertTrue(((TestAppender) logger.getAppenders().
-                get("TestAppender")).getMessages().contains("Metadata received: name: John"));
+        Assert.assertTrue(appender.getMessages().contains("Metadata received: name: John"));
         logger.removeAppender(appender);
     }
 
@@ -436,8 +429,7 @@ public class GrpcCallSinkGenericTestCase {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
-        Assert.assertTrue(((TestAppender) logger.getAppenders().
-                get("TestAppender")).getMessages().contains("For grpc-call sink to work a grpc-call-response source " +
+        Assert.assertTrue(appender.getMessages().contains("For grpc-call sink to work a grpc-call-response source " +
                 "should be available with the same sink.id. In this case sink.id is 1. Please provide a " +
                 "grpc-call-response source with the sink.id 1"));
         logger.removeAppender(appender);

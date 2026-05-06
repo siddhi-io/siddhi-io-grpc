@@ -290,7 +290,9 @@ public class GrpcSourceTestCase {
                     Thread.sleep(10);
                     requestObserver.onCompleted();
                 } catch (InterruptedException e) {
-
+                    Thread.currentThread().interrupt();
+                } finally {
+                    channel.shutdown();
                 }
             }
         };
