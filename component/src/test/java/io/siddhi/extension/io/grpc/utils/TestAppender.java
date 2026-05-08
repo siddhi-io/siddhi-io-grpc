@@ -26,19 +26,16 @@ import org.apache.logging.log4j.core.config.plugins.Plugin;
 import org.apache.logging.log4j.core.config.plugins.PluginAttribute;
 import org.apache.logging.log4j.core.config.plugins.PluginElement;
 import org.apache.logging.log4j.core.config.plugins.PluginFactory;
-import org.mvel2.util.StringAppender;
 
 /**
  * Test appender to receive logs.
  */
-@Plugin(name = "TestAppender",
-        category = Core.CATEGORY_NAME, elementType = Appender.ELEMENT_TYPE)
+@Plugin(name = "TestAppender", category = Core.CATEGORY_NAME, elementType = Appender.ELEMENT_TYPE)
 public class TestAppender extends AbstractAppender {
 
-    private StringAppender messages = new StringAppender();
+    private final StringBuilder messages = new StringBuilder();
 
     public TestAppender(String name, Filter filter) {
-
         super(name, filter, null);
     }
 
@@ -46,24 +43,15 @@ public class TestAppender extends AbstractAppender {
     public static TestAppender createAppender(
             @PluginAttribute("name") String name,
             @PluginElement("Filter") Filter filter) {
-
         return new TestAppender(name, filter);
     }
 
     public String getMessages() {
-
-        String results = messages.toString();
-        if (results.isEmpty()) {
-            return null;
-        }
-        return results;
+        return messages.toString();
     }
 
     @Override
     public void append(LogEvent event) {
-
         messages.append(event.getMessage().getFormattedMessage());
     }
-
 }
-

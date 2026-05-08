@@ -19,14 +19,13 @@
   ~  */
   -->
 
-<Configuration status="WARN" packages="io.siddhi.extension.io" >
+<Configuration status="WARN">
     <Appenders>
         <Console name="ConsoleAppender" target="SYSTEM_OUT"/>
-        <TestAppender name="TestAppender"/>
     </Appenders>
     <Loggers>
         <Root level="DEBUG">
-            <AppenderRef ref="ConsoleAppender" />
+            <AppenderRef ref="ConsoleAppender"/>
         </Root>
     </Loggers>
 </Configuration>

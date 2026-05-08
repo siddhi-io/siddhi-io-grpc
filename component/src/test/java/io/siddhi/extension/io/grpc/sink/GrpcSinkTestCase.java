@@ -74,8 +74,7 @@ public class GrpcSinkTestCase {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
-        Assert.assertTrue(((TestAppender) logger.getAppenders().
-                get("TestAppender")).getMessages().contains("Server consume hit with payload = " +
+        Assert.assertTrue(appender.getMessages().contains("Server consume hit with payload = " +
                 "[Request 1] and Headers = {{}}"));
         logger.removeAppender(appender);
     }
@@ -104,11 +103,9 @@ public class GrpcSinkTestCase {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
-        Assert.assertTrue(((TestAppender) logger.getAppenders().
-                get("TestAppender")).getMessages().contains("Server consume hit with payload = " +
+        Assert.assertTrue(appender.getMessages().contains("Server consume hit with payload = " +
                 "[Request 1] and Headers = {{}}"));
-        Assert.assertTrue(((TestAppender) logger.getAppenders().
-                get("TestAppender")).getMessages().contains("Server consume hit with payload = " +
+        Assert.assertTrue(appender.getMessages().contains("Server consume hit with payload = " +
                 "[Request 2] and Headers = {{}}"));
         logger.removeAppender(appender);
     }
@@ -139,11 +136,9 @@ public class GrpcSinkTestCase {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
-        Assert.assertTrue(((TestAppender) logger.getAppenders().
-                get("TestAppender")).getMessages().contains("Server consume hit with payload = [Request 1] " +
+        Assert.assertTrue(appender.getMessages().contains("Server consume hit with payload = [Request 1] " +
                 "and Headers = {{Name=John, Age=23, Content-Type=text}}"));
-        Assert.assertTrue(((TestAppender) logger.getAppenders().
-                get("TestAppender")).getMessages().contains("Server consume hit with payload = [Request 2] " +
+        Assert.assertTrue(appender.getMessages().contains("Server consume hit with payload = [Request 2] " +
                 "and Headers = {{Name=Nash, Age=54, Content-Type=json}}"));
         logger.removeAppender(appender);
     }
@@ -239,8 +234,7 @@ public class GrpcSinkTestCase {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
-        Assert.assertTrue(((TestAppender) logger.getAppenders().
-                get("TestAppender")).getMessages().contains("Server consume hit with payload = Request 1 " +
+        Assert.assertTrue(appender.getMessages().contains("Server consume hit with payload = Request 1 " +
                 "and Headers = {{}}"));
         logger.removeAppender(appender);
     }
@@ -269,8 +263,7 @@ public class GrpcSinkTestCase {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
-        Assert.assertTrue(((TestAppender) logger.getAppenders().
-                get("TestAppender")).getMessages().contains("Server consume hit with payload = " +
+        Assert.assertTrue(appender.getMessages().contains("Server consume hit with payload = " +
                 "Request 1 and Headers = " + "{{sequence=mySeq}}"));
         logger.removeAppender(appender);
     }
@@ -301,11 +294,9 @@ public class GrpcSinkTestCase {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
-        Assert.assertTrue(((TestAppender) logger.getAppenders().
-                get("TestAppender")).getMessages().contains("Server consume hit with payload = " +
+        Assert.assertTrue(appender.getMessages().contains("Server consume hit with payload = " +
                 "[Request 1] and Headers = {{Name=John, Age=23, Content-Type=text, sequence=mySeq}}"));
-        Assert.assertTrue(((TestAppender) logger.getAppenders().
-                get("TestAppender")).getMessages().contains("Server consume hit with payload = [Request 2] " +
+        Assert.assertTrue(appender.getMessages().contains("Server consume hit with payload = [Request 2] " +
                 "and Headers = {{Name=Nash, Age=54, Content-Type=json, sequence=mySeq}}"));
         logger.removeAppender(appender);
     }
@@ -335,13 +326,10 @@ public class GrpcSinkTestCase {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
-        Assert.assertTrue(((TestAppender) logger.getAppenders().
-                get("TestAppender")).getMessages().contains("Server consume hit with payload = " +
+        Assert.assertTrue(appender.getMessages().contains("Server consume hit with payload = " +
                 "[{\"event\":{\"message\":\"Request 1\"}}] and Headers = {{}}"));
-        Assert.assertTrue(((TestAppender) logger.getAppenders().
-                get("TestAppender")).getMessages().contains("Metadata received: name: John"));
-        Assert.assertTrue(((TestAppender) logger.getAppenders().
-                get("TestAppender")).getMessages().contains("Metadata received: age: 23"));
+        Assert.assertTrue(appender.getMessages().contains("Metadata received: name: John"));
+        Assert.assertTrue(appender.getMessages().contains("Metadata received: age: 23"));
         logger.removeAppender(appender);
     }
 
@@ -370,8 +358,7 @@ public class GrpcSinkTestCase {
         siddhiAppRuntime.shutdown();
         server.start();
 
-        Assert.assertTrue(((TestAppender) logger.getAppenders().
-                get("TestAppender")).getMessages().contains("UNAVAILABLE: io exception caused by UNAVAILABLE: " +
+        Assert.assertTrue(appender.getMessages().contains("UNAVAILABLE: io exception caused by UNAVAILABLE: " +
                 "io exception"));
         logger.removeAppender(appender);
     }
@@ -412,11 +399,9 @@ public class GrpcSinkTestCase {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
-        Assert.assertTrue(((TestAppender) logger.getAppenders().
-                get("TestAppender")).getMessages().contains("Server consume hit with payload = [Request 1] " +
+        Assert.assertTrue(appender.getMessages().contains("Server consume hit with payload = [Request 1] " +
                 "and Headers = {{}}"));
-        Assert.assertTrue(((TestAppender) logger.getAppenders().
-                get("TestAppender")).getMessages().contains("Server consume hit with payload = [Request 2] " +
+        Assert.assertTrue(appender.getMessages().contains("Server consume hit with payload = [Request 2] " +
                 "and Headers = {{}}"));
         logger.removeAppender(appender);
     }

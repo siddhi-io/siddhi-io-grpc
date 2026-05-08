@@ -290,7 +290,9 @@ public class GrpcSourceTestCase {
                     Thread.sleep(10);
                     requestObserver.onCompleted();
                 } catch (InterruptedException e) {
-
+                    Thread.currentThread().interrupt();
+                } finally {
+                    channel.shutdown();
                 }
             }
         };
@@ -401,7 +403,7 @@ public class GrpcSourceTestCase {
         Metadata metadata = new Metadata();
         metadata.put(Metadata.Key.of("Name", Metadata.ASCII_STRING_MARSHALLER), "John");
         EventServiceGrpc.EventServiceStub asyncStub = EventServiceGrpc.newStub(channel);
-        asyncStub = MetadataUtils.attachHeaders(asyncStub, metadata);
+        asyncStub = asyncStub.withInterceptors(MetadataUtils.newAttachHeadersInterceptor(metadata));
 
         StreamObserver<Empty> responseObserver = new StreamObserver<Empty>() {
             @Override
@@ -739,7 +741,7 @@ public class GrpcSourceTestCase {
         Metadata metadata = new Metadata();
         metadata.put(Metadata.Key.of("Name", Metadata.ASCII_STRING_MARSHALLER), "John");
         metadata.put(Metadata.Key.of("Age", Metadata.ASCII_STRING_MARSHALLER), "23");
-        blockingStub = MetadataUtils.attachHeaders(blockingStub, metadata);
+        blockingStub = blockingStub.withInterceptors(MetadataUtils.newAttachHeadersInterceptor(metadata));
 
         siddhiAppRuntime.start();
         Empty emptyResponse = blockingStub.send(request);

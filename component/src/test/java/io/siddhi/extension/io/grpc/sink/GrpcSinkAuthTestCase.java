@@ -212,8 +212,7 @@ public class GrpcSinkAuthTestCase {
         } finally {
             server.stop();
         }
-        Assert.assertTrue(((TestAppender) logger.getAppenders().
-                get("TestAppender")).getMessages().contains("UNAVAILABLE: Network closed for unknown reason"));
+        Assert.assertTrue(appender.getMessages().contains("UNAVAILABLE: Network closed for unknown reason"));
         logger.removeAppender(appender);
     }
 

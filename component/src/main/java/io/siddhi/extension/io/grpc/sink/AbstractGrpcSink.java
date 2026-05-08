@@ -272,6 +272,6 @@ public abstract class AbstractGrpcSink extends Sink {
             metadata.put(Metadata.Key.of(headerKeyValueArray[0], Metadata.ASCII_STRING_MARSHALLER),
                     headerKeyValueArray[1]);
         }
-        return MetadataUtils.attachHeaders(stub, metadata);
+        return stub.withInterceptors(MetadataUtils.newAttachHeadersInterceptor(metadata));
     }
 }

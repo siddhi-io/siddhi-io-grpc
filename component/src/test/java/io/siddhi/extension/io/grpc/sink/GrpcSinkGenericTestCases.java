@@ -77,8 +77,7 @@ public class GrpcSinkGenericTestCases {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
-        Assert.assertTrue(((TestAppender) logger.getAppenders().
-                get("TestAppender")).getMessages().contains("Server hits with request :\n" +
+        Assert.assertTrue(appender.getMessages().contains("Server hits with request :\n" +
                 "stringValue: \"Test 01\"\n" +
                 "intValue: 60\n" +
                 "longValue: 10000\n" +
@@ -115,8 +114,7 @@ public class GrpcSinkGenericTestCases {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
-        Assert.assertTrue(((TestAppender) logger.getAppenders().
-                get("TestAppender")).getMessages().contains("Server hits with request :\n" +
+        Assert.assertTrue(appender.getMessages().contains("Server hits with request :\n" +
                 "stringValue: \"Test 02\"\n" +
                 "intValue: 60\n" +
                 "longValue: 10000\n" +
@@ -152,8 +150,7 @@ public class GrpcSinkGenericTestCases {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
-        Assert.assertTrue(((TestAppender) logger.getAppenders().
-                get("TestAppender")).getMessages().contains("Server hits with request :\n" +
+        Assert.assertTrue(appender.getMessages().contains("Server hits with request :\n" +
                 "stringValue: \"Test 01\"\n" +
                 "intValue: 60\n" +
                 "map {\n" +
@@ -196,10 +193,8 @@ public class GrpcSinkGenericTestCases {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
-        Assert.assertTrue(((TestAppender) logger.getAppenders().
-                get("TestAppender")).getMessages().contains("Metadata received: name: John"));
-        Assert.assertTrue(((TestAppender) logger.getAppenders().
-                get("TestAppender")).getMessages().contains("Metadata received: age: 23"));
+        Assert.assertTrue(appender.getMessages().contains("Metadata received: name: John"));
+        Assert.assertTrue(appender.getMessages().contains("Metadata received: age: 23"));
         logger.removeAppender(appender);
 
     }
@@ -233,8 +228,7 @@ public class GrpcSinkGenericTestCases {
         siddhiAppRuntime.shutdown();
         Thread.sleep(1000);
 
-        Assert.assertTrue(((TestAppender) logger.getAppenders().
-                get("TestAppender")).getMessages().contains("Done Streaming"));
+        Assert.assertTrue(appender.getMessages().contains("Done Streaming"));
         logger.removeAppender(appender);
     }
 
@@ -268,8 +262,7 @@ public class GrpcSinkGenericTestCases {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
         Thread.sleep(1000);
-        Assert.assertTrue(((TestAppender) logger.getAppenders().
-                get("TestAppender")).getMessages().contains("Done Streaming"));
+        Assert.assertTrue(appender.getMessages().contains("Done Streaming"));
         logger.removeAppender(appender);
 
     }

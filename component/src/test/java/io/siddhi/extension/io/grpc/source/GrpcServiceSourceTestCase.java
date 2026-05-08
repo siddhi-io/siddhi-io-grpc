@@ -230,7 +230,7 @@ public class GrpcServiceSourceTestCase {
                 Metadata metadata = new Metadata();
                 metadata.put(Metadata.Key.of("Name", Metadata.ASCII_STRING_MARSHALLER), "John");
                 metadata.put(Metadata.Key.of("Age", Metadata.ASCII_STRING_MARSHALLER), "23");
-                blockingStub = MetadataUtils.attachHeaders(blockingStub, metadata);
+                blockingStub = blockingStub.withInterceptors(MetadataUtils.newAttachHeadersInterceptor(metadata));
 
                 Event response = blockingStub.process(sequenceCallRequest);
                 Assert.assertNotNull(response);
@@ -285,7 +285,7 @@ public class GrpcServiceSourceTestCase {
 
                 Metadata metadata = new Metadata();
                 metadata.put(Metadata.Key.of("Age", Metadata.ASCII_STRING_MARSHALLER), "23");
-                blockingStub = MetadataUtils.attachHeaders(blockingStub, metadata);
+                blockingStub = blockingStub.withInterceptors(MetadataUtils.newAttachHeadersInterceptor(metadata));
 
                 Event response = blockingStub.process(sequenceCallRequest);
                 Assert.assertNotNull(response);
@@ -298,8 +298,7 @@ public class GrpcServiceSourceTestCase {
         channel.shutdown();
         channel.awaitTermination(30, TimeUnit.SECONDS);
 
-        Assert.assertTrue(((TestAppender) logger.getAppenders().
-                get("TestAppender")).getMessages().contains("Dropping request. Requested transport property" +
+        Assert.assertTrue(appender.getMessages().contains("Dropping request. Requested transport property" +
                 " 'name' not present in " + "received event"));
         logger.removeAppender(appender);
     }
@@ -463,8 +462,7 @@ public class GrpcServiceSourceTestCase {
         channel.shutdown();
         channel.awaitTermination(30, TimeUnit.SECONDS);
 
-        Assert.assertTrue(((TestAppender) logger.getAppenders().
-                get("TestAppender")).getMessages().contains("Dropping request. Requested transport property " +
+        Assert.assertTrue(appender.getMessages().contains("Dropping request. Requested transport property " +
                 "'age' not present in received event"));
         logger.removeAppender(appender);
     }
@@ -594,7 +592,7 @@ public class GrpcServiceSourceTestCase {
             Metadata metadata = new Metadata();
             metadata.put(Metadata.Key.of("Name", Metadata.ASCII_STRING_MARSHALLER), "John");
             metadata.put(Metadata.Key.of("Age", Metadata.ASCII_STRING_MARSHALLER), "23");
-            blockingStub = MetadataUtils.attachHeaders(blockingStub, metadata);
+            blockingStub = blockingStub.withInterceptors(MetadataUtils.newAttachHeadersInterceptor(metadata));
             Response response = blockingStub.process(request);
             Assert.assertNotNull(response);
 
@@ -666,7 +664,7 @@ public class GrpcServiceSourceTestCase {
             Metadata metadata = new Metadata();
             metadata.put(Metadata.Key.of("Name", Metadata.ASCII_STRING_MARSHALLER), "John");
             metadata.put(Metadata.Key.of("Age", Metadata.ASCII_STRING_MARSHALLER), "23");
-            blockingStub = MetadataUtils.attachHeaders(blockingStub, metadata);
+            blockingStub = blockingStub.withInterceptors(MetadataUtils.newAttachHeadersInterceptor(metadata));
             Response response = blockingStub.process(request);
             Assert.assertNotNull(response);
 

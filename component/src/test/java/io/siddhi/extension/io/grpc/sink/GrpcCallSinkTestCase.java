@@ -102,8 +102,7 @@ public class GrpcCallSinkTestCase {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
-        Assert.assertTrue(((TestAppender) logger.getAppenders().
-                get("TestAppender")).getMessages().contains("Server process hit with payload = " +
+        Assert.assertTrue(appender.getMessages().contains("Server process hit with payload = " +
                 "[{\"event\":{\"message\":\"Request 1\"}}] and Headers = {{sequence=mySeq}}"));
         logger.removeAppender(appender);
     }
@@ -158,11 +157,9 @@ public class GrpcCallSinkTestCase {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
-        Assert.assertTrue(((TestAppender) logger.getAppenders().
-                get("TestAppender")).getMessages().contains("Server process hit with payload = " +
+        Assert.assertTrue(appender.getMessages().contains("Server process hit with payload = " +
                 "[Request 1] and Headers = {{Name=John, Age=23, Content-Type=text, sequence=mySeq}}"));
-        Assert.assertTrue(((TestAppender) logger.getAppenders().
-                get("TestAppender")).getMessages().contains("Server process hit with payload = [Request 2] " +
+        Assert.assertTrue(appender.getMessages().contains("Server process hit with payload = [Request 2] " +
                 "and Headers = {{Name=Nash, Age=54, Content-Type=json, sequence=mySeq}}"));
         logger.removeAppender(appender);
     }
@@ -189,8 +186,7 @@ public class GrpcCallSinkTestCase {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
-        Assert.assertTrue(((TestAppender) logger.getAppenders().
-                get("TestAppender")).getMessages().contains("For grpc-call sink to work a grpc-call-response source " +
+        Assert.assertTrue(appender.getMessages().contains("For grpc-call sink to work a grpc-call-response source " +
                 "should be available with the same sink.id. In this case sink.id is 1. " +
                 "Please provide a grpc-call-response source with the sink.id 1"));
         logger.removeAppender(appender);
@@ -230,16 +226,12 @@ public class GrpcCallSinkTestCase {
         Thread.sleep(1000);
         siddhiAppRuntime.shutdown();
 
-        Assert.assertTrue(((TestAppender) logger.getAppenders().
-                get("TestAppender")).getMessages().contains("Server process hit with payload = [Request 1] and " +
+        Assert.assertTrue(appender.getMessages().contains("Server process hit with payload = [Request 1] and " +
                 "Headers = {{}}"));
-        Assert.assertTrue(((TestAppender) logger.getAppenders().
-                get("TestAppender")).getMessages().contains("Server process hit with payload = [Request 2] and " +
+        Assert.assertTrue(appender.getMessages().contains("Server process hit with payload = [Request 2] and " +
                 "Headers = {{}}"));
-        Assert.assertTrue(((TestAppender) logger.getAppenders().
-                get("TestAppender")).getMessages().contains("Metadata received: name: John"));
-        Assert.assertTrue(((TestAppender) logger.getAppenders().
-                get("TestAppender")).getMessages().contains("Metadata received: name: Nash"));
+        Assert.assertTrue(appender.getMessages().contains("Metadata received: name: John"));
+        Assert.assertTrue(appender.getMessages().contains("Metadata received: name: Nash"));
         logger.removeAppender(appender);
     }
 
