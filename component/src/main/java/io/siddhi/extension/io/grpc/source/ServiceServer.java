@@ -17,7 +17,7 @@
  */
 package io.siddhi.extension.io.grpc.source;
 
-import io.grpc.netty.shaded.io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.SslContextBuilder;
 import io.siddhi.core.stream.input.source.Source;
 import org.apache.logging.log4j.Logger;
 
