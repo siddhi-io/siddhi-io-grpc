@@ -63,7 +63,7 @@
         </dependency>
         <dependency>
             <groupId>io.grpc</groupId>
-            <artifactId>grpc-netty-shaded</artifactId>
+            <artifactId>grpc-netty</artifactId>
         </dependency>
         <dependency>
             <groupId>javax.annotation</groupId>
@@ -176,7 +176,10 @@
                             org.wso2.grpc.*, <!-- auto-gen classes -->
                         </Private-Package>
                         <Import-Package>
-                            com.google.guava.*;version="${guava.version.range}",
+                            io.netty.*;version="${netty.version.range}",
+                            com.google.common.*;version="${guava.version.range}",
+                            com.google.gson.*;version="${gson.version.range}",
+                            org.apache.commons.lang3.*;version="${commons-lang3.version.range}",
                             *;resolution:=optional
                         </Import-Package>
                         <DynamicImport-Package>*</DynamicImport-Package>

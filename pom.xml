@@ -57,7 +57,7 @@
             </dependency>
             <dependency>
                 <groupId>io.grpc</groupId>
-                <artifactId>grpc-netty-shaded</artifactId>
+                <artifactId>grpc-netty</artifactId>
                 <version>${grpc.version}</version>
             </dependency>
             <dependency>
@@ -213,10 +213,13 @@
     <properties>
         <grpc.version.range>[1.22.1, 2.0.0)</grpc.version.range>
         <com.protobuf.version.range>[3.7.1,4.0.0)</com.protobuf.version.range>
-        <guava.version.range>[26.0-android, 33.0-android)</guava.version.range>
+        <guava.version.range>[32.1,34)</guava.version.range>
+        <netty.version.range>[4.1.133,4.2)</netty.version.range>
+        <gson.version.range>[2.9,3)</gson.version.range>
+        <commons-lang3.version.range>[3.9,4)</commons-lang3.version.range>
         <commons.lang3.version>3.9</commons.lang3.version>
         <testng.version>6.11</testng.version>
-        <grpc.version>1.71.0</grpc.version>
+        <grpc.version>1.82.4</grpc.version>
         <maven.findbugsplugin.version.exclude>findbugs-exclude.xml</maven.findbugsplugin.version.exclude>
         <siddhi.version>5.1.32</siddhi.version>
         <siddhi.version.range>[5.0.0,6.0.0)</siddhi.version.range>
