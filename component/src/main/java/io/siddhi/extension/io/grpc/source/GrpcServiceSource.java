@@ -297,6 +297,7 @@ public class GrpcServiceSource extends AbstractGrpcSource {
         if (grpcServerConfigs.getServiceConfigs().isDefaultService()) {
             GrpcServerManager.getInstance().registerSource(grpcServerConfigs, this, GrpcConstants
                     .DEFAULT_METHOD_NAME_WITH_RESPONSE, siddhiAppContext, streamID);
+            serviceServer = GrpcServerManager.getInstance().getServer(grpcServerConfigs.getServiceConfigs().getPort());
         } else {
             GenericService.setServiceName(grpcServerConfigs.getServiceConfigs().getServiceName());
             GenericService.setNonEmptyResponseMethodName(grpcServerConfigs.getServiceConfigs().getMethodName());
@@ -310,8 +311,6 @@ public class GrpcServiceSource extends AbstractGrpcSource {
         if (grpcServerConfigs.getServiceConfigs().isDefaultService()) {
             if (GrpcServerManager.getInstance().getServer(grpcServerConfigs.getServiceConfigs().getPort())
                     .getState() == 0) {
-                serviceServer = GrpcServerManager.getInstance().getServer(
-                        grpcServerConfigs.getServiceConfigs().getPort());
                 serviceServer.connectServer(logger, connectionCallback, siddhiAppContext.getName(), streamID);
             }
         } else {
