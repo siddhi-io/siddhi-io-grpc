@@ -9,6 +9,7 @@
             <class name="io.siddhi.extension.io.grpc.sink.GrpcCallSinkTestCase"/>
             <class name="io.siddhi.extension.io.grpc.source.GrpcSourceTestCase"/>
             <class name="io.siddhi.extension.io.grpc.source.GrpcServiceSourceTestCase"/>
+            <class name="io.siddhi.extension.io.grpc.source.GrpcSourcePersistenceTestCase"/>
             <class name="io.siddhi.extension.io.grpc.sink.GrpcSinkGenericTestCases"/>
             <class name="io.siddhi.extension.io.grpc.sink.GrpcCallSinkGenericTestCase"/>
             <!-- TODO: Update to a Java version later than 1.8.0_242 in the builder, and uncomment these test cases -->
